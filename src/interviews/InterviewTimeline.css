@@ -1,0 +1,124 @@
+.interview-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+}
+
+.interview-timeline__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.interview-timeline__title {
+  font-size: var(--text-heading);
+  color: var(--text-primary);
+}
+
+.interview-timeline__add-btn {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-meta);
+  background-color: var(--accent);
+  color: white;
+  border-radius: var(--radius-sm);
+}
+
+.interview-timeline__add-btn:hover {
+  background-color: var(--accent-hover);
+}
+
+.interview-timeline__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background-color: var(--surface-sunken);
+  padding: var(--space-4);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.interview-timeline__form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.timeline-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.timeline-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  position: relative;
+}
+
+.timeline-item__badge {
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: var(--weight-bold);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface-sunken);
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.timeline-item__content {
+  flex: 1;
+}
+
+.timeline-item__top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.timeline-item__round {
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+
+.timeline-item__date {
+  font-size: var(--text-meta);
+  color: var(--text-tertiary);
+}
+
+.timeline-item__meta {
+  font-size: var(--text-meta);
+  color: var(--text-secondary);
+}
+
+.timeline-item__notes {
+  margin-top: var(--space-2);
+  font-size: var(--text-meta);
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.timeline-item__delete-btn {
+  color: var(--text-tertiary);
+  font-size: 14px;
+  padding: 2px;
+}
+
+.timeline-item__delete-btn:hover {
+  color: var(--danger);
+}
+
+.interview-timeline__empty {
+  font-size: var(--text-meta);
+  color: var(--text-tertiary);
+  font-style: italic;
+}

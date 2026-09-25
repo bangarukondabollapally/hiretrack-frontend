@@ -4,71 +4,47 @@
  * Route structure per docs/ARCHITECTURE.md and docs/API.md:
  *   /login            → LoginPage      ✓ TASK-009
  *   /register         → RegisterPage   ✓ TASK-009
- *   /dashboard        → DashboardPage  (TASK-023, protected)
- *   /applications     → ApplicationsList (TASK-014, protected)
- *   /applications/:id → ApplicationDetail (TASK-015, protected)
- *   /interviews       → InterviewTimeline (TASK-019, protected)
- *   /assistant        → ChatPage       (TASK-030, protected)
- *   /profile          → ProfilePage    (TASK-026, protected)
- *
- * ProtectedRoute and AuthContext are added in TASK-010.
+ *   /dashboard        → DashboardPage  ✓ TASK-023 (protected)
+ *   /applications     → ApplicationsList ✓ TASK-014 (protected)
+ *   /applications/new → ApplicationForm ✓ TASK-015 (protected)
+ *   /applications/:id → ApplicationForm ✓ TASK-015 (protected)
  */
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './auth/AuthContext';
+import ProtectedRoute from './auth/ProtectedRoute';
+import Layout from './components/Layout';
 import LoginPage from './auth/LoginPage';
 import RegisterPage from './auth/RegisterPage';
-
-function PlaceholderPage({ name }) {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        fontFamily: 'var(--font-primary)',
-        color: 'var(--text-secondary)',
-        gap: '8px',
-      }}
-    >
-      <span
-        style={{
-          fontSize: 'var(--text-page-heading)',
-          fontWeight: 'var(--weight-semibold)',
-          color: 'var(--text-primary)',
-        }}
-      >
-        HireTrack
-      </span>
-      <span style={{ fontSize: 'var(--text-meta)' }}>
-        {name} — coming in a future task
-      </span>
-    </div>
-  );
-}
+import DashboardPage from './dashboard/DashboardPage';
+import ApplicationsList from './applications/ApplicationsList';
+import ApplicationForm from './applications/ApplicationForm';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public routes — TASK-009 ✓ */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public routes — TASK-009 ✓ */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
 
-        {/* Protected routes — implemented from TASK-014 onward */}
-        <Route path="/dashboard" element={<PlaceholderPage name="Dashboard" />} />
-        <Route path="/applications" element={<PlaceholderPage name="Applications" />} />
-        <Route path="/applications/:id" element={<PlaceholderPage name="Application Detail" />} />
-        <Route path="/interviews" element={<PlaceholderPage name="Interviews" />} />
-        <Route path="/assistant" element={<PlaceholderPage name="AI Assistant" />} />
-        <Route path="/profile" element={<PlaceholderPage name="Profile" />} />
+          {/* Protected routes wrapped with Layout */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<Layout />}>
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/applications" element={<ApplicationsList />} />
+              <Route path="/applications/new" element={<ApplicationForm />} />
+              <Route path="/applications/:id" element={<ApplicationForm />} />
+            </Route>
+          </Route>
 
-        {/* Default redirect */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Default redirects */}
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

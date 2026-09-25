@@ -1,0 +1,118 @@
+.application-form-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.form-header h2 {
+  font-size: var(--text-page-heading);
+  color: var(--text-primary);
+}
+
+.form-error-alert {
+  padding: var(--space-3) var(--space-4);
+  background-color: rgba(239, 68, 68, 0.15);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-sm);
+  color: var(--danger);
+  font-size: var(--text-body);
+}
+
+.application-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+}
+
+@media (max-width: 640px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.form-group label {
+  font-size: var(--text-label);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: var(--space-3);
+  font-size: var(--text-body);
+  width: 100%;
+}
+
+.form-section {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+.btn-primary {
+  padding: var(--space-2) var(--space-5);
+  background-color: var(--accent);
+  color: #ffffff;
+  border-radius: var(--radius-sm);
+  font-weight: var(--weight-medium);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+}
+
+.btn-secondary {
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+}
+
+.btn-secondary:hover {
+  background-color: var(--surface-sunken);
+}
+
+.timeline-section {
+  margin-top: var(--space-4);
+}
+
+.form-loading {
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--text-secondary);
+}
