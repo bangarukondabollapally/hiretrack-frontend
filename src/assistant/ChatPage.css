@@ -1,0 +1,178 @@
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 120px);
+  gap: var(--space-4);
+  max-width: var(--content-max);
+}
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+
+.chat-subtitle {
+  font-size: var(--text-body);
+  color: var(--text-secondary);
+  margin-top: var(--space-1);
+}
+
+.chat-app-selector {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.selector-label {
+  font-size: var(--text-meta);
+  color: var(--text-secondary);
+}
+
+.app-select-dropdown {
+  padding: 4px 10px;
+  font-size: var(--text-meta);
+}
+
+.app-ref-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background-color: var(--surface-sunken);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-meta);
+}
+
+.ref-pill {
+  color: var(--text-secondary);
+}
+
+.ref-clear-btn {
+  font-size: var(--text-meta);
+  color: var(--text-tertiary);
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.ref-clear-btn:hover {
+  color: var(--danger);
+}
+
+/* Conversation list per DESIGN.md §10 */
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-right: var(--space-2);
+}
+
+.message-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.message-row--user {
+  justify-content: flex-end;
+}
+
+.message-row--assistant {
+  justify-content: flex-start;
+}
+
+.assistant-badge {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  background-color: var(--surface-sunken);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: var(--weight-bold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.message-bubble {
+  max-width: 75%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+}
+
+.message-bubble--user {
+  background-color: var(--accent);
+  color: #ffffff;
+}
+
+.message-bubble--assistant {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+.message-bubble--error {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.message-bubble--loading {
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+.message-text {
+  white-space: pre-wrap;
+}
+
+/* Input area & suggested prompt buttons per DESIGN.md §10 */
+.chat-input-area {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.suggested-prompts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.suggested-btn {
+  padding: 4px 12px;
+  background-color: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-meta);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.suggested-btn:hover:not(:disabled) {
+  background-color: var(--surface);
+  color: var(--text-primary);
+  border-color: var(--text-tertiary);
+}
+
+.chat-form {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.chat-input {
+  flex: 1;
+  padding: var(--space-3);
+  font-size: var(--text-body);
+}
