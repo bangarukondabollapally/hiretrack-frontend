@@ -19,7 +19,8 @@
  */
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from './AuthContext';
 import axiosInstance from '../api/axiosInstance';
 import { ROUTES } from '../lib/constants';
 import './Auth.css';
@@ -40,6 +41,8 @@ function validatePassword(value) {
 // ── Component ────────────────────────────────────────────────────────────────
 
 export default function LoginPage() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [fields, setFields] = useState({ email: '', password: '' });
   const [touched, setTouched] = useState({ email: false, password: false });
   const [serverError, setServerError] = useState('');
@@ -80,10 +83,8 @@ export default function LoginPage() {
         password: fields.password,
       });
 
-      // TASK-010 will replace this with AuthContext.login(response.data)
-      // and navigate to ROUTES.DASHBOARD.
-      console.log('[LoginPage] Login successful — token storage wired in TASK-010', response.data);
-
+      login(response.data);
+      navigate(ROUTES.DASHBOARD);
     } catch (err) {
       if (err.response?.status === 401) {
         setServerError('Incorrect email or password. Please try again.');

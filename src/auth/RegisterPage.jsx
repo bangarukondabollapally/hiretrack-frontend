@@ -20,6 +20,7 @@
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from './AuthContext';
 import axiosInstance from '../api/axiosInstance';
 import { ROUTES } from '../lib/constants';
 import './Auth.css';
@@ -48,6 +49,7 @@ function validateConfirmPassword(value, password) {
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [fields, setFields] = useState({
     email: '',
@@ -95,12 +97,14 @@ export default function RegisterPage() {
         password: fields.password,
       });
 
-      // Registration successful — navigate to login.
-      // TASK-010 may change this to auto-login instead.
-      navigate(ROUTES.LOGIN, {
-        state: { message: 'Account created! Sign in to get started.' },
+      // Automatically log in after registration
+      const loginRes = await axiosInstance.post('/api/auth/login', {
+        email: fields.email,
+        password: fields.password,
       });
 
+      login(loginRes.data);
+      navigate(ROUTES.DASHBOARD);
     } catch (err) {
       if (err.response?.status === 409) {
         setServerError('An account with this email already exists. Try signing in instead.');
