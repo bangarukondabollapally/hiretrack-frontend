@@ -1,7 +1,7 @@
 .profile-container {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-5);
   max-width: var(--content-narrow);
 }
 
@@ -23,6 +23,12 @@
   font-size: var(--text-body);
 }
 
+.profile-alert--info {
+  background-color: rgba(43, 114, 184, 0.12);
+  border: 1px solid var(--info);
+  color: var(--info);
+}
+
 .profile-alert--success {
   background-color: rgba(63, 125, 92, 0.12);
   border: 1px solid var(--success);
@@ -35,10 +41,85 @@
   color: var(--danger);
 }
 
+/* ── Dropzone ── */
+.resume-dropzone {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4);
+  background-color: var(--surface-card);
+  border: 2px dashed var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background-color var(--transition-fast);
+  text-align: center;
+}
+
+.resume-dropzone:hover {
+  border-color: var(--accent);
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.resume-dropzone--dragging {
+  border-color: var(--accent);
+  background-color: rgba(43, 114, 184, 0.08);
+}
+
+.resume-dropzone--parsing {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.resume-file-input {
+  display: none;
+}
+
+.dropzone-icon {
+  font-size: 32px;
+}
+
+.dropzone-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.dropzone-primary {
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+}
+
+.dropzone-secondary {
+  font-size: var(--text-meta);
+  color: var(--text-secondary);
+}
+
+.dropzone-status {
+  font-size: var(--text-body);
+  color: var(--accent);
+}
+
+/* ── Form & Editor ── */
 .profile-form {
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+}
+
+.form-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-2);
+}
+
+.character-count {
+  font-size: var(--text-meta);
+  color: var(--text-tertiary);
 }
 
 .resume-textarea {
@@ -48,6 +129,15 @@
   padding: var(--space-4);
   width: 100%;
   resize: vertical;
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+}
+
+.resume-textarea:focus {
+  outline: none;
+  border-color: var(--accent);
 }
 
 .profile-loading {
