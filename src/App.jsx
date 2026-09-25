@@ -8,6 +8,8 @@
  *   /applications     → ApplicationsList ✓ TASK-014 (protected)
  *   /applications/new → ApplicationForm ✓ TASK-015 (protected)
  *   /applications/:id → ApplicationForm ✓ TASK-015 (protected)
+ *   /profile          → ProfilePage    ✓ TASK-026 (protected)
+ *   /assistant        → ChatPage       ✓ TASK-030 (protected)
  */
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
@@ -19,6 +21,8 @@ import RegisterPage from './auth/RegisterPage';
 import DashboardPage from './dashboard/DashboardPage';
 import ApplicationsList from './applications/ApplicationsList';
 import ApplicationForm from './applications/ApplicationForm';
+import ProfilePage from './profile/ProfilePage';
+import ChatPage from './assistant/ChatPage';
 
 function App() {
   return (
@@ -26,8 +30,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Public routes — TASK-009 ✓ */}
-          {/* <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} /> */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
 
           {/* Protected routes wrapped with Layout */}
           <Route element={<ProtectedRoute />}>
@@ -36,6 +40,8 @@ function App() {
               <Route path="/applications" element={<ApplicationsList />} />
               <Route path="/applications/new" element={<ApplicationForm />} />
               <Route path="/applications/:id" element={<ApplicationForm />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/assistant" element={<ChatPage />} />
             </Route>
           </Route>
 

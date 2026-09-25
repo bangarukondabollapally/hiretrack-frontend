@@ -179,6 +179,16 @@ export default function ApplicationForm() {
           />
         </div>
 
+        <div className="form-group">
+          <label>Job Description</label>
+          <textarea
+            rows="5"
+            placeholder="Paste full job description text here..."
+            value={formData.jobDescription}
+            onChange={(e) => setFormData({ ...formData, jobDescription: e.target.value })}
+          />
+        </div>
+
         {isEdit && (
           <div className="form-section">
             <TagSelector

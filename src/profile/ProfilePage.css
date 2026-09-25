@@ -1,0 +1,56 @@
+.profile-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: var(--content-narrow);
+}
+
+.profile-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.profile-subtitle {
+  font-size: var(--text-body);
+  color: var(--text-secondary);
+  line-height: var(--leading-body);
+}
+
+.profile-alert {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-body);
+}
+
+.profile-alert--success {
+  background-color: rgba(63, 125, 92, 0.12);
+  border: 1px solid var(--success);
+  color: var(--success);
+}
+
+.profile-alert--error {
+  background-color: rgba(176, 54, 42, 0.12);
+  border: 1px solid var(--danger);
+  color: var(--danger);
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.resume-textarea {
+  font-family: var(--font-primary);
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  padding: var(--space-4);
+  width: 100%;
+  resize: vertical;
+}
+
+.profile-loading {
+  padding: var(--space-8) 0;
+  color: var(--text-secondary);
+}
