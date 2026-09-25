@@ -1,0 +1,84 @@
+.interviews-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: var(--content-narrow);
+}
+
+.interviews-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.interviews-subtitle {
+  font-size: var(--text-body);
+  color: var(--text-secondary);
+  line-height: var(--leading-body);
+}
+
+.interviews-loading,
+.interviews-error {
+  padding: var(--space-8) 0;
+  color: var(--text-secondary);
+}
+
+.interviews-empty {
+  padding: var(--space-8);
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  color: var(--text-secondary);
+}
+
+.interviews-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.app-selector-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.selector-label {
+  font-size: var(--text-meta);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.app-select-dropdown {
+  font-family: var(--font-primary);
+  font-size: var(--text-body);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--bg-canvas);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  outline: none;
+  cursor: pointer;
+}
+
+.app-select-dropdown:focus {
+  border-color: var(--accent);
+}
+
+.interview-timeline-wrapper {
+  background-color: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+}

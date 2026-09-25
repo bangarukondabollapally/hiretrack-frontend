@@ -21,6 +21,7 @@ import RegisterPage from './auth/RegisterPage';
 import DashboardPage from './dashboard/DashboardPage';
 import ApplicationsList from './applications/ApplicationsList';
 import ApplicationForm from './applications/ApplicationForm';
+import InterviewsPage from './interviews/InterviewsPage';
 import ProfilePage from './profile/ProfilePage';
 import ChatPage from './assistant/ChatPage';
 
@@ -40,6 +41,7 @@ function App() {
               <Route path="/applications" element={<ApplicationsList />} />
               <Route path="/applications/new" element={<ApplicationForm />} />
               <Route path="/applications/:id" element={<ApplicationForm />} />
+              <Route path="/interviews" element={<InterviewsPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/assistant" element={<ChatPage />} />
             </Route>
