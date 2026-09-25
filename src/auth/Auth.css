@@ -1,0 +1,198 @@
+/*
+ * Auth.css — Shared styles for LoginPage and RegisterPage
+ * All values use design tokens from src/styles/tokens.css
+ * Per docs/DESIGN.md §13 (Inputs and Forms), §12 (Buttons), §17 (Error States)
+ */
+
+/* ── Page layout ─────────────────────────────────────────────────── */
+.auth-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: var(--space-6);
+  background-color: var(--bg);
+}
+
+/* ── Card / container ────────────────────────────────────────────── */
+/* Auth forms use --surface (the "rare card" case per DESIGN.md §4) */
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8) var(--space-7);
+}
+
+/* ── Branding ────────────────────────────────────────────────────── */
+.auth-brand {
+  font-size: var(--text-section-heading);
+  font-weight: var(--weight-bold);
+  color: var(--accent);
+  margin-bottom: var(--space-1);
+  letter-spacing: -0.3px;
+}
+
+.auth-tagline {
+  font-size: var(--text-meta);
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-7);
+}
+
+/* ── Heading ─────────────────────────────────────────────────────── */
+.auth-heading {
+  font-size: var(--text-page-heading);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  line-height: var(--leading-heading);
+  margin-bottom: var(--space-6);
+}
+
+/* ── Form ────────────────────────────────────────────────────────── */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* ── Field group (label + input + error) ─────────────────────────── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.field-label {
+  font-size: var(--text-meta);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+}
+
+/* Required asterisk — never color alone per DESIGN.md §13 */
+.field-label .required {
+  color: var(--danger);
+  margin-left: 2px;
+  aria-hidden: true;
+}
+
+.field-input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-body);
+  color: var(--text-primary);
+  background-color: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  outline: none;
+}
+
+.field-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+.field-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--focus);
+}
+
+/* Error state on the input itself */
+.field-input--error {
+  border-color: var(--danger);
+}
+
+.field-input--error:focus {
+  box-shadow: 0 0 0 3px rgba(176, 54, 42, 0.2);
+}
+
+/* Inline field error — per DESIGN.md §17 */
+.field-error {
+  font-size: var(--text-meta);
+  color: var(--danger);
+  line-height: var(--leading-body);
+}
+
+/* ── Server-level error banner ────────────────────────────────────── */
+.auth-error {
+  padding: var(--space-3) var(--space-4);
+  background-color: rgba(176, 54, 42, 0.06);
+  border: 1px solid rgba(176, 54, 42, 0.2);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-meta);
+  color: var(--danger);
+  line-height: var(--leading-body);
+}
+
+/* ── Submit button ───────────────────────────────────────────────── */
+/* Primary variant per DESIGN.md §12 */
+.auth-submit {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-button);
+  font-weight: var(--weight-semibold);
+  color: #fff;
+  background-color: var(--accent);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 40px;
+}
+
+.auth-submit:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+}
+
+.auth-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Inline spinner (replaces label text, per DESIGN.md §12) */
+.auth-submit .spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Footer link ─────────────────────────────────────────────────── */
+.auth-footer {
+  margin-top: var(--space-5);
+  font-size: var(--text-meta);
+  color: var(--text-tertiary);
+  text-align: center;
+}
+
+.auth-footer a {
+  color: var(--accent);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.auth-footer a:hover {
+  color: var(--accent-hover);
+}
+
+/* ── Responsive ──────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  .auth-card {
+    padding: var(--space-6) var(--space-5);
+    border: none;
+    border-radius: 0;
+    max-width: 100%;
+  }
+}
