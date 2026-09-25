@@ -26,8 +26,8 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Public routes — TASK-009 ✓ */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          {/* <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} /> */}
 
           {/* Protected routes wrapped with Layout */}
           <Route element={<ProtectedRoute />}>

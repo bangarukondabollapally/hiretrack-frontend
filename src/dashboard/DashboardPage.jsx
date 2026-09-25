@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
-import { useAuth } from '../auth/AuthContext';
 import './DashboardPage.css';
 
 export default function DashboardPage() {
-  const { user } = useAuth();
   const [dashboardData, setDashboardData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -39,95 +37,91 @@ export default function DashboardPage() {
 
   return (
     <div className="dashboard-container">
-      {/* Banner / Greeting */}
+      {/* 1. Greeting + primary action per DESIGN.md §7 */}
       <div className="dashboard-hero">
         <div className="dashboard-hero__content">
-          <h1>Welcome back! 👋</h1>
-          <p>Here is an overview of your active job search activities.</p>
+          <h1 className="dashboard-title">Welcome back</h1>
+          <p className="dashboard-subtitle">Here is an overview of your active job search activities.</p>
         </div>
         <button onClick={() => navigate('/applications/new')} className="btn-primary">
-          + New Application
+          + Add application
         </button>
       </div>
 
-      {/* Metric Cards */}
-      <div className="dashboard-metrics">
-        <div className="metric-card metric-card--applied">
-          <span className="metric-card__label">Applied</span>
-          <span className="metric-card__value">{statusCounts.APPLIED || 0}</span>
+      {/* 2. Metrics — integrated inline per DESIGN.md §7 */}
+      <div className="dashboard-inline-metrics">
+        <div className="inline-metric">
+          <span className="inline-metric__value">{statusCounts.APPLIED || 0}</span>
+          <span className="inline-metric__label">Applied</span>
         </div>
-
-        <div className="metric-card metric-card--screening">
-          <span className="metric-card__label">Screening</span>
-          <span className="metric-card__value">{statusCounts.SCREENING || 0}</span>
+        <div className="inline-metric">
+          <span className="inline-metric__value">{statusCounts.SCREENING || 0}</span>
+          <span className="inline-metric__label">Screening</span>
         </div>
-
-        <div className="metric-card metric-card--interview">
-          <span className="metric-card__label">Interviews</span>
-          <span className="metric-card__value">{statusCounts.INTERVIEW || 0}</span>
+        <div className="inline-metric">
+          <span className="inline-metric__value">{statusCounts.INTERVIEW || 0}</span>
+          <span className="inline-metric__label">Interview</span>
         </div>
-
-        <div className="metric-card metric-card--offer">
-          <span className="metric-card__label">Offers</span>
-          <span className="metric-card__value">{statusCounts.OFFER || 0}</span>
+        <div className="inline-metric">
+          <span className="inline-metric__value">{statusCounts.OFFER || 0}</span>
+          <span className="inline-metric__label">Offer</span>
         </div>
-
-        <div className="metric-card metric-card--rejected">
-          <span className="metric-card__label">Rejected</span>
-          <span className="metric-card__value">{statusCounts.REJECTED || 0}</span>
+        <div className="inline-metric">
+          <span className="inline-metric__value">{statusCounts.REJECTED || 0}</span>
+          <span className="inline-metric__label">Rejected</span>
         </div>
       </div>
 
-      {/* Two-column layout */}
+      {/* 3. Main working area — two columns on desktop */}
       <div className="dashboard-grid">
-        {/* Upcoming Interviews */}
-        <div className="dashboard-panel">
-          <div className="panel-header">
-            <h3>📅 Upcoming Interviews (Next 7 Days)</h3>
+        {/* Left column: Upcoming Interviews */}
+        <div className="dashboard-section">
+          <div className="section-header">
+            <h2 className="section-title">Upcoming Interviews</h2>
           </div>
           {upcomingInterviews.length === 0 ? (
-            <p className="panel-empty">No upcoming interviews scheduled for the next 7 days.</p>
+            <p className="section-empty">No upcoming interviews scheduled for the next 7 days.</p>
           ) : (
-            <div className="panel-list">
+            <div className="section-list">
               {upcomingInterviews.map((item, idx) => (
                 <div
                   key={idx}
                   onClick={() => navigate(`/applications/${item.applicationId}`)}
-                  className="panel-item panel-item--clickable"
+                  className="section-row"
                 >
-                  <div className="panel-item__main">
-                    <span className="panel-item__title">{item.companyName}</span>
-                    <span className="panel-item__meta">
+                  <div className="section-row__main">
+                    <span className="section-row__title">{item.companyName}</span>
+                    <span className="section-row__meta">
                       {new Date(item.interviewDate).toLocaleString()}
                     </span>
                   </div>
-                  <span className="panel-item__action">View →</span>
+                  <span className="section-row__action">View →</span>
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* Follow Ups Due */}
-        <div className="dashboard-panel">
-          <div className="panel-header">
-            <h3>⏰ Follow-ups Due</h3>
+        {/* Right column: Follow-ups Due */}
+        <div className="dashboard-section">
+          <div className="section-header">
+            <h2 className="section-title">Follow-ups Due</h2>
           </div>
           {followUpsDue.length === 0 ? (
-            <p className="panel-empty">No follow-ups due today.</p>
+            <p className="section-empty">No follow-ups due today.</p>
           ) : (
-            <div className="panel-list">
+            <div className="section-list">
               {followUpsDue.map((item, idx) => (
                 <div
                   key={idx}
                   onClick={() => navigate(`/applications/${item.applicationId}`)}
-                  className="panel-item panel-item--clickable"
+                  className="section-row"
                 >
-                  <div className="panel-item__main">
-                    <span className="panel-item__title">{item.companyName}</span>
-                    <span className="panel-item__meta">Due: {item.followUpDate}</span>
+                  <div className="section-row__main">
+                    <span className="section-row__title">{item.companyName}</span>
+                    <span className="section-row__meta">Due: {item.followUpDate}</span>
                   </div>
-                  <span className="panel-item__action">View →</span>
+                  <span className="section-row__action">View →</span>
                 </div>
               ))}
             </div>

@@ -4,8 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.65);
-  backdrop-filter: blur(4px);
+  background-color: rgba(28, 27, 25, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -15,15 +14,16 @@
 .modal-content {
   background-color: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xl);
   padding: var(--space-6);
   max-width: 440px;
   width: 90%;
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-overlay);
 }
 
 .modal-title {
-  font-size: var(--text-heading);
+  font-size: var(--text-section-heading);
+  font-weight: var(--weight-semibold);
   color: var(--text-primary);
   margin-bottom: var(--space-2);
 }
@@ -32,6 +32,7 @@
   font-size: var(--text-body);
   color: var(--text-secondary);
   margin-bottom: var(--space-6);
+  line-height: var(--leading-body);
 }
 
 .modal-actions {
@@ -42,22 +43,29 @@
 
 .modal-btn {
   padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   font-size: var(--text-button);
   font-weight: var(--weight-medium);
+  font-family: var(--font-primary);
+  cursor: pointer;
 }
 
 .modal-btn--secondary {
-  background-color: var(--surface-raised);
+  background-color: transparent;
   border: 1px solid var(--border);
   color: var(--text-primary);
+}
+
+.modal-btn--secondary:hover {
+  background-color: var(--surface-sunken);
 }
 
 .modal-btn--danger {
   background-color: var(--danger);
   color: #ffffff;
+  border: none;
 }
 
 .modal-btn--danger:hover {
-  background-color: var(--danger-hover);
+  background-color: #922b21;
 }

@@ -7,61 +7,59 @@
 .applications-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
 }
 
-.applications-header h2 {
+.page-title {
   font-size: var(--text-page-heading);
+  font-weight: var(--weight-bold);
   color: var(--text-primary);
 }
 
 .applications-subtitle {
-  font-size: var(--text-meta);
+  font-size: var(--text-body);
   color: var(--text-secondary);
+  margin-top: var(--space-1);
 }
 
 .applications-error {
   padding: var(--space-3) var(--space-4);
-  background-color: rgba(239, 68, 68, 0.15);
+  background-color: rgba(176, 54, 42, 0.1);
   border: 1px solid var(--danger);
   border-radius: var(--radius-sm);
   color: var(--danger);
+  font-size: var(--text-body);
 }
 
 .applications-loading {
-  text-align: center;
-  padding: var(--space-8);
+  padding: var(--space-8) 0;
   color: var(--text-secondary);
 }
 
 .applications-empty {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-12) var(--space-4);
-  background-color: var(--surface);
-  border: 1px dashed var(--border);
-  border-radius: var(--radius-md);
-  text-align: center;
+  align-items: flex-start;
+  padding: var(--space-9) 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   gap: var(--space-3);
 }
 
-.empty-icon {
-  font-size: 48px;
-}
-
-.applications-empty h3 {
-  font-size: var(--text-heading);
+.empty-title {
+  font-size: var(--text-section-heading);
+  font-weight: var(--weight-semibold);
   color: var(--text-primary);
 }
 
+.empty-subtitle {
+  font-size: var(--text-body);
+  color: var(--text-secondary);
+}
+
 .applications-table-wrapper {
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-top: 1px solid var(--border);
   overflow-x: auto;
-  box-shadow: var(--shadow-sm);
 }
 
 .applications-table {
@@ -71,19 +69,20 @@
   font-size: var(--text-body);
 }
 
-.applications-table th,
-.applications-table td {
-  padding: var(--space-3) var(--space-4);
+.applications-table th {
+  padding: var(--space-3) var(--space-2);
   border-bottom: 1px solid var(--border);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-semibold);
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-.applications-table th {
-  background-color: var(--surface-sunken);
-  font-size: var(--text-label);
-  font-weight: var(--weight-semibold);
+.applications-table td {
+  padding: var(--space-3) var(--space-2);
+  border-bottom: 1px solid var(--border-subtle);
   color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .table-row-clickable {
@@ -92,7 +91,7 @@
 }
 
 .table-row-clickable:hover {
-  background-color: var(--surface-raised);
+  background-color: var(--surface-sunken);
 }
 
 .font-medium {
@@ -109,8 +108,8 @@
 .table-tag {
   padding: 2px 8px;
   background-color: var(--surface-sunken);
-  border-radius: 9999px;
-  font-size: 11px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-meta);
   color: var(--text-secondary);
 }
 
@@ -120,13 +119,15 @@
 }
 
 .action-btn {
-  padding: 4px 10px;
+  padding: 3px 8px;
   border-radius: var(--radius-sm);
   font-size: var(--text-meta);
+  cursor: pointer;
+  font-family: var(--font-primary);
 }
 
 .action-btn--edit {
-  background-color: var(--surface-raised);
+  background-color: transparent;
   border: 1px solid var(--border);
   color: var(--text-primary);
 }
@@ -136,8 +137,8 @@
 }
 
 .action-btn--delete {
-  background-color: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background-color: transparent;
+  border: 1px solid rgba(176, 54, 42, 0.3);
   color: var(--danger);
 }
 

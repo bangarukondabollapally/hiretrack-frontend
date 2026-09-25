@@ -1,104 +1,160 @@
 .app-layout {
   display: flex;
-  flex-direction: column;
   min-height: 100vh;
   width: 100%;
   background-color: var(--bg);
 }
 
-.app-header {
-  height: 64px;
+/* Sidebar per DESIGN.md §11 */
+.app-sidebar {
+  width: 220px;
+  min-width: 220px;
   background-color: var(--surface);
-  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
   position: sticky;
   top: 0;
   z-index: 100;
 }
 
-.app-header__container {
-  max-width: 1200px;
-  margin: 0 auto;
-  height: 100%;
-  padding: 0 var(--space-4);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.app-sidebar__header {
+  padding: var(--space-5) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
-.app-header__brand {
+.app-sidebar__brand {
   display: flex;
   align-items: center;
   gap: var(--space-2);
 }
 
-.app-header__logo-icon {
-  font-size: 20px;
+.app-sidebar__logo-mark {
+  width: 28px;
+  height: 28px;
+  background-color: var(--accent);
+  color: #ffffff;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--weight-bold);
+  font-size: 14px;
 }
 
-.app-header__logo-text {
-  font-size: var(--text-heading);
+.app-sidebar__logo-text {
+  font-size: var(--text-section-heading);
   font-weight: var(--weight-bold);
   color: var(--text-primary);
   letter-spacing: -0.02em;
 }
 
-.app-nav {
+.app-sidebar__nav {
+  flex: 1;
+  padding: var(--space-4) 0;
   display: flex;
-  align-items: center;
-  gap: var(--space-1);
+  flex-direction: column;
+  gap: 2px;
 }
 
-.app-nav__link {
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
+.app-sidebar__link {
+  display: flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-4);
   color: var(--text-secondary);
-  font-weight: var(--weight-medium);
   font-size: var(--text-body);
-  transition: all var(--transition-fast);
+  font-weight: var(--weight-medium);
+  position: relative;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
-.app-nav__link:hover {
+.app-sidebar__link:hover {
   color: var(--text-primary);
-  background-color: var(--surface-raised);
-}
-
-.app-nav__link--active {
-  color: var(--accent);
   background-color: var(--surface-sunken);
+}
+
+.app-sidebar__link--active {
+  color: var(--text-primary);
   font-weight: var(--weight-semibold);
+  background-color: var(--surface-sunken);
 }
 
-.app-header__user {
+/* 2px accent indicator bar on left edge for active item per DESIGN.md §11 */
+.app-sidebar__link--active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--accent);
+}
+
+.app-sidebar__footer {
+  padding: var(--space-4);
+  border-top: 1px solid var(--border);
   display: flex;
-  align-items: center;
-  gap: var(--space-3);
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
-.app-header__email {
+.app-sidebar__user-info {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.app-sidebar__user-email {
   font-size: var(--text-meta);
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.app-header__logout-btn {
-  padding: var(--space-1) var(--space-3);
+.app-sidebar__logout-btn {
+  padding: var(--space-2) var(--space-3);
   font-size: var(--text-meta);
   color: var(--text-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
+  width: 100%;
+  text-align: center;
+  background-color: transparent;
 }
 
-.app-header__logout-btn:hover {
+.app-sidebar__logout-btn:hover {
   color: var(--danger);
   border-color: var(--danger);
-  background-color: var(--surface-raised);
+  background-color: var(--surface-sunken);
 }
 
+/* Main Content Area */
 .app-main {
   flex: 1;
-  padding: var(--space-6) var(--space-4);
+  padding: var(--space-7) var(--space-8);
+  overflow-y: auto;
+  max-width: var(--content-max);
 }
 
 .app-main__container {
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .app-layout {
+    flex-direction: column;
+  }
+  .app-sidebar {
+    width: 100%;
+    min-width: 100%;
+    height: auto;
+    position: static;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .app-main {
+    padding: var(--space-4);
+  }
 }

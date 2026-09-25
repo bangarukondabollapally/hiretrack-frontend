@@ -13,31 +13,59 @@ export default function Layout() {
 
   return (
     <div className="app-layout">
-      <header className="app-header">
-        <div className="app-header__container">
-          <div className="app-header__brand">
-            <span className="app-header__logo-icon">💼</span>
-            <span className="app-header__logo-text">HireTrack</span>
-          </div>
-
-          <nav className="app-nav">
-            <NavLink to="/dashboard" className={({ isActive }) => `app-nav__link ${isActive ? 'app-nav__link--active' : ''}`}>
-              Dashboard
-            </NavLink>
-            <NavLink to="/applications" className={({ isActive }) => `app-nav__link ${isActive ? 'app-nav__link--active' : ''}`}>
-              Applications
-            </NavLink>
-          </nav>
-
-          <div className="app-header__user">
-            <span className="app-header__email">{user?.email}</span>
-            <button onClick={handleLogout} className="app-header__logout-btn">
-              Sign out
-            </button>
+      {/* Compact Sidebar per DESIGN.md §11 */}
+      <aside className="app-sidebar">
+        <div className="app-sidebar__header">
+          <div className="app-sidebar__brand">
+            <span className="app-sidebar__logo-mark">H</span>
+            <span className="app-sidebar__logo-text">HireTrack</span>
           </div>
         </div>
-      </header>
 
+        <nav className="app-sidebar__nav">
+          <NavLink
+            to="/dashboard"
+            className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
+          >
+            Dashboard
+          </NavLink>
+          <NavLink
+            to="/applications"
+            className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
+          >
+            Applications
+          </NavLink>
+          <NavLink
+            to="/interviews"
+            className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
+          >
+            Interviews
+          </NavLink>
+          <NavLink
+            to="/assistant"
+            className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
+          >
+            AI Assistant
+          </NavLink>
+          <NavLink
+            to="/profile"
+            className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
+          >
+            Profile
+          </NavLink>
+        </nav>
+
+        <div className="app-sidebar__footer">
+          <div className="app-sidebar__user-info">
+            <span className="app-sidebar__user-email">{user?.email}</span>
+          </div>
+          <button onClick={handleLogout} className="app-sidebar__logout-btn">
+            Sign out
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
       <main className="app-main">
         <div className="app-main__container">
           <Outlet />

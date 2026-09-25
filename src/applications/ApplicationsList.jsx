@@ -31,12 +31,10 @@ export default function ApplicationsList() {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      // Fetch full application first to update status
       const appRes = await axiosInstance.get(`/api/applications/${id}`);
       const updatedData = { ...appRes.data, status: newStatus };
       await axiosInstance.put(`/api/applications/${id}`, updatedData);
 
-      // Update local state
       setApplications(prev =>
         prev.map(app => (app.id === id ? { ...app, status: newStatus } : app))
       );
@@ -63,11 +61,11 @@ export default function ApplicationsList() {
     <div className="applications-container">
       <div className="applications-header">
         <div>
-          <h2>Job Applications</h2>
-          <p className="applications-subtitle">Track and manage your active job search</p>
+          <h1 className="page-title">Applications</h1>
+          <p className="applications-subtitle">Track and manage your active job applications</p>
         </div>
         <button onClick={() => navigate('/applications/new')} className="btn-primary">
-          + Add Application
+          + Add application
         </button>
       </div>
 
@@ -77,11 +75,10 @@ export default function ApplicationsList() {
         <div className="applications-loading">Loading applications...</div>
       ) : applications.length === 0 ? (
         <div className="applications-empty">
-          <div className="empty-icon">📁</div>
-          <h3>No job applications yet</h3>
-          <p>Get started by tracking your first application!</p>
+          <h2 className="empty-title">No applications yet</h2>
+          <p className="empty-subtitle">Start tracking your job search in one place.</p>
           <button onClick={() => navigate('/applications/new')} className="btn-primary">
-            + Add Application
+            + Add application
           </button>
         </div>
       ) : (
@@ -122,14 +119,12 @@ export default function ApplicationsList() {
                     <button
                       onClick={() => navigate(`/applications/${app.id}`)}
                       className="action-btn action-btn--edit"
-                      title="Edit application"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => setDeleteTarget(app)}
                       className="action-btn action-btn--delete"
-                      title="Delete application"
                     >
                       Delete
                     </button>
