@@ -144,3 +144,27 @@
   padding: var(--space-8) 0;
   color: var(--text-secondary);
 }
+
+.profile-target-role-input {
+  font-family: var(--font-primary);
+  font-size: var(--text-body);
+  padding: var(--space-2) var(--space-3);
+  width: 100%;
+  background-color: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+}
+
+.profile-target-role-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--focus);
+}
+
+.profile-field-hint {
+  font-size: var(--text-meta);
+  color: var(--text-tertiary);
+  line-height: var(--leading-body);
+  margin: 0;
+}

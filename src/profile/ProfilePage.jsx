@@ -5,6 +5,7 @@ import './ProfilePage.css';
 
 export default function ProfilePage() {
   const [resumeText, setResumeText] = useState('');
+  const [targetRole, setTargetRole] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
@@ -23,6 +24,7 @@ export default function ProfilePage() {
     try {
       const response = await axiosInstance.get('/api/profile');
       setResumeText(response.data.resumeText || '');
+      setTargetRole(response.data.targetRole || '');
     } catch (err) {
       setMessage({ type: 'error', text: 'Failed to load profile data.' });
     } finally {
@@ -92,7 +94,7 @@ export default function ProfilePage() {
     setMessage({ type: '', text: '' });
 
     try {
-      await axiosInstance.put('/api/profile', { resumeText });
+      await axiosInstance.put('/api/profile', { resumeText, targetRole });
       setMessage({ type: 'success', text: 'Resume updated successfully!' });
     } catch (err) {
       setMessage({ type: 'error', text: 'Failed to update resume.' });
@@ -159,6 +161,18 @@ export default function ProfilePage() {
       </div>
 
       <form onSubmit={handleSubmit} className="profile-form">
+        <div className="form-group">
+          <label className="form-label" htmlFor="target-role">Target Role</label>
+          <input
+            id="target-role"
+            type="text"
+            className="profile-target-role-input"
+            placeholder="e.g. Frontend Engineer, Product Manager"
+            value={targetRole}
+            onChange={(e) => setTargetRole(e.target.value)}
+          />
+          <p className="profile-field-hint">Used by the AI assistant for general career questions.</p>
+        </div>
         <div className="form-group">
           <div className="form-group-header">
             <label className="form-label">Resume Text Preview & Editor</label>
