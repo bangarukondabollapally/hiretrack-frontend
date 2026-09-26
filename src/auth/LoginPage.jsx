@@ -96,41 +96,6 @@ export default function LoginPage() {
     }
   }
 
-  async function handleQuickDemoLogin() {
-    setIsSubmitting(true);
-    setServerError('');
-    
-    // Generate unique temporary email
-    const randomId = Math.floor(1000 + Math.random() * 9000);
-    const tempEmail = `temp_user_${randomId}@hiretrack.demo`;
-    const tempPassword = 'password123';
-
-    try {
-      // 1. Register temporary user
-      try {
-        await axiosInstance.post('/api/auth/register', {
-          email: tempEmail,
-          password: tempPassword,
-        });
-      } catch (regErr) {
-        // Ignore 409 conflict if already registered
-      }
-
-      // 2. Log in immediately
-      const response = await axiosInstance.post('/api/auth/login', {
-        email: tempEmail,
-        password: tempPassword,
-      });
-
-      login(response.data);
-      navigate(ROUTES.DASHBOARD);
-    } catch (err) {
-      setServerError('Failed to create instant temp mail session.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
   return (
     <main className="auth-page">
       <div className="auth-card">
@@ -220,16 +185,6 @@ export default function LoginPage() {
             ) : (
               'Sign in'
             )}
-          </button>
-
-          {/* Quick Temp Mail Bypass */}
-          <button
-            type="button"
-            className="auth-demo-btn"
-            onClick={handleQuickDemoLogin}
-            disabled={isSubmitting}
-          >
-            ⚡ Instant Access (Temp Mail Bypass)
           </button>
         </form>
 

@@ -3,38 +3,37 @@
   flex-direction: column;
   gap: var(--space-6);
   max-width: 800px;
-  margin: 0 auto;
 }
 
 .form-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border);
 }
 
 .form-header h2 {
   font-size: var(--text-page-heading);
+  font-weight: var(--weight-semibold);
   color: var(--text-primary);
+  line-height: var(--leading-heading);
 }
 
 .form-error-alert {
   padding: var(--space-3) var(--space-4);
-  background-color: rgba(239, 68, 68, 0.15);
-  border: 1px solid var(--danger);
+  background-color: rgba(176, 54, 42, 0.08);
+  border: 1px solid rgba(176, 54, 42, 0.25);
   border-radius: var(--radius-sm);
   color: var(--danger);
   font-size: var(--text-body);
 }
 
+/* No card wrapper — section headings + dividers carry structure per §4 */
 .application-form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: var(--space-6);
-  box-shadow: var(--shadow-sm);
+  gap: var(--space-5);
 }
 
 .form-grid {
@@ -52,11 +51,12 @@
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
-.form-group label {
-  font-size: var(--text-label);
+.form-group label,
+.form-label {
+  font-size: var(--text-meta);
   font-weight: var(--weight-medium);
   color: var(--text-secondary);
 }
@@ -64,13 +64,13 @@
 .form-group input,
 .form-group select,
 .form-group textarea {
-  padding: var(--space-3);
+  padding: var(--space-2) var(--space-3);
   font-size: var(--text-body);
   width: 100%;
 }
 
 .form-section {
-  padding-top: var(--space-4);
+  padding-top: var(--space-5);
   border-top: 1px solid var(--border);
 }
 
@@ -78,29 +78,42 @@
   display: flex;
   justify-content: flex-end;
   gap: var(--space-3);
-  margin-top: var(--space-4);
-  padding-top: var(--space-4);
+  padding-top: var(--space-5);
   border-top: 1px solid var(--border);
 }
 
+/* ── Global button variants ─────────────────────────────── */
 .btn-primary {
   padding: var(--space-2) var(--space-5);
   background-color: var(--accent);
   color: #ffffff;
-  border-radius: var(--radius-sm);
-  font-weight: var(--weight-medium);
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-button);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
 }
 
 .btn-primary:hover:not(:disabled) {
   background-color: var(--accent-hover);
 }
 
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn-secondary {
   padding: var(--space-2) var(--space-4);
-  background-color: var(--surface-raised);
+  background-color: transparent;
   border: 1px solid var(--border);
   color: var(--text-primary);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
+  font-size: var(--text-button);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .btn-secondary:hover {
@@ -108,11 +121,11 @@
 }
 
 .timeline-section {
-  margin-top: var(--space-4);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border);
 }
 
 .form-loading {
-  text-align: center;
-  padding: var(--space-8);
+  padding: var(--space-8) 0;
   color: var(--text-secondary);
 }
