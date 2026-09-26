@@ -120,6 +120,17 @@ export default function RegisterPage() {
     }
   }
 
+  function handleFillTempMail() {
+    const randomId = Math.floor(1000 + Math.random() * 9000);
+    const tempEmail = `temp_user_${randomId}@hiretrack.demo`;
+    setFields({
+      email: tempEmail,
+      password: 'password123',
+      confirmPassword: 'password123',
+    });
+    setTouched({ email: true, password: true, confirmPassword: true });
+  }
+
   return (
     <main className="auth-page">
       <div className="auth-card">
@@ -251,6 +262,16 @@ export default function RegisterPage() {
             ) : (
               'Create account'
             )}
+          </button>
+
+          {/* Auto Fill Temp Email */}
+          <button
+            type="button"
+            className="auth-demo-btn"
+            onClick={handleFillTempMail}
+            disabled={isSubmitting}
+          >
+            🎲 Auto-Fill Temp Email
           </button>
         </form>
 

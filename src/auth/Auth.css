@@ -168,6 +168,31 @@
   to { transform: rotate(360deg); }
 }
 
+/* ── Secondary / Demo button ─────────────────────────────────────── */
+.auth-demo-btn {
+  width: 100%;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-meta);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  background-color: var(--surface-sunken);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.auth-demo-btn:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 /* ── Footer link ─────────────────────────────────────────────────── */
 .auth-footer {
   margin-top: var(--space-5);
