@@ -51,6 +51,7 @@ export default function ChatPage() {
   const [selectedAppId, setSelectedAppId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [attachError, setAttachError] = useState('');
+  const [isRailHidden, setIsRailHidden] = useState(false);
 
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
@@ -167,18 +168,29 @@ export default function ChatPage() {
   return (
     <div className="chat-container">
       {/* ── Slim conversation history sidebar (§23) ── */}
-      {conversations.length > 1 && (
+      {conversations.length > 1 && !isRailHidden && (
         <aside className="chat-history-rail">
           <div className="chat-history-header">
             <span className="chat-history-label">Recent</span>
-            <button
-              className="chat-new-btn"
-              type="button"
-              onClick={newConversation}
-              title="New conversation"
-            >
-              + New
-            </button>
+            <div className="chat-history-header-actions">
+              <button
+                className="chat-new-btn"
+                type="button"
+                onClick={newConversation}
+                title="New conversation"
+              >
+                + New
+              </button>
+              <button
+                className="chat-rail-close-btn"
+                type="button"
+                onClick={() => setIsRailHidden(true)}
+                title="Hide history sidebar"
+                aria-label="Hide history sidebar"
+              >
+                «
+              </button>
+            </div>
           </div>
           <ul className="chat-history-list">
             {conversations.map(conv => (
@@ -213,7 +225,20 @@ export default function ChatPage() {
         {/* Header */}
         <div className="chat-header">
           <div className="chat-header-left">
-            <h1 className="page-title">AI Assistant</h1>
+            <div className="chat-header-title-row">
+              {isRailHidden && conversations.length > 1 && (
+                <button
+                  type="button"
+                  className="chat-rail-open-btn"
+                  onClick={() => setIsRailHidden(false)}
+                  title="Show recent conversations"
+                  aria-label="Show recent conversations"
+                >
+                  » History
+                </button>
+              )}
+              <h1 className="page-title">AI Assistant</h1>
+            </div>
             <p className="chat-subtitle">grounded in resume + application records</p>
           </div>
 

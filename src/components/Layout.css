@@ -17,11 +17,43 @@
   position: sticky;
   top: 0;
   z-index: 100;
+  transition: width var(--transition-base), min-width var(--transition-base);
+}
+
+.app-sidebar--collapsed {
+  width: 56px;
+  min-width: 56px;
 }
 
 .app-sidebar__header {
-  padding: var(--space-5) var(--space-4);
+  padding: var(--space-4);
   border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.app-sidebar__toggle-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 0;
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.app-sidebar__toggle-btn:hover {
+  background-color: var(--surface-sunken);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
 }
 
 .app-sidebar__brand {
@@ -41,6 +73,7 @@
   justify-content: center;
   font-weight: var(--weight-bold);
   font-size: 14px;
+  flex-shrink: 0;
 }
 
 .app-sidebar__logo-text {
@@ -56,6 +89,40 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+}
+
+.app-sidebar__link-icon {
+  display: none;
+}
+
+.app-sidebar--collapsed .app-sidebar__header {
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 8px;
+}
+
+.app-sidebar--collapsed .app-sidebar__link {
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.app-sidebar--collapsed .app-sidebar__link-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: var(--weight-bold);
+  color: var(--text-secondary);
+}
+
+.app-sidebar--collapsed .app-sidebar__link--active .app-sidebar__link-icon {
+  color: var(--accent);
+}
+
+.app-sidebar--collapsed .app-sidebar__footer {
+  padding: 12px 8px;
 }
 
 .app-sidebar__link {
