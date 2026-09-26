@@ -14,13 +14,13 @@
   --font-mono: 'JetBrains Mono', 'Cascadia Code', ui-monospace, 'Fira Code', monospace;
   --font-stamp: 'VT323', monospace;
 
-  /* Font sizes — tightened 1px across the board vs v1 */
-  --text-display: 36px;
-  --text-page-heading: 26px;
-  --text-section-heading: 17px;
+  /* Font sizes — per DESIGN.md token reference */
+  --text-display: 34px;
+  --text-page-heading: 24px;
+  --text-section-heading: 16px;
   --text-body: 14px;
   --text-meta: 11.5px;
-  --text-button: 13px;
+  --text-button: 12.5px;
 
   /* Font weights */
   --weight-regular: 400;
