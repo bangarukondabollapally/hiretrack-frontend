@@ -336,38 +336,8 @@ export default function ChatPage() {
             <p className="chat-attach-error" role="alert">{attachError}</p>
           )}
 
-          {/* Composer — pill-shaped, auto-growing */}
+          {/* Composer — dark elevated card theme per reference design */}
           <div className="chat-composer">
-            {/* Item 4: file attach button — icon only, no colored bg */}
-            <button
-              type="button"
-              className="chat-attach-btn"
-              onClick={() => fileInputRef.current?.click()}
-              title="Attach a .txt or .md file"
-              aria-label="Attach text file"
-              disabled={isLoading}
-            >
-              {/* Paperclip icon */}
-              <svg width="15" height="15" viewBox="0 0 15 15" fill="none" aria-hidden="true">
-                <path
-                  d="M13.5 6.5L7 13a4.243 4.243 0 01-6-6l7-7a2.828 2.828 0 014 4L5.5 11A1.414 1.414 0 013.5 9L10 2.5"
-                  stroke="currentColor"
-                  strokeWidth="1.3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".txt,.md,text/plain,text/markdown"
-              className="chat-file-input"
-              onChange={handleFileAttach}
-              aria-hidden="true"
-            />
-
-            {/* Item 2: auto-growing textarea */}
             <textarea
               ref={textareaRef}
               className="chat-composer-input"
@@ -379,21 +349,50 @@ export default function ChatPage() {
               rows={1}
               aria-label="Chat input"
             />
-            <button
-              type="button"
-              className="chat-send-btn"
-              onClick={() => handleSendMessage()}
-              disabled={isLoading || !inputText.trim()}
-              aria-label="Send message"
-            >
-              {isLoading ? (
-                <span className="chat-send-spinner" aria-hidden="true" />
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                  <path d="M14 8L2 2l2.5 6L2 14l12-6z" fill="currentColor" />
+            <div className="chat-composer-bottom">
+              <button
+                type="button"
+                className="chat-attach-btn"
+                onClick={() => fileInputRef.current?.click()}
+                title="Attach a .txt or .md file"
+                aria-label="Attach text file"
+                disabled={isLoading}
+              >
+                {/* Paperclip / Plus icon */}
+                <svg width="16" height="16" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+                  <path
+                    d="M13.5 6.5L7 13a4.243 4.243 0 01-6-6l7-7a2.828 2.828 0 014 4L5.5 11A1.414 1.414 0 013.5 9L10 2.5"
+                    stroke="currentColor"
+                    strokeWidth="1.3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                 </svg>
-              )}
-            </button>
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".txt,.md,text/plain,text/markdown"
+                className="chat-file-input"
+                onChange={handleFileAttach}
+                aria-hidden="true"
+              />
+              <button
+                type="button"
+                className="chat-send-btn"
+                onClick={() => handleSendMessage()}
+                disabled={isLoading || !inputText.trim()}
+                aria-label="Send message"
+              >
+                {isLoading ? (
+                  <span className="chat-send-spinner" aria-hidden="true" />
+                ) : (
+                  <svg width="15" height="15" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                    <path d="M14 8L2 2l2.5 6L2 14l12-6z" fill="currentColor" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
           <p className="chat-composer-hint">Enter to send · Shift+Enter for new line</p>
         </div>
