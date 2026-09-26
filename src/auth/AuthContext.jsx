@@ -1,5 +1,6 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import axiosInstance from '../api/axiosInstance';
+import { clearChatHistory } from '../assistant/useChatHistory';
 
 const AuthContext = createContext(null);
 
@@ -9,6 +10,9 @@ export function AuthProvider({ children }) {
     const savedUser = localStorage.getItem('ht_user');
     return savedUser ? JSON.parse(savedUser) : null;
   });
+  // Keep a ref to the current user id so logout() can clear the right key
+  const userRef = useRef(user);
+  useEffect(() => { userRef.current = user; }, [user]);
 
   useEffect(() => {
     if (token) {
@@ -49,6 +53,8 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
+    // Clear this user's chat history before wiping the user reference
+    clearChatHistory(userRef.current?.userId);
     setToken(null);
     setUser(null);
     localStorage.removeItem('ht_token');
