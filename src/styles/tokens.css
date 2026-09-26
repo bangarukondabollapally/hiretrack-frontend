@@ -1,23 +1,26 @@
 /*
- * HireTrack Design Tokens
- * Source of truth: docs/DESIGN.md §20
+ * HireTrack Design Tokens — v2 Premium
+ * Source of truth: docs/DESIGN.md
  *
- * Import this file once in main.jsx (or index.css).
- * All components consume these tokens — never hardcode raw color/size values.
+ * Fonts:
+ *   --font-primary   → Manrope      (body, headings, UI)
+ *   --font-mono      → JetBrains Mono (code, timestamps, metadata numbers)
+ *   --font-stamp     → VT323        (HT sender badge — terminal-stamp character only)
  */
 
 :root {
   /* ── Typography ─────────────────────────────────────────────────── */
   --font-primary: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-numeric: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', ui-monospace, 'Fira Code', monospace;
+  --font-stamp: 'VT323', monospace;
 
-  /* Font sizes */
-  --text-display: 40px;
-  --text-page-heading: 30px;
-  --text-section-heading: 19px;
-  --text-body: 15px;
-  --text-meta: 12.5px;
-  --text-button: 13.5px;
+  /* Font sizes — tightened 1px across the board vs v1 */
+  --text-display: 36px;
+  --text-page-heading: 26px;
+  --text-section-heading: 17px;
+  --text-body: 14px;
+  --text-meta: 11.5px;
+  --text-button: 13px;
 
   /* Font weights */
   --weight-regular: 400;
@@ -27,36 +30,38 @@
 
   /* Line heights */
   --leading-heading: 1.25;
-  --leading-body: 1.5;
+  --leading-body: 1.55;
 
   /* ── Colors ─────────────────────────────────────────────────────── */
-  /* Backgrounds */
-  --bg: #FAF9F6;              /* Page background — warm off-white */
-  --surface: #FFFFFF;         /* Elevated surface: modals, dropdowns, the rare card */
-  --surface-sunken: #F3F1EC;  /* Recessed areas: input backgrounds, active nav item */
+  /* Backgrounds — slightly cooler off-white for premium feel */
+  --bg: #F8F7F4;              /* Page background — warm off-white */
+  --surface: #FFFFFF;         /* Elevated surfaces: modals, composer, dropdowns */
+  --surface-sunken: #F1EFE9;  /* Recessed: input backgrounds, active nav, user bubbles */
+  --surface-mid: #ECEAE3;     /* Slightly deeper recess — table headers, badges */
 
   /* Text */
-  --text-primary: #1C1B19;    /* Near-black, warm-toned */
-  --text-secondary: #6B6862;  /* Muted gray-brown */
-  --text-tertiary: #9C988F;   /* Metadata, placeholders, disabled */
+  --text-primary: #1A1917;    /* Near-black, warm-toned */
+  --text-secondary: #64615A;  /* Muted gray-brown */
+  --text-tertiary: #9A958C;   /* Metadata, placeholders, disabled */
 
   /* Borders */
-  --border: #E7E4DC;          /* Default dividers and input borders */
-  --border-subtle: #F0EEE8;   /* Barely-there separators inside grouped sections */
+  --border: #E3E0D8;          /* Default dividers and input borders */
+  --border-subtle: #EDEAE3;   /* Barely-there separators inside grouped sections */
+  --border-strong: #C9C6BC;   /* Stronger rule — active states, focused inputs */
 
-  /* Brand accent — forest green (see DESIGN.md §3 for usage discipline) */
+  /* Brand accent — forest green */
   --accent: #2A5C4B;
   --accent-hover: #1F473A;
-  --focus: rgba(42, 92, 75, 0.4); /* Focus ring — accent at 40% opacity */
+  --accent-dim: rgba(42, 92, 75, 0.08);  /* Very subtle tint — active state bg */
+  --focus: rgba(42, 92, 75, 0.35);
 
   /* Functional / status colors */
-  --success: #3F7D5C;   /* Offer */
-  --warning: #B7791F;   /* Interview */
-  --danger: #B0362A;    /* Rejected */
-  --info: #3D6B8C;      /* Screening */
+  --success: #3F7D5C;
+  --warning: #B7791F;
+  --danger: #B0362A;
+  --info: #3D6B8C;
 
-  /* ── Spacing ─────────────────────────────────────────────────────── */
-  /* Base unit: 4px. Scale per DESIGN.md §6 */
+  /* ── Spacing — 4px base unit ─────────────────────────────────────── */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -69,29 +74,22 @@
   --space-10: 64px;
 
   /* ── Radii ───────────────────────────────────────────────────────── */
-  --radius-sm: 6px;   /* Inputs, small controls */
-  --radius-md: 8px;   /* Buttons, standard components */
-  --radius-lg: 10px;  /* Larger surfaces (the rare card) */
-  --radius-xl: 12px;  /* Modals/dialogs only */
+  --radius-sm: 5px;
+  --radius-md: 7px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
 
   /* ── Shadows ─────────────────────────────────────────────────────── */
-  /* Default state: no shadow (see DESIGN.md §5) */
   --shadow-none: none;
-  --shadow-hover: 0 1px 2px rgba(28, 27, 25, 0.06);   /* Hover on interactive rows/cards */
-  --shadow-overlay: 0 8px 24px rgba(28, 27, 25, 0.12); /* Modals and dropdowns only */
+  --shadow-hover: 0 1px 3px rgba(26, 25, 23, 0.07), 0 1px 1px rgba(26, 25, 23, 0.04);
+  --shadow-overlay: 0 8px 28px rgba(26, 25, 23, 0.13), 0 2px 6px rgba(26, 25, 23, 0.06);
+  --shadow-composer: 0 2px 8px rgba(26, 25, 23, 0.08), 0 1px 2px rgba(26, 25, 23, 0.05);
 
   /* ── Transitions ─────────────────────────────────────────────────── */
-  --transition-fast: 150ms ease;
-  --transition-base: 200ms ease;
-
-  /* ── Breakpoints (reference only — use in media queries) ─────────── */
-  /* --bp-mobile:  375px  */
-  /* --bp-tablet:  768px  */
-  /* --bp-desktop: 1024px */
-  /* --bp-wide:    1280px */
-  /* --bp-max:     1440px */
+  --transition-fast: 120ms ease;
+  --transition-base: 180ms ease;
 
   /* ── Content widths ──────────────────────────────────────────────── */
   --content-max: 1280px;
-  --content-narrow: 720px; /* Forms, focused reading contexts */
+  --content-narrow: 720px;
 }

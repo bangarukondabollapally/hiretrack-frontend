@@ -183,14 +183,25 @@ export default function ChatPage() {
           <ul className="chat-history-list">
             {conversations.map(conv => (
               <li key={conv.id}>
-                <button
-                  type="button"
-                  className={`chat-history-item ${conv.id === activeId ? 'chat-history-item--active' : ''}`}
-                  onClick={() => switchConversation(conv.id)}
-                  title={conv.title}
-                >
-                  <span className="chat-history-title">{conv.title}</span>
-                </button>
+                <div className={`chat-history-row ${conv.id === activeId ? 'chat-history-row--active' : ''}`}>
+                  <button
+                    type="button"
+                    className="chat-history-item"
+                    onClick={() => switchConversation(conv.id)}
+                    title={conv.title}
+                  >
+                    <span className="chat-history-title">{conv.title}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="chat-history-delete"
+                    onClick={() => deleteConversation(conv.id)}
+                    title="Delete conversation"
+                    aria-label={`Delete "${conv.title}"`}
+                  >
+                    ×
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
@@ -201,9 +212,9 @@ export default function ChatPage() {
       <div className="chat-main">
         {/* Header */}
         <div className="chat-header">
-          <div>
+          <div className="chat-header-left">
             <h1 className="page-title">AI Assistant</h1>
-            <p className="chat-subtitle">Grounded in your resume and application records</p>
+            <p className="chat-subtitle">grounded in resume + application records</p>
           </div>
 
           <div className="chat-header-controls">

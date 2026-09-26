@@ -29,6 +29,9 @@ body {
   color: var(--text-primary);
   background-color: var(--bg);
   min-height: 100vh;
+  -webkit-text-size-adjust: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
 
 /* ── Typography base ─────────────────────────────────────────────── */
@@ -64,6 +67,14 @@ a:hover {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
+}
+
+/* ── Code / pre ──────────────────────────────────────────────────── */
+code,
+pre,
+kbd {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
 }
 
 /* ── Lists ───────────────────────────────────────────────────────── */
