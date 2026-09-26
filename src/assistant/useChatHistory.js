@@ -139,6 +139,15 @@ export function useChatHistory(userId, initialGreeting) {
     });
   }, [activeId]);
 
+  /** Rename a conversation by id. */
+  const renameConversation = useCallback((id, newTitle) => {
+    if (!newTitle || !newTitle.trim()) return;
+    setConversations(prev => prev.map(conv => {
+      if (conv.id !== id) return conv;
+      return { ...conv, title: newTitle.trim() };
+    }));
+  }, []);
+
   return {
     conversations,
     activeId,
@@ -148,5 +157,6 @@ export function useChatHistory(userId, initialGreeting) {
     switchConversation,
     appendMessage,
     deleteConversation,
+    renameConversation,
   };
 }

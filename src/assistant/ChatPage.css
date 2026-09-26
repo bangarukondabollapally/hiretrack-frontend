@@ -136,12 +136,23 @@
   font-weight: var(--weight-medium);
 }
 
-/* delete button — hidden until row is hovered */
-.chat-history-delete {
-  flex-shrink: 0;
+/* History row action buttons (rename & delete) */
+.chat-history-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  margin-right: 6px;
+}
+
+.chat-history-row:hover .chat-history-row-actions {
+  opacity: 1;
+}
+
+.chat-history-action-btn {
   width: 22px;
   height: 22px;
-  margin-right: var(--space-2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -150,20 +161,55 @@
   cursor: pointer;
   color: var(--text-tertiary);
   border-radius: var(--radius-sm);
-  opacity: 0;
-  transition: opacity var(--transition-fast), color var(--transition-fast), background-color var(--transition-fast);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
   padding: 0;
-  font-size: 13px;
-  line-height: 1;
 }
 
-.chat-history-row:hover .chat-history-delete {
-  opacity: 1;
+.chat-history-rename:hover {
+  color: var(--text-primary);
+  background-color: var(--surface-mid);
 }
 
 .chat-history-delete:hover {
   color: var(--danger);
   background-color: rgba(176, 54, 42, 0.08);
+}
+
+/* Inline rename edit box */
+.chat-history-edit-box {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 4px 6px;
+}
+
+.chat-history-edit-input {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-primary);
+  font-size: var(--text-meta);
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  padding: 2px 6px;
+  outline: none;
+}
+
+.chat-history-edit-input:focus {
+  border-color: var(--accent);
+}
+
+.chat-history-save {
+  color: var(--success);
+  background-color: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.chat-history-save:hover {
+  background-color: var(--surface-mid);
 }
 
 /* ─────────────────────────────────────────────────────────────

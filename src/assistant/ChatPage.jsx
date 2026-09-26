@@ -44,6 +44,7 @@ export default function ChatPage() {
     switchConversation,
     appendMessage,
     deleteConversation,
+    renameConversation,
   } = useChatHistory(userId, INITIAL_GREETING);
 
   const [inputText, setInputText] = useState('');
@@ -53,9 +54,29 @@ export default function ChatPage() {
   const [attachError, setAttachError] = useState('');
   const [isRailHidden, setIsRailHidden] = useState(false);
 
+  const [editingConvId, setEditingConvId] = useState(null);
+  const [editingTitle, setEditingTitle] = useState('');
+
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  const startEditing = (conv, e) => {
+    e?.stopPropagation();
+    setEditingConvId(conv.id);
+    setEditingTitle(conv.title);
+  };
+
+  const saveEditing = (convId) => {
+    if (editingTitle.trim()) {
+      renameConversation(convId, editingTitle.trim());
+    }
+    setEditingConvId(null);
+  };
+
+  const cancelEditing = () => {
+    setEditingConvId(null);
+  };
 
   // ── Item 6: Load applications for dropdown ──────────────────────────
   useEffect(() => {
@@ -168,7 +189,7 @@ export default function ChatPage() {
   return (
     <div className="chat-container">
       {/* ── Slim conversation history sidebar (§23) ── */}
-      {conversations.length > 1 && !isRailHidden && (
+      {!isRailHidden && (
         <aside className="chat-history-rail">
           <div className="chat-history-header">
             <span className="chat-history-label">Recent</span>
@@ -188,7 +209,10 @@ export default function ChatPage() {
                 title="Hide history sidebar"
                 aria-label="Hide history sidebar"
               >
-                «
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
               </button>
             </div>
           </div>
@@ -196,23 +220,69 @@ export default function ChatPage() {
             {conversations.map(conv => (
               <li key={conv.id}>
                 <div className={`chat-history-row ${conv.id === activeId ? 'chat-history-row--active' : ''}`}>
-                  <button
-                    type="button"
-                    className="chat-history-item"
-                    onClick={() => switchConversation(conv.id)}
-                    title={conv.title}
-                  >
-                    <span className="chat-history-title">{conv.title}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="chat-history-delete"
-                    onClick={() => deleteConversation(conv.id)}
-                    title="Delete conversation"
-                    aria-label={`Delete "${conv.title}"`}
-                  >
-                    ×
-                  </button>
+                  {editingConvId === conv.id ? (
+                    <div className="chat-history-edit-box">
+                      <input
+                        type="text"
+                        className="chat-history-edit-input"
+                        value={editingTitle}
+                        onChange={(e) => setEditingTitle(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') saveEditing(conv.id);
+                          if (e.key === 'Escape') cancelEditing();
+                        }}
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        className="chat-history-action-btn chat-history-save"
+                        onClick={() => saveEditing(conv.id)}
+                        title="Save title"
+                      >
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        className="chat-history-item"
+                        onClick={() => switchConversation(conv.id)}
+                        onDoubleClick={(e) => startEditing(conv, e)}
+                        title={`${conv.title} (Double-click to rename)`}
+                      >
+                        <span className="chat-history-title">{conv.title}</span>
+                      </button>
+                      <div className="chat-history-row-actions">
+                        <button
+                          type="button"
+                          className="chat-history-action-btn chat-history-rename"
+                          onClick={(e) => startEditing(conv, e)}
+                          title="Rename conversation"
+                          aria-label={`Rename "${conv.title}"`}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          className="chat-history-action-btn chat-history-delete"
+                          onClick={() => deleteConversation(conv.id)}
+                          title="Delete conversation"
+                          aria-label={`Delete "${conv.title}"`}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 6h18" />
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                          </svg>
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               </li>
             ))}
@@ -226,7 +296,7 @@ export default function ChatPage() {
         <div className="chat-header">
           <div className="chat-header-left">
             <div className="chat-header-title-row">
-              {isRailHidden && conversations.length > 1 && (
+              {isRailHidden && (
                 <button
                   type="button"
                   className="chat-rail-open-btn"
@@ -234,7 +304,12 @@ export default function ChatPage() {
                   title="Show recent conversations"
                   aria-label="Show recent conversations"
                 >
-                  » History
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect width="18" height="18" x="3" y="3" rx="2" />
+                    <path d="M9 3v18" />
+                    <path d="m14 9 3 3-3 3" />
+                  </svg>
+                  <span>History</span>
                 </button>
               )}
               <h1 className="page-title">AI Assistant</h1>
