@@ -1,68 +1,108 @@
 # HireTrack — Frontend
 
-React + Vite single-page application for HireTrack, an AI-powered job application management system.
+React + Vite single-page web application for HireTrack, an AI-powered job application management system.
 
-## Stack
-- React 18, Vite, **JavaScript** (not TypeScript — intentional, see docs/DECISIONS.md ADR-002)
-- Axios (HTTP client), React Router (routing)
-- Vanilla CSS with design tokens per `../docs/DESIGN.md`
-- No UI component library — design system is custom
+## Tech Stack
+- **React 19** (`^19.2.8`), **Vite** (`^8.3.0`), **JavaScript** (ESNext modules)
+- **React Router v7** (`^7.18.4`) — Client-side SPA routing
+- **Axios** — HTTP client with auth token interceptor and global error handling
+- **PDF & Document Parsing**: `pdfjs-dist` (`^6.3.289`) for client-side PDF resume text extraction
+- **Markdown Rendering**: `react-markdown` & `remark-gfm` for rendering rich AI assistant responses
+- **Styling & Design System**: Custom Vanilla CSS with Design Tokens (`tokens.css`)
+
+## Design System & Typography
+The UI is built with a custom design system and aesthetic:
+- **Typography**: 
+  - Primary UI & Body: `JetBrains Mono`
+  - Code & Timestamps: `JetBrains Mono`
+  - Header Badge / Sender Stamp: `VT323` (Terminal-style character stamp)
+- **Color Palette**: Warm off-white background (`#F8F7F4`), clean elevated surfaces (`#FFFFFF`), forest green brand accent (`#2A5C4B`), and structured semantic status indicators.
+- **Micro-Interactions**: Custom focus indicators, smooth transitions, modal overlays, drag-and-drop dropzone, and responsive layouts.
+
+## Key Features
+- **User Authentication**: JWT-based user login and registration with automatic token persistence and session isolation.
+- **Application Tracking**: Create, view, update, filter, and delete job applications with status, job role, dates, notes, and salary info.
+- **Interview Timeline**: Track multi-round interview schedules, types (Technical, HR, Behavioral), notes, and outcomes (Pending, Passed, Failed).
+- **Tag Management**: Custom colored tags for filtering and grouping job applications.
+- **Metrics Dashboard**: Dynamic application status metrics, interview success rates, and pipeline overview.
+- **Client-Side Resume Parsing**: Drag-and-drop resume upload supporting PDF (`.pdf`), text (`.txt`), and markdown (`.md`). Text extraction is performed **entirely client-side in the browser** using `pdfjs-dist`; raw binary files are never transmitted to the backend server.
+- **AI Career Assistant**: Interactive Groq-backed career coach featuring conversation persistence in `localStorage`, per-user history clearing on logout, and targeted prompt scoping to specific job applications.
+
+---
 
 ## Documentation
-All project documentation lives in `../docs/` (shared parent workspace):
-- `../docs/PRD.md` — product requirements
-- `../docs/ARCHITECTURE.md` — system architecture and layering
-- `../docs/API.md` — full endpoint contract (coordination boundary with backend)
-- `../docs/DESIGN.md` — design system, tokens, component rules
-- `../docs/TASKS.md` — task breakdown and implementation order
+All project documentation lives in `../docs/`:
+- `../docs/PRD.md` — Product requirements
+- `../docs/ARCHITECTURE.md` — System architecture and frontend layering
+- `../docs/API.md` — REST API specification
+- `../docs/DESIGN.md` — Comprehensive design system rules and token specs
+
+---
 
 ## Local Development
 
 ### Prerequisites
-- Node.js 18+
-- npm 9+
-- Backend running on `http://localhost:8080` (see `../backend/README.md`)
+- **Node.js 18+**
+- **npm 9+**
+- HireTrack Backend running on `http://localhost:8080` (see `../backend/README.md`)
 
 ### Setup
-```bash
-cp .env.example .env
-# .env.example already contains the correct local dev value:
-# VITE_API_BASE_URL=http://localhost:8080
-```
+1. Clone the repository and navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+2. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+   The `.env` file should set:
+   ```env
+   VITE_API_BASE_URL=http://localhost:8080
+   ```
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-### Run
+### Running Development Server
 ```bash
 npm run dev
 ```
-App opens on `http://localhost:5173`.
+Access the web application at `http://localhost:5173`.
 
-### Build
+### Production Build
+Build optimized production bundle:
 ```bash
 npm run build
 ```
 
-### Preview production build
+### Preview Production Build
 ```bash
 npm run preview
 ```
 
-## Source Structure
-```
-src/
-├── api/           — Axios instance (TASK-003); auth interceptor (TASK-010)
-├── auth/          — AuthContext, ProtectedRoute, Login/Register pages (TASK-009/010)
-├── applications/  — Application list, form, detail, status, tags (TASK-014–017, 021)
-├── interviews/    — Interview timeline (TASK-019)
-├── dashboard/     — Dashboard page (TASK-023)
-├── assistant/     — AI chat UI (TASK-030)
-├── components/    — Shared reusable UI components
-├── styles/        — Design tokens (tokens.css) — all CSS variables
-├── lib/           — Constants (status/outcome enums, route paths)
-├── App.jsx        — Root component with BrowserRouter and route declarations
-└── main.jsx       — Vite entry point
+### Linting
+```bash
+npm run lint
 ```
 
-## Environment Variables
-| Variable | Description | Local default |
-|---|---|---|
-| `VITE_API_BASE_URL` | Backend API base URL — no trailing slash | `http://localhost:8080` |
+---
+
+## Source Directory Structure
+
+```
+src/
+├── api/           — Axios instance with bearer token interceptor and 401 error handler
+├── auth/          — AuthContext provider, ProtectedRoute component, Login & Register pages
+├── applications/  — Application list, search/filter bar, detail view, create/edit modals
+├── interviews/    — Interview round timeline, create/edit interview modal
+├── tags/          — Tag creation and assignment components
+├── profile/       — Profile & Master Resume editor, client-side PDF dropzone parser
+├── dashboard/     — Aggregated pipeline metrics, status breakdown cards, upcoming interviews
+├── assistant/     — AI Chat panel, prompt builder options, localStorage chat history hook
+├── lib/           — Client-side file parser (pdfjs-dist integration), status enums, constants
+├── styles/        — Design tokens (tokens.css) containing all CSS custom properties
+├── components/    — Shared UI components (Navbar, Modal, Alert, LoadingSpinner)
+├── App.jsx        — Main application router and shell layout
+└── main.jsx       — React 19 application entry point
+```
