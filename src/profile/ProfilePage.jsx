@@ -4,6 +4,7 @@ import { extractTextFromFile } from '../lib/fileParser';
 import './ProfilePage.css';
 
 export default function ProfilePage() {
+  const [name, setName] = useState('');
   const [resumeText, setResumeText] = useState('');
   const [targetRole, setTargetRole] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -23,6 +24,7 @@ export default function ProfilePage() {
     setIsLoading(true);
     try {
       const response = await axiosInstance.get('/api/profile');
+      setName(response.data.name || '');
       setResumeText(response.data.resumeText || '');
       setTargetRole(response.data.targetRole || '');
     } catch (err) {
@@ -94,10 +96,10 @@ export default function ProfilePage() {
     setMessage({ type: '', text: '' });
 
     try {
-      await axiosInstance.put('/api/profile', { resumeText, targetRole });
-      setMessage({ type: 'success', text: 'Resume updated successfully!' });
+      await axiosInstance.put('/api/profile', { name, resumeText, targetRole });
+      setMessage({ type: 'success', text: 'Profile updated successfully!' });
     } catch (err) {
-      setMessage({ type: 'error', text: 'Failed to update resume.' });
+      setMessage({ type: 'error', text: 'Failed to update profile.' });
     } finally {
       setIsSaving(false);
     }
@@ -161,6 +163,17 @@ export default function ProfilePage() {
       </div>
 
       <form onSubmit={handleSubmit} className="profile-form">
+        <div className="form-group">
+          <label className="form-label" htmlFor="profile-name">Full Name</label>
+          <input
+            id="profile-name"
+            type="text"
+            className="profile-target-role-input"
+            placeholder="e.g. Jane Doe"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
         <div className="form-group">
           <label className="form-label" htmlFor="target-role">Target Role</label>
           <input

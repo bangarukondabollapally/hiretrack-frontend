@@ -613,12 +613,12 @@
 
 .chat-suggest-btn {
   padding: 4px 12px;
-  background: #27272A;
-  border: 1px solid #3F3F46;
-  border-radius: 8px;
-  font-size: 11.5px;
+  background-color: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-meta);
   font-family: var(--font-primary);
-  color: #D4D4D8;
+  color: var(--text-secondary);
   cursor: pointer;
   transition:
     background-color var(--transition-fast),
@@ -627,9 +627,9 @@
 }
 
 .chat-suggest-btn:hover:not(:disabled) {
-  background-color: #3F3F46;
-  border-color: #52525B;
-  color: #FFFFFF;
+  background-color: var(--surface-mid);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
 }
 
 .chat-suggest-btn:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -643,29 +643,27 @@
   padding: 0 2px;
 }
 
-/* Composer — dark elevated card theme per reference design */
+/* Composer — warm elevated surface-sunken tone per DESIGN.md §24 */
 .chat-composer {
   display: flex;
   flex-direction: column;
-  background-color: #1A1A1C;
-  border: none !important;
-  outline: none !important;
-  border-radius: 14px;
-  padding: 8px 12px 6px 12px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.22), 0 1px 3px rgba(0, 0, 0, 0.12);
-  transition: box-shadow var(--transition-fast);
+  background-color: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 10px 14px 8px 14px;
+  box-shadow: var(--shadow-hover);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .chat-composer:focus-within {
-  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.35);
-  border: none !important;
-  outline: none !important;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--focus);
 }
 
 /* Hidden file input */
 .chat-file-input { display: none; }
 
-/* Auto-growing textarea inside dark composer */
+/* Auto-growing textarea inside composer */
 .chat-composer-input {
   width: 100%;
   background: transparent !important;
@@ -674,9 +672,9 @@
   box-shadow: none !important;
   resize: none;
   font-family: var(--font-primary);
-  font-size: 13px;
-  line-height: 1.45;
-  color: #F4F4F5;
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  color: var(--text-primary);
   min-height: 24px;
   max-height: 35vh;
   overflow-y: auto;
@@ -693,8 +691,8 @@
 }
 
 .chat-composer-input::placeholder {
-  color: #71717A;
-  font-size: 12.5px;
+  color: var(--text-tertiary);
+  font-size: var(--text-body);
 }
 
 /* Bottom bar: paperclip on left, send button on right */
@@ -716,16 +714,16 @@
   justify-content: center;
   background: transparent;
   border: none;
-  color: #9A9A9E;
+  color: var(--text-secondary);
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   transition: color var(--transition-fast), background-color var(--transition-fast);
   padding: 0;
 }
 
 .chat-attach-btn:hover:not(:disabled) {
-  color: #FFFFFF;
-  background-color: #27272A;
+  color: var(--text-primary);
+  background-color: var(--surface-mid);
 }
 
 .chat-attach-btn:disabled { opacity: 0.35; cursor: not-allowed; }

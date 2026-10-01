@@ -93,3 +93,15 @@
   --content-max: 1280px;
   --content-narrow: 720px;
 }
+
+/* Mobile type scale reduction per DESIGN.md §24 */
+@media (max-width: 480px) {
+  :root {
+    --text-display: 26px;
+    --text-page-heading: 20px;
+    --text-section-heading: 15px;
+    --text-body: 13px;
+    --text-meta: 11px;
+    --text-button: 12px;
+  }
+}
