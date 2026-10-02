@@ -148,6 +148,35 @@ export function useChatHistory(userId, initialGreeting) {
     }));
   }, []);
 
+  /** Update the text of a specific message by ID in the active conversation. */
+  const updateMessageText = useCallback((msgId, textUpdater) => {
+    setConversations(prev => prev.map(conv => {
+      if (conv.id !== activeId) return conv;
+      return {
+        ...conv,
+        messages: conv.messages.map(m => {
+          if (m.id !== msgId) return m;
+          const newText = typeof textUpdater === 'function' ? textUpdater(m.text) : textUpdater;
+          return { ...m, text: newText };
+        })
+      };
+    }));
+  }, [activeId]);
+
+  /** Append reasoning text to a specific message by ID. */
+  const updateReasoningText = useCallback((msgId, reasoningChunk) => {
+    setConversations(prev => prev.map(conv => {
+      if (conv.id !== activeId) return conv;
+      return {
+        ...conv,
+        messages: conv.messages.map(m => {
+          if (m.id !== msgId) return m;
+          return { ...m, reasoning: (m.reasoning || '') + reasoningChunk };
+        })
+      };
+    }));
+  }, [activeId]);
+
   return {
     conversations,
     activeId,
@@ -156,6 +185,8 @@ export function useChatHistory(userId, initialGreeting) {
     newConversation,
     switchConversation,
     appendMessage,
+    updateMessageText,
+    updateReasoningText,
     deleteConversation,
     renameConversation,
   };
