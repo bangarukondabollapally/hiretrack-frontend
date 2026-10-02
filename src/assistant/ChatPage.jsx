@@ -88,6 +88,15 @@ const renderCellContent = (children) => {
       <span key={idx}>{renderCellContent(child)}</span>
     ));
   }
+  if (children && typeof children === 'object' && children.props && children.props.children) {
+    return {
+      ...children,
+      props: {
+        ...children.props,
+        children: renderCellContent(children.props.children),
+      },
+    };
+  }
   return children;
 };
 

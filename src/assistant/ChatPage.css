@@ -567,7 +567,8 @@
   width: 100%;
   border-collapse: collapse;
   font-family: var(--font-serif, Georgia, serif);
-  font-size: var(--text-body);
+  font-size: 15px;
+  line-height: 1.55;
   color: var(--text-primary);
   text-align: left;
 }
@@ -575,14 +576,15 @@
 .assistant-table th {
   background: rgba(26, 25, 23, 0.04);
   font-weight: 600;
-  padding: 8px 12px;
+  font-size: 14.5px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--border);
   vertical-align: top;
   min-width: 120px;
 }
 
 .assistant-table td {
-  padding: 8px 12px;
+  padding: 10px 14px;
   border-bottom: 1px solid var(--border);
   vertical-align: top;
   min-width: 120px;
