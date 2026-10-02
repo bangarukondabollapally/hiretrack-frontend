@@ -439,31 +439,43 @@
   font-style: italic;
 }
 
-/* GFM Tables (Item 3.4 & 3.6 spec: tinted header, bold, text in --text-primary, visible row dividers) */
-.assistant-prose table {
+/* GFM Tables (Item 4 spec: tinted header, visible row dividers, cell padding ~8px 12px, vertical-align top, serif typography, text in --text-primary, overflow-x auto) */
+.assistant-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  margin: 16px 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.assistant-table {
   width: 100%;
   border-collapse: collapse;
-  margin: 16px 0;
-  font-family: var(--font-primary);
-  font-size: 14px;
-  display: block;
-  overflow-x: auto;
-}
-
-.assistant-prose th {
-  border-bottom: 2px solid var(--border);
-  padding: 10px 12px;
-  text-align: left;
-  font-weight: 700;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: var(--text-body);
   color: var(--text-primary);
-  background-color: var(--surface-sunken);
+  text-align: left;
 }
 
-.assistant-prose td {
+.assistant-table th {
+  background: rgba(26, 25, 23, 0.04);
+  font-weight: 600;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--border);
-  padding: 10px 12px;
-  text-align: left;
-  color: var(--text-primary);
+  vertical-align: top;
+  min-width: 120px;
+}
+
+.assistant-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  min-width: 120px;
+}
+
+.assistant-table tr:last-child td {
+  border-bottom: none;
 }
 
 /* Role-fit suggestion chip */

@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { useOutletContext, useLocation } from 'react-router-dom';
+import remarkGfm from 'remark-gfm';
 import axiosInstance from '../api/axiosInstance';
 import { useAuth } from '../auth/AuthContext';
 import { useChatHistory } from './useChatHistory';
+import { repairMarkdownTables, TABLE_BR_MARKER } from '../lib/repairMarkdownTables';
 import './ChatPage.css';
-
-import { repairMarkdownTables } from './tableRepair';
 
 // Lazy load ReactMarkdown for performance (Phase 2 code splitting)
 const ReactMarkdown = lazy(() => import('react-markdown'));
@@ -27,6 +27,26 @@ const ROTATING_THINKING_WORDS = ['Thinking', 'Musing', 'Pondering', 'Mulling it 
 const normalizeText = (text) => {
   if (!text) return '';
   return text.replace(/\u2011/g, '-').replace(/\u202F/g, ' ');
+};
+
+// Recursive helper to split TABLE_BR_MARKER into real <br /> elements
+const renderCellContent = (children) => {
+  if (typeof children === 'string') {
+    if (!children.includes(TABLE_BR_MARKER)) return children;
+    const parts = children.split(TABLE_BR_MARKER);
+    return parts.map((part, i) => (
+      <span key={i}>
+        {i > 0 && <br />}
+        {part}
+      </span>
+    ));
+  }
+  if (Array.isArray(children)) {
+    return children.map((child, idx) => (
+      <span key={idx}>{renderCellContent(child)}</span>
+    ));
+  }
+  return children;
 };
 
 export default function ChatPage() {
@@ -86,7 +106,6 @@ export default function ChatPage() {
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const reasoningTimerRef = useRef(null);
-  const remarkGfmRef = useRef(null);
   const contextPickerRef = useRef(null);
 
   // Load applications for context pill picker
@@ -94,13 +113,6 @@ export default function ChatPage() {
     axiosInstance.get('/api/applications')
       .then(r => setApplications(r.data || []))
       .catch(() => {});
-  }, []);
-
-  // Dynamically import remarkGfm
-  useEffect(() => {
-    import('remark-gfm').then(mod => {
-      remarkGfmRef.current = mod.default;
-    });
   }, []);
 
   // Set portal target for expanded sidebar history slot
@@ -607,8 +619,23 @@ export default function ChatPage() {
                           <div className="assistant-prose">
                             <Suspense fallback={<div>{normalizeText(msg.text)}</div>}>
                               <ReactMarkdown
-                                remarkPlugins={remarkGfmRef.current ? [remarkGfmRef.current] : []}
+                                remarkPlugins={[remarkGfm]}
                                 components={{
+                                  table({ children, ...props }) {
+                                    return (
+                                      <div className="assistant-table-wrapper">
+                                        <table className="assistant-table" {...props}>
+                                          {children}
+                                        </table>
+                                      </div>
+                                    );
+                                  },
+                                  th({ children, ...props }) {
+                                    return <th {...props}>{renderCellContent(children)}</th>;
+                                  },
+                                  td({ children, ...props }) {
+                                    return <td {...props}>{renderCellContent(children)}</td>;
+                                  },
                                   code({ node, inline, className, children, ...props }) {
                                     const match = /language-(\w+)/.exec(className || '');
                                     const codeText = String(children).replace(/\n$/, '');
