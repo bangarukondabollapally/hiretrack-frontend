@@ -139,21 +139,25 @@
   background-color: var(--border-subtle);
 }
 
-/* Claude Popover Menu for 3-dots */
-.conv-popover-menu {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
+/* Floating Portal Menu for 3-dots (rendered directly in body) */
+.conv-popover-menu-portal {
+  position: fixed;
   width: 140px;
   background-color: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  z-index: 100;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+  z-index: 9999;
   padding: 4px;
   display: flex;
   flex-direction: column;
   gap: 2px;
+  animation: popoverFadeIn 120ms ease;
+}
+
+@keyframes popoverFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .conv-popover-item {

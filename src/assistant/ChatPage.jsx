@@ -93,6 +93,22 @@ export default function ChatPage() {
   const [editingConvId, setEditingConvId] = useState(null);
   const [editingTitle, setEditingTitle] = useState('');
   const [menuOpenConvId, setMenuOpenConvId] = useState(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+
+  // Handle opening floating popover menu at trigger button coordinates
+  const handleOpenMenu = (e, convId) => {
+    e.stopPropagation();
+    if (menuOpenConvId === convId) {
+      setMenuOpenConvId(null);
+      return;
+    }
+    const rect = e.currentTarget.getBoundingClientRect();
+    setMenuPos({
+      top: rect.bottom + 4,
+      left: Math.max(10, rect.right - 140),
+    });
+    setMenuOpenConvId(convId);
+  };
 
   // Portal mount check
   const [portalTarget, setPortalTarget] = useState(null);
@@ -128,7 +144,7 @@ export default function ChatPage() {
     setIsSlideOverOpen(false);
   }, [location.pathname]);
 
-  // Close slide-over & popovers on Escape key
+  // Close slide-over & popovers on Escape key or outside click/scroll
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
@@ -138,15 +154,22 @@ export default function ChatPage() {
       }
     };
     const handleOutsideClick = (e) => {
-      if (!e.target.closest('.conv-item-actions')) {
+      if (!e.target.closest('.conv-popover-menu-portal') && !e.target.closest('.conv-menu-trigger')) {
         setMenuOpenConvId(null);
       }
     };
+    const handleScrollOrResize = () => setMenuOpenConvId(null);
+
     window.addEventListener('keydown', handleKeyDown);
     document.addEventListener('click', handleOutsideClick);
+    window.addEventListener('scroll', handleScrollOrResize, true);
+    window.addEventListener('resize', handleScrollOrResize);
+
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('click', handleOutsideClick);
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      window.removeEventListener('resize', handleScrollOrResize);
     };
   }, []);
 
@@ -494,10 +517,7 @@ export default function ChatPage() {
                       type="button"
                       className="icon-btn-subtle conv-menu-trigger"
                       title="More options"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setMenuOpenConvId(menuOpenConvId === conv.id ? null : conv.id);
-                      }}
+                      onClick={(e) => handleOpenMenu(e, conv.id)}
                       aria-label="More options"
                     >
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
@@ -506,45 +526,6 @@ export default function ChatPage() {
                         <circle cx="12" cy="19" r="2.2" />
                       </svg>
                     </button>
-
-                    {menuOpenConvId === conv.id && (
-                      <div className="conv-popover-menu" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          type="button"
-                          className="conv-popover-item"
-                          onClick={() => {
-                            togglePinConversation(conv.id);
-                            setMenuOpenConvId(null);
-                          }}
-                        >
-                          <span className="conv-popover-icon">📌</span>
-                          <span>{conv.pinned ? 'Unpin' : 'Pin'}</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="conv-popover-item"
-                          onClick={() => {
-                            setEditingConvId(conv.id);
-                            setEditingTitle(conv.title);
-                            setMenuOpenConvId(null);
-                          }}
-                        >
-                          <span className="conv-popover-icon">✏️</span>
-                          <span>Rename</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="conv-popover-item conv-popover-item--danger"
-                          onClick={() => {
-                            deleteConversation(conv.id);
-                            setMenuOpenConvId(null);
-                          }}
-                        >
-                          <span className="conv-popover-icon">🗑️</span>
-                          <span>Delete</span>
-                        </button>
-                      </div>
-                    )}
                   </div>
                 </>
               )}
@@ -552,6 +533,57 @@ export default function ChatPage() {
           ))
         )}
       </div>
+
+      {/* Floating Portal Menu for 3-dots actions (rendered directly in body to avoid scrollbar clipping) */}
+      {menuOpenConvId && createPortal(
+        <div
+          className="conv-popover-menu-portal"
+          style={{
+            top: `${menuPos.top}px`,
+            left: `${menuPos.left}px`,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            className="conv-popover-item"
+            onClick={() => {
+              togglePinConversation(menuOpenConvId);
+              setMenuOpenConvId(null);
+            }}
+          >
+            <span className="conv-popover-icon">📌</span>
+            <span>{sortedConversations.find(c => c.id === menuOpenConvId)?.pinned ? 'Unpin' : 'Pin'}</span>
+          </button>
+          <button
+            type="button"
+            className="conv-popover-item"
+            onClick={() => {
+              const conv = sortedConversations.find(c => c.id === menuOpenConvId);
+              if (conv) {
+                setEditingConvId(conv.id);
+                setEditingTitle(conv.title);
+              }
+              setMenuOpenConvId(null);
+            }}
+          >
+            <span className="conv-popover-icon">✏️</span>
+            <span>Rename</span>
+          </button>
+          <button
+            type="button"
+            className="conv-popover-item conv-popover-item--danger"
+            onClick={() => {
+              deleteConversation(menuOpenConvId);
+              setMenuOpenConvId(null);
+            }}
+          >
+            <span className="conv-popover-icon">🗑️</span>
+            <span>Delete</span>
+          </button>
+        </div>,
+        document.body
+      )}
     </div>
   );
 
