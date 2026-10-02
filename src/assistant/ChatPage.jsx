@@ -193,6 +193,7 @@ export default function ChatPage() {
         setIsSlideOverOpen(false);
         setIsAppPickerOpen(false);
         setMenuOpenConvId(null);
+        setEditingConvId(null);
       }
     };
     const handleOutsideClick = (e) => {
@@ -214,6 +215,26 @@ export default function ChatPage() {
       window.removeEventListener('resize', handleScrollOrResize);
     };
   }, []);
+
+  // Save and close rename input when clicking outside
+  useEffect(() => {
+    if (!editingConvId) return;
+    const handleRenameOutsideClick = (e) => {
+      if (!e.target.closest('.conv-rename-input')) {
+        if (editingTitle.trim()) {
+          renameConversation(editingConvId, editingTitle.trim());
+        }
+        setEditingConvId(null);
+      }
+    };
+    const timer = setTimeout(() => {
+      document.addEventListener('click', handleRenameOutsideClick);
+    }, 100);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('click', handleRenameOutsideClick);
+    };
+  }, [editingConvId, editingTitle, renameConversation]);
 
   // Rotate thinking words while in 'thinking' phase
   useEffect(() => {
@@ -510,20 +531,19 @@ export default function ChatPage() {
                   onChange={(e) => setEditingTitle(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
+                      e.preventDefault();
+                      e.stopPropagation();
                       if (editingTitle.trim()) {
                         renameConversation(conv.id, editingTitle.trim());
                       }
                       setEditingConvId(null);
                     } else if (e.key === 'Escape') {
+                      e.preventDefault();
+                      e.stopPropagation();
                       setEditingConvId(null);
                     }
                   }}
-                  onBlur={() => {
-                    if (editingTitle.trim()) {
-                      renameConversation(conv.id, editingTitle.trim());
-                    }
-                    setEditingConvId(null);
-                  }}
+                  onFocus={(e) => e.target.select()}
                   autoFocus
                   onClick={(e) => e.stopPropagation()}
                 />
