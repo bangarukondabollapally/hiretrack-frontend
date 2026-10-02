@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
+import { createPortal } from 'react-dom';
+import { useOutletContext, useLocation } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
 import { useAuth } from '../auth/AuthContext';
 import { useChatHistory } from './useChatHistory';
@@ -19,9 +21,20 @@ const SUGGESTED_PROMPTS = [
 
 const ROTATING_THINKING_WORDS = ['Thinking', 'Musing', 'Pondering', 'Mulling it over'];
 
+// Text normalization helper per item 3.2
+const normalizeText = (text) => {
+  if (!text) return '';
+  return text.replace(/\u2011/g, '-').replace(/\u202F/g, ' ');
+};
+
 export default function ChatPage() {
   const { user, token } = useAuth();
   const userId = user?.userId;
+  const location = useLocation();
+
+  // Read layout sidebar context if provided
+  const outletContext = useOutletContext() || {};
+  const isSidebarCollapsed = outletContext.isSidebarCollapsed ?? false;
 
   const {
     conversations,
@@ -43,6 +56,7 @@ export default function ChatPage() {
   const [selectedAppId, setSelectedAppId] = useState(null);
   const [appSearchQuery, setAppSearchQuery] = useState('');
   const [isAppPickerOpen, setIsAppPickerOpen] = useState(false);
+  const [pickerHighlightedIdx, setPickerHighlightedIdx] = useState(0);
 
   // Streaming & status states
   const [isGenerating, setIsGenerating] = useState(false);
@@ -51,13 +65,17 @@ export default function ChatPage() {
   const [reasoningTimeSeconds, setReasoningTimeSeconds] = useState(0);
   const [isReasoningExpanded, setIsReasoningExpanded] = useState(false);
 
-  // History sidebar / mobile drawer
-  const [isHistorySidebarOpen, setIsHistorySidebarOpen] = useState(true);
+  // Slide-over history panel state (for collapsed sidebar or mobile)
+  const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
   const [editingConvId, setEditingConvId] = useState(null);
   const [editingTitle, setEditingTitle] = useState('');
 
-  // UI state for auto-scroll
+  // Portal mount check
+  const [portalTarget, setPortalTarget] = useState(null);
+
+  // UI state for auto-scroll & copy feedback
   const [showScrollBottomBtn, setShowScrollBottomBtn] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
 
   // Refs
   const abortControllerRef = useRef(null);
@@ -67,6 +85,7 @@ export default function ChatPage() {
   const fileInputRef = useRef(null);
   const reasoningTimerRef = useRef(null);
   const remarkGfmRef = useRef(null);
+  const contextPickerRef = useRef(null);
 
   // Load applications for context pill picker
   useEffect(() => {
@@ -80,6 +99,29 @@ export default function ChatPage() {
     import('remark-gfm').then(mod => {
       remarkGfmRef.current = mod.default;
     });
+  }, []);
+
+  // Set portal target for expanded sidebar history slot
+  useEffect(() => {
+    const target = document.getElementById('sidebar-recent-conversations-slot');
+    setPortalTarget(target);
+  }, [isSidebarCollapsed, location.pathname]);
+
+  // Close slide-over history panel on route change
+  useEffect(() => {
+    setIsSlideOverOpen(false);
+  }, [location.pathname]);
+
+  // Close slide-over on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsSlideOverOpen(false);
+        setIsAppPickerOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   // Rotate thinking words while in 'thinking' phase
@@ -98,55 +140,49 @@ export default function ChatPage() {
     if (!ta) return;
     ta.style.height = 'auto';
     const maxH = window.innerHeight * 0.4;
-    ta.style.height = Math.min(ta.scrollHeight, maxH) + 'px';
-    ta.style.overflowY = ta.scrollHeight > maxH ? 'auto' : 'hidden';
+    ta.style.height = `${Math.min(ta.scrollHeight, maxH)}px`;
   }, [inputText]);
 
-  // Smart auto-scroll handling
-  const handleScroll = () => {
-    const el = messagesContainerRef.current;
-    if (!el) return;
-    const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 100;
-    setShowScrollBottomBtn(!isAtBottom);
-  };
-
-  const scrollToBottom = (behavior = 'smooth') => {
+  // Auto-scroll transcript
+  const scrollToBottom = useCallback((behavior = 'smooth') => {
     messagesEndRef.current?.scrollIntoView({ behavior });
-  };
+  }, []);
 
   useEffect(() => {
-    const el = messagesContainerRef.current;
-    if (!el) return;
-    const isAtBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120;
-    if (isAtBottom || isGenerating) {
-      scrollToBottom('smooth');
-    }
-  }, [messages, isGenerating, streamPhase]);
+    scrollToBottom('auto');
+  }, [messages.length, scrollToBottom]);
 
-  // Stop / Abort generation
+  const handleScroll = () => {
+    const c = messagesContainerRef.current;
+    if (!c) return;
+    const isUp = c.scrollHeight - c.scrollTop - c.clientHeight > 120;
+    setShowScrollBottomBtn(isUp);
+  };
+
   const handleStopGeneration = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
-      abortControllerRef.current = null;
     }
-    setIsGenerating(false);
-    setStreamPhase(null);
   };
 
-  // ── Stream / Send handler via fetch + ReadableStream ────────────────
-  const handleSendMessage = useCallback(async (textToSend = inputText) => {
-    const messageText = textToSend.trim();
+  // SSE Stream Handler (item 3.2: TextDecoder stream:true, \n\n buffering)
+  const handleSendMessage = useCallback(async (overrideText) => {
+    const messageText = (overrideText || inputText).trim();
     if (!messageText || isGenerating) return;
 
+    if (!overrideText) {
+      setInputText('');
+    }
+
+    // Auto-create new conversation if needed
     if (!activeId) {
       newConversation();
     }
 
-    const userMsgId = `msg_${Date.now()}`;
-    const userMsg = { id: userMsgId, sender: 'user', text: messageText };
+    // Append User Message
+    const userMsg = { id: `msg_${Date.now()}`, sender: 'user', text: messageText };
     appendMessage(userMsg);
 
-    setInputText('');
     setIsGenerating(true);
     setStreamPhase('retrieving');
     setReasoningTimeSeconds(0);
@@ -191,42 +227,55 @@ export default function ChatPage() {
 
       while (true) {
         const { value, done } = await reader.read();
-        if (done) break;
+        if (done) {
+          if (buffer.trim()) {
+            parseAndProcessBlock(buffer);
+          }
+          break;
+        }
 
         buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || ''; // Keep partial line in buffer
+        const blocks = buffer.split('\n\n');
+        buffer = blocks.pop() || ''; // Keep partial block in buffer until full \n\n boundary
 
-        let currentEvent = 'message';
-        for (const line of lines) {
+        for (const block of blocks) {
+          parseAndProcessBlock(block);
+        }
+      }
+
+      function parseAndProcessBlock(block) {
+        let eventType = 'message';
+        let dataLines = [];
+
+        for (const line of block.split('\n')) {
           const trimmed = line.trim();
           if (!trimmed) continue;
-
           if (trimmed.startsWith('event:')) {
-            currentEvent = trimmed.substring(6).trim();
+            eventType = trimmed.substring(6).trim();
           } else if (trimmed.startsWith('data:')) {
-            const rawData = trimmed.substring(5).trim();
-            if (!rawData) continue;
+            dataLines.push(trimmed.substring(5).trim());
+          }
+        }
 
-            try {
-              const data = JSON.parse(rawData);
+        if (dataLines.length === 0) return;
+        const rawData = dataLines.join('\n');
 
-              if (currentEvent === 'status') {
-                setStreamPhase(data.phase);
-              } else if (currentEvent === 'token') {
-                setStreamPhase('generating');
-                updateMessageText(assistantMsgId, prev => (prev || '') + (data.text || ''));
-              } else if (currentEvent === 'reasoning') {
-                updateReasoningText(assistantMsgId, data.text || '');
-              } else if (currentEvent === 'error') {
-                updateMessageText(assistantMsgId, `\n\n[Error: ${data.message || 'Stream connection failed'}]`);
-              }
-            } catch (e) {
-              // Plain text data fallback
-              if (currentEvent === 'token') {
-                updateMessageText(assistantMsgId, prev => (prev || '') + rawData);
-              }
-            }
+        try {
+          const data = JSON.parse(rawData);
+          if (eventType === 'status') {
+            setStreamPhase(data.phase);
+          } else if (eventType === 'token') {
+            setStreamPhase('generating');
+            updateMessageText(assistantMsgId, prev => (prev || '') + (data.text || ''));
+          } else if (eventType === 'reasoning') {
+            updateReasoningText(assistantMsgId, data.text || '');
+          } else if (eventType === 'error') {
+            updateMessageText(assistantMsgId, `\n\n[Error: ${data.message || 'Stream connection failed'}]`);
+          }
+        } catch (e) {
+          console.warn('Unparseable SSE JSON chunk:', rawData, e);
+          if (eventType === 'token') {
+            updateMessageText(assistantMsgId, prev => (prev || '') + rawData);
           }
         }
       }
@@ -275,8 +324,12 @@ export default function ChatPage() {
     reader.readAsText(file);
   };
 
-  const copyToClipboard = (text) => {
+  const copyToClipboard = (text, id) => {
     navigator.clipboard.writeText(text);
+    if (id) {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    }
   };
 
   const handleRegenerate = (msgIndex) => {
@@ -293,36 +346,67 @@ export default function ChatPage() {
     a.jobRole.toLowerCase().includes(appSearchQuery.toLowerCase())
   );
 
+  // Application picker options array (0 is "All applications", 1..N are apps)
+  const pickerOptions = [{ id: null, companyName: 'All applications', jobRole: 'General context' }, ...filteredApps];
+
+  const handlePickerKeyDown = (e) => {
+    if (!isAppPickerOpen) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setPickerHighlightedIdx(prev => Math.min(prev + 1, pickerOptions.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setPickerHighlightedIdx(prev => Math.max(prev - 1, 0));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      const selectedOption = pickerOptions[pickerHighlightedIdx];
+      if (selectedOption) {
+        setSelectedAppId(selectedOption.id);
+        setIsAppPickerOpen(false);
+      }
+    } else if (e.key === 'Escape') {
+      setIsAppPickerOpen(false);
+    }
+  };
+
   const nonGreetingMessages = messages.filter(m => m.text !== INITIAL_GREETING);
   const isTranscriptEmpty = nonGreetingMessages.length === 0;
 
-  return (
-    <div className="assistant-layout">
-      {/* Sidebar: Recent Conversations */}
-      <aside className={`assistant-sidebar ${isHistorySidebarOpen ? 'assistant-sidebar--open' : 'assistant-sidebar--closed'}`}>
-        <div className="assistant-sidebar__header">
-          <span className="sidebar-title">Recent conversations</span>
-          <button
-            type="button"
-            className="btn-new-chat"
-            onClick={newConversation}
-            title="New Chat"
-          >
-            + New chat
-          </button>
-        </div>
+  // Render recent conversations list helper
+  const renderConversationsList = () => (
+    <div className="recent-conversations-container">
+      <div className="recent-conversations-header">
+        <span className="recent-conversations-title">Recent Chats</span>
+        <button
+          type="button"
+          className="btn-new-chat"
+          onClick={() => {
+            newConversation();
+            setIsSlideOverOpen(false);
+          }}
+          title="New Chat"
+        >
+          + New chat
+        </button>
+      </div>
 
-        <div className="assistant-sidebar__list">
-          {conversations.map(conv => (
+      <div className="recent-conversations-list">
+        {conversations.length === 0 ? (
+          <div className="no-conversations-text">No recent chats</div>
+        ) : (
+          conversations.map(conv => (
             <div
               key={conv.id}
-              className={`sidebar-conv-item ${conv.id === activeId ? 'sidebar-conv-item--active' : ''}`}
-              onClick={() => switchConversation(conv.id)}
+              className={`conv-item ${conv.id === activeId ? 'conv-item--active' : ''}`}
+              onClick={() => {
+                switchConversation(conv.id);
+                setIsSlideOverOpen(false);
+              }}
             >
               {editingConvId === conv.id ? (
                 <input
                   type="text"
-                  className="sidebar-rename-input"
+                  className="conv-rename-input"
                   value={editingTitle}
                   onChange={(e) => setEditingTitle(e.target.value)}
                   onKeyDown={(e) => {
@@ -333,14 +417,18 @@ export default function ChatPage() {
                       setEditingConvId(null);
                     }
                   }}
+                  onBlur={() => {
+                    renameConversation(conv.id, editingTitle);
+                    setEditingConvId(null);
+                  }}
                   autoFocus
                   onClick={(e) => e.stopPropagation()}
                 />
               ) : (
-                <span className="sidebar-conv-title">{conv.title}</span>
+                <span className="conv-item-title">{conv.title}</span>
               )}
 
-              <div className="sidebar-conv-actions" onClick={(e) => e.stopPropagation()}>
+              <div className="conv-item-actions" onClick={(e) => e.stopPropagation()}>
                 <button
                   type="button"
                   className="icon-btn-subtle"
@@ -362,23 +450,64 @@ export default function ChatPage() {
                 </button>
               </div>
             </div>
-          ))}
+          ))
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="assistant-layout">
+      {/* Portal recent conversations into expanded sidebar if available */}
+      {!isSidebarCollapsed && portalTarget && createPortal(renderConversationsList(), portalTarget)}
+
+      {/* Slide-over panel backdrop for collapsed sidebar or mobile */}
+      {isSlideOverOpen && (
+        <div
+          className="history-slideover-backdrop"
+          onClick={() => setIsSlideOverOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Slide-over panel (closed by default) */}
+      <div className={`history-slideover-panel ${isSlideOverOpen ? 'history-slideover-panel--open' : ''}`}>
+        <div className="history-slideover-close-header">
+          <span>Recent Conversations</span>
+          <button
+            type="button"
+            className="icon-btn-subtle"
+            onClick={() => setIsSlideOverOpen(false)}
+            aria-label="Close panel"
+          >
+            ×
+          </button>
         </div>
-      </aside>
+        {renderConversationsList()}
+      </div>
 
       {/* Main Container */}
       <main className="assistant-main">
-        {/* Top Header bar with sidebar toggle */}
+        {/* Top Header bar with slide-over toggle button */}
         <header className="assistant-top-bar">
           <button
             type="button"
-            className="sidebar-toggle-btn"
-            onClick={() => setIsHistorySidebarOpen(!isHistorySidebarOpen)}
-            title={isHistorySidebarOpen ? "Hide sidebar" : "Show sidebar"}
+            className="history-toggle-btn"
+            onClick={() => setIsSlideOverOpen(!isSlideOverOpen)}
+            title="Recent Conversations"
+            aria-label="Recent Conversations"
           >
-            ☰
+            💬 Recent chats
           </button>
           <span className="top-bar-title">HireTrack AI Assistant</span>
+          <button
+            type="button"
+            className="btn-new-chat-top"
+            onClick={newConversation}
+            title="Start New Chat"
+          >
+            + New chat
+          </button>
         </header>
 
         {/* Content View: Empty Centered vs Docked Transcript */}
@@ -426,7 +555,7 @@ export default function ChatPage() {
                   {messages.map((msg, idx) => (
                     <div key={msg.id || idx} className={`transcript-turn transcript-turn--${msg.sender}`}>
                       {msg.sender === 'user' ? (
-                        <div className="user-bubble">{msg.text}</div>
+                        <div className="user-bubble">{normalizeText(msg.text)}</div>
                       ) : (
                         <div className="assistant-response">
                           <div className="assistant-response-header">
@@ -447,27 +576,67 @@ export default function ChatPage() {
                             )}
                           </div>
 
-                          {/* Collapsible Reasoning Block */}
-                          {msg.reasoning && (
-                            <div className="reasoning-disclosure">
-                              <button
-                                type="button"
-                                className="reasoning-toggle-btn"
-                                onClick={() => setIsReasoningExpanded(!isReasoningExpanded)}
-                              >
-                                {isReasoningExpanded ? '▼' : '►'} Thought for {reasoningTimeSeconds}s
-                              </button>
-                              {isReasoningExpanded && (
-                                <div className="reasoning-content">{msg.reasoning}</div>
+                          {/* Minimal Claude-style "Thought for Ns" disclosure (item 3.2) */}
+                          {(msg.reasoning || (isGenerating && idx === messages.length - 1 && reasoningTimeSeconds > 0)) && (
+                            <div className="thought-container">
+                              {msg.reasoning ? (
+                                <button
+                                  type="button"
+                                  className="thought-toggle-btn"
+                                  onClick={() => setIsReasoningExpanded(!isReasoningExpanded)}
+                                >
+                                  <span className="thought-chevron">{isReasoningExpanded ? '▼' : '►'}</span>
+                                  <span>Thought for {reasoningTimeSeconds || 1}s</span>
+                                </button>
+                              ) : (
+                                <div className="thought-static-label">
+                                  Thought for {reasoningTimeSeconds || 1}s
+                                </div>
+                              )}
+
+                              {isReasoningExpanded && msg.reasoning && (
+                                <div className="thought-reasoning-panel">
+                                  {normalizeText(msg.reasoning)}
+                                </div>
                               )}
                             </div>
                           )}
 
-                          {/* Assistant Message Body in proportional serif font */}
+                          {/* Assistant Message Body in proportional serif font per item 3.2 */}
                           <div className="assistant-prose">
-                            <Suspense fallback={<div>{msg.text}</div>}>
-                              <ReactMarkdown remarkPlugins={remarkGfmRef.current ? [remarkGfmRef.current] : []}>
-                                {msg.text || (isGenerating && idx === messages.length - 1 ? '...' : '')}
+                            <Suspense fallback={<div>{normalizeText(msg.text)}</div>}>
+                              <ReactMarkdown
+                                remarkPlugins={remarkGfmRef.current ? [remarkGfmRef.current] : []}
+                                components={{
+                                  code({ node, inline, className, children, ...props }) {
+                                    const match = /language-(\w+)/.exec(className || '');
+                                    const codeText = String(children).replace(/\n$/, '');
+                                    if (inline) {
+                                      return <code className="inline-code-pill" {...props}>{children}</code>;
+                                    }
+                                    const lang = match ? match[1] : 'text';
+                                    const isTextLike = lang === 'text' || lang === 'email' || lang === 'plain' || !match;
+                                    return (
+                                      <div className={`code-block-wrapper ${isTextLike ? 'code-block-wrapper--text' : ''}`}>
+                                        <div className="code-block-header">
+                                          <span className="code-block-lang">{lang}</span>
+                                          <button
+                                            type="button"
+                                            className="code-block-copy-btn"
+                                            onClick={() => copyToClipboard(codeText, `code_${idx}`)}
+                                          >
+                                            {copiedId === `code_${idx}` ? 'Copied!' : 'Copy'}
+                                          </button>
+                                        </div>
+                                        <pre className="code-block-content">
+                                          <code>{codeText}</code>
+                                        </pre>
+                                      </div>
+                                    );
+                                  }
+                                }}
+                              >
+                                {normalizeText(msg.text) || (isGenerating && idx === messages.length - 1 ? '...' : '')}
                               </ReactMarkdown>
                             </Suspense>
                           </div>
@@ -478,10 +647,10 @@ export default function ChatPage() {
                               <button
                                 type="button"
                                 className="action-btn"
-                                onClick={() => copyToClipboard(msg.text)}
+                                onClick={() => copyToClipboard(msg.text, `msg_${idx}`)}
                                 title="Copy response"
                               >
-                                📋 Copy
+                                {copiedId === `msg_${idx}` ? '✓ Copied' : '📋 Copy'}
                               </button>
                               <button
                                 type="button"
@@ -523,17 +692,22 @@ export default function ChatPage() {
     </div>
   );
 
-  // Helper render method for Composer
+  // Helper render method for Composer (item 3.2 spec)
   function renderComposer() {
     return (
       <div className="composer-card">
         {/* Context Pill Toolbar */}
         <div className="composer-toolbar">
-          <div className="context-picker-wrapper">
+          <div className="context-picker-wrapper" ref={contextPickerRef}>
             <button
               type="button"
               className="context-pill"
-              onClick={() => setIsAppPickerOpen(!isAppPickerOpen)}
+              onClick={() => {
+                setIsAppPickerOpen(!isAppPickerOpen);
+                setPickerHighlightedIdx(0);
+              }}
+              aria-expanded={isAppPickerOpen}
+              aria-label="Select application context"
             >
               <span className="context-pill-icon">🎯</span>
               <span className="context-pill-text">
@@ -555,46 +729,67 @@ export default function ChatPage() {
               )}
             </button>
 
-            {/* Searchable Context Dropdown */}
+            {/* Mobile Backdrop for Context Picker Sheet */}
             {isAppPickerOpen && (
-              <div className="context-dropdown">
-                <input
-                  type="text"
-                  className="context-search-input"
-                  placeholder="Search applications..."
-                  value={appSearchQuery}
-                  onChange={(e) => setAppSearchQuery(e.target.value)}
-                  autoFocus
-                />
+              <div
+                className="context-picker-mobile-backdrop"
+                onClick={() => setIsAppPickerOpen(false)}
+              />
+            )}
+
+            {/* Searchable Context Dropdown Popover / Mobile Bottom Sheet */}
+            {isAppPickerOpen && (
+              <div
+                className="context-dropdown"
+                onKeyDown={handlePickerKeyDown}
+              >
+                <div className="context-search-header">
+                  <input
+                    type="text"
+                    className="context-search-input"
+                    placeholder="Search applications..."
+                    value={appSearchQuery}
+                    onChange={(e) => {
+                      setAppSearchQuery(e.target.value);
+                      setPickerHighlightedIdx(0);
+                    }}
+                    autoFocus
+                  />
+                </div>
                 <div className="context-dropdown-list">
                   <div
-                    className={`context-dropdown-item ${!selectedAppId ? 'selected' : ''}`}
+                    className={`context-dropdown-item ${!selectedAppId ? 'selected' : ''} ${pickerHighlightedIdx === 0 ? 'highlighted' : ''}`}
                     onClick={() => {
                       setSelectedAppId(null);
                       setIsAppPickerOpen(false);
                     }}
+                    onMouseEnter={() => setPickerHighlightedIdx(0)}
                   >
-                    All applications (General context)
+                    <strong>All applications</strong> (General context)
                   </div>
-                  {filteredApps.map(app => (
-                    <div
-                      key={app.id}
-                      className={`context-dropdown-item ${selectedAppId === app.id ? 'selected' : ''}`}
-                      onClick={() => {
-                        setSelectedAppId(app.id);
-                        setIsAppPickerOpen(false);
-                      }}
-                    >
-                      <strong>{app.companyName}</strong> — {app.jobRole}
-                    </div>
-                  ))}
+                  {filteredApps.map((app, idx) => {
+                    const itemIdx = idx + 1;
+                    return (
+                      <div
+                        key={app.id}
+                        className={`context-dropdown-item ${selectedAppId === app.id ? 'selected' : ''} ${pickerHighlightedIdx === itemIdx ? 'highlighted' : ''}`}
+                        onClick={() => {
+                          setSelectedAppId(app.id);
+                          setIsAppPickerOpen(false);
+                        }}
+                        onMouseEnter={() => setPickerHighlightedIdx(itemIdx)}
+                      >
+                        <strong>{app.companyName}</strong> — {app.jobRole}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Textarea */}
+        {/* Textarea: borderless container with inner textarea outline removed */}
         <textarea
           ref={textareaRef}
           className="composer-input"
@@ -638,7 +833,7 @@ export default function ChatPage() {
             ) : (
               <button
                 type="button"
-                className="btn-submit"
+                className={`btn-submit ${inputText.trim() ? 'btn-submit--active' : ''}`}
                 onClick={() => handleSendMessage()}
                 disabled={!inputText.trim()}
               >
