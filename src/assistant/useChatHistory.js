@@ -148,6 +148,14 @@ export function useChatHistory(userId, initialGreeting) {
     }));
   }, []);
 
+  /** Toggle pin status for a conversation. */
+  const togglePinConversation = useCallback((id) => {
+    setConversations(prev => prev.map(conv => {
+      if (conv.id !== id) return conv;
+      return { ...conv, pinned: !conv.pinned };
+    }));
+  }, []);
+
   /** Update the text of a specific message by ID in the active conversation. */
   const updateMessageText = useCallback((msgId, textUpdater) => {
     setConversations(prev => prev.map(conv => {
@@ -189,5 +197,6 @@ export function useChatHistory(userId, initialGreeting) {
     updateReasoningText,
     deleteConversation,
     renameConversation,
+    togglePinConversation,
   };
 }

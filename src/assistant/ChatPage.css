@@ -67,12 +67,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 5px 8px;
-  border-radius: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
   cursor: pointer;
   color: var(--text-secondary);
-  font-size: var(--text-body, 12px);
+  font-size: var(--text-body, 13px);
   transition: background-color var(--transition-fast);
+  position: relative;
 }
 
 .conv-item:hover {
@@ -86,6 +87,19 @@
   font-weight: var(--weight-semibold);
 }
 
+.conv-item-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.conv-pin-badge {
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
 .conv-item-title {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -94,6 +108,7 @@
 }
 
 .conv-item-actions {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -101,7 +116,8 @@
   transition: opacity var(--transition-fast);
 }
 
-.conv-item:hover .conv-item-actions {
+.conv-item:hover .conv-item-actions,
+.conv-item--active .conv-item-actions {
   opacity: 1;
 }
 
@@ -112,23 +128,103 @@
   cursor: pointer;
   font-size: 12px;
   padding: 2px 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .icon-btn-subtle:hover {
   color: var(--text-primary);
+  background-color: var(--border-subtle);
 }
 
-.icon-btn-danger:hover {
+/* Claude Popover Menu for 3-dots */
+.conv-popover-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  width: 140px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.conv-popover-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 12.5px;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color var(--transition-fast);
+}
+
+.conv-popover-item:hover {
+  background-color: var(--surface-sunken);
+}
+
+.conv-popover-item--danger {
   color: var(--danger);
 }
 
-.conv-rename-input {
+.conv-popover-item--danger:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.conv-popover-icon {
+  font-size: 13px;
+  width: 16px;
+  display: inline-block;
+  text-align: center;
+}
+
+/* Inline rename row */
+.conv-rename-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   width: 100%;
-  font-size: var(--text-body, 12px);
-  padding: 2px 6px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--bg);
+}
+
+.conv-rename-input {
+  flex: 1;
+  font-size: 12.5px;
+  padding: 3px 8px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text-primary);
+}
+
+.conv-rename-btn {
+  padding: 3px 6px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+}
+
+.conv-rename-btn--save {
+  background-color: var(--accent);
+  color: #ffffff;
+}
+
+.conv-rename-btn--cancel {
+  background-color: var(--surface-sunken);
+  color: var(--text-tertiary);
 }
 
 /* History Slide-Over Panel (when sidebar collapsed or mobile) */
@@ -195,16 +291,23 @@
 .history-toggle-btn {
   background: transparent;
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 4px 10px;
-  font-size: 13px;
+  border-radius: 8px;
+  padding: 6px;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   color: var(--text-secondary);
+  transition: all 150ms ease;
+  flex-shrink: 0;
 }
 
 .history-toggle-btn:hover {
   background-color: var(--surface-sunken);
   color: var(--text-primary);
+  border-color: var(--border-strong);
 }
 
 .top-bar-title {
@@ -214,18 +317,21 @@
 }
 
 .btn-new-chat-top {
-  padding: 4px 10px;
+  padding: 5px 12px;
   font-size: 13px;
   background-color: var(--surface-sunken);
-  color: var(--accent);
+  color: var(--text-primary);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: 8px;
   cursor: pointer;
   font-weight: var(--weight-medium);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .btn-new-chat-top:hover {
   background-color: var(--border-subtle);
+  border-color: var(--border-strong);
 }
 
 .assistant-content {
@@ -265,29 +371,46 @@
   letter-spacing: -0.02em;
 }
 
+/* Claude-style Suggestion Chips (Rounded Rectangle) */
 .suggestion-chips {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 8px;
-  margin-top: 20px;
+  gap: 10px;
+  margin-top: 24px;
+  max-width: 680px;
 }
 
 .chip-btn {
-  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
   font-size: 13px;
+  font-weight: var(--weight-medium);
   color: var(--text-secondary);
   background-color: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 20px;
+  border-radius: 8px; /* Claude-style rounded rectangle */
   cursor: pointer;
   transition: all var(--transition-fast);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 .chip-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
   background-color: var(--surface-sunken);
+  transform: translateY(-1px);
+}
+
+.chip-icon {
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.chip-label {
+  white-space: nowrap;
 }
 
 /* Docked Layout */
@@ -645,7 +768,7 @@
 .composer-card {
   background-color: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 24px;
+  border-radius: 14px; /* Claude-style rounded rectangle */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   padding: 4px 8px 4px 12px;
   min-height: 44px;

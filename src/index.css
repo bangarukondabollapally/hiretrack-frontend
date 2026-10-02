@@ -110,6 +110,65 @@ button:disabled {
   opacity: 0.6;
 }
 
+/* Global Button Utilities with Mobile Optimization */
+.btn-primary {
+  padding: 8px 16px;
+  background-color: var(--accent);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: var(--text-button);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-fast);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--accent-hover);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  padding: 8px 14px;
+  background-color: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  font-size: var(--text-button);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.btn-secondary:hover {
+  background-color: var(--surface-sunken);
+}
+
+@media (max-width: 480px) {
+  .btn-primary {
+    padding: 6px 12px;
+    font-size: var(--text-button);
+  }
+  .btn-secondary {
+    padding: 6px 10px;
+    font-size: var(--text-button);
+  }
+}
+
 /* ── Inputs base ─────────────────────────────────────────────────── */
 input,
 textarea,

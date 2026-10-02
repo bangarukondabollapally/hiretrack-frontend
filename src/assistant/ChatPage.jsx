@@ -14,11 +14,11 @@ const ReactMarkdown = lazy(() => import('react-markdown'));
 const INITIAL_GREETING = "What can I help you with today?";
 
 const SUGGESTED_PROMPTS = [
-  'What applications need follow-up?',
-  'Summarize my interview preparation notes',
-  'Show applications in Interview stage',
-  'Tailor my resume for this role',
-  'What should I research before my interview?',
+  { icon: '</>', category: 'Code', label: 'Tailor resume for this role', prompt: 'Tailor my resume for this role' },
+  { icon: '🎓', category: 'Prep', label: 'Summarize prep notes', prompt: 'Summarize my interview preparation notes' },
+  { icon: '💼', category: 'Status', label: 'Applications in Interview stage', prompt: 'Show applications in Interview stage' },
+  { icon: '💡', category: 'Strategy', label: 'What applications need follow-up?', prompt: 'What applications need follow-up?' },
+  { icon: '✏️', category: 'Draft', label: 'Research before interview', prompt: 'What should I research before my interview?' },
 ];
 
 const ROTATING_THINKING_WORDS = ['Thinking', 'Musing', 'Pondering', 'Mulling it over'];
@@ -70,6 +70,7 @@ export default function ChatPage() {
     updateReasoningText,
     deleteConversation,
     renameConversation,
+    togglePinConversation,
   } = useChatHistory(userId, INITIAL_GREETING);
 
   // Input & context states
@@ -87,10 +88,11 @@ export default function ChatPage() {
   const [reasoningTimeSeconds, setReasoningTimeSeconds] = useState(0);
   const [isReasoningExpanded, setIsReasoningExpanded] = useState(false);
 
-  // Slide-over history panel state (for collapsed sidebar or mobile)
+  // Slide-over history panel & popover menu states
   const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
   const [editingConvId, setEditingConvId] = useState(null);
   const [editingTitle, setEditingTitle] = useState('');
+  const [menuOpenConvId, setMenuOpenConvId] = useState(null);
 
   // Portal mount check
   const [portalTarget, setPortalTarget] = useState(null);
@@ -126,16 +128,26 @@ export default function ChatPage() {
     setIsSlideOverOpen(false);
   }, [location.pathname]);
 
-  // Close slide-over on Escape key
+  // Close slide-over & popovers on Escape key
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         setIsSlideOverOpen(false);
         setIsAppPickerOpen(false);
+        setMenuOpenConvId(null);
+      }
+    };
+    const handleOutsideClick = (e) => {
+      if (!e.target.closest('.conv-item-actions')) {
+        setMenuOpenConvId(null);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener('click', handleOutsideClick);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('click', handleOutsideClick);
+    };
   }, []);
 
   // Rotate thinking words while in 'thinking' phase
@@ -385,7 +397,14 @@ export default function ChatPage() {
   const nonGreetingMessages = messages.filter(m => m.text !== INITIAL_GREETING);
   const isTranscriptEmpty = nonGreetingMessages.length === 0;
 
-  // Render recent conversations list helper
+  // Sort conversations: Pinned first, then by creation
+  const sortedConversations = [...conversations].sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return 0;
+  });
+
+  // Render recent conversations list helper with Claude-style 3-dots menu & Pinning
   const renderConversationsList = () => (
     <div className="recent-conversations-container">
       <div className="recent-conversations-header">
@@ -404,64 +423,131 @@ export default function ChatPage() {
       </div>
 
       <div className="recent-conversations-list">
-        {conversations.length === 0 ? (
+        {sortedConversations.length === 0 ? (
           <div className="no-conversations-text">No recent chats</div>
         ) : (
-          conversations.map(conv => (
+          sortedConversations.map(conv => (
             <div
               key={conv.id}
               className={`conv-item ${conv.id === activeId ? 'conv-item--active' : ''}`}
               onClick={() => {
-                switchConversation(conv.id);
-                setIsSlideOverOpen(false);
+                if (editingConvId !== conv.id) {
+                  switchConversation(conv.id);
+                  setIsSlideOverOpen(false);
+                }
               }}
             >
               {editingConvId === conv.id ? (
-                <input
-                  type="text"
-                  className="conv-rename-input"
-                  value={editingTitle}
-                  onChange={(e) => setEditingTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      renameConversation(conv.id, editingTitle);
+                <div className="conv-rename-row" onClick={(e) => e.stopPropagation()}>
+                  <input
+                    type="text"
+                    className="conv-rename-input"
+                    value={editingTitle}
+                    onChange={(e) => setEditingTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        if (editingTitle.trim()) {
+                          renameConversation(conv.id, editingTitle.trim());
+                        }
+                        setEditingConvId(null);
+                      } else if (e.key === 'Escape') {
+                        setEditingConvId(null);
+                      }
+                    }}
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    className="conv-rename-btn conv-rename-btn--save"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (editingTitle.trim()) {
+                        renameConversation(conv.id, editingTitle.trim());
+                      }
                       setEditingConvId(null);
-                    } else if (e.key === 'Escape') {
+                    }}
+                    title="Save"
+                  >
+                    ✓
+                  </button>
+                  <button
+                    type="button"
+                    className="conv-rename-btn conv-rename-btn--cancel"
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setEditingConvId(null);
-                    }
-                  }}
-                  onBlur={() => {
-                    renameConversation(conv.id, editingTitle);
-                    setEditingConvId(null);
-                  }}
-                  autoFocus
-                  onClick={(e) => e.stopPropagation()}
-                />
+                    }}
+                    title="Cancel"
+                  >
+                    ✕
+                  </button>
+                </div>
               ) : (
-                <span className="conv-item-title">{conv.title}</span>
-              )}
+                <>
+                  <div className="conv-item-left">
+                    {conv.pinned && <span className="conv-pin-badge" title="Pinned">📌</span>}
+                    <span className="conv-item-title">{conv.title}</span>
+                  </div>
 
-              <div className="conv-item-actions" onClick={(e) => e.stopPropagation()}>
-                <button
-                  type="button"
-                  className="icon-btn-subtle"
-                  title="Rename"
-                  onClick={() => {
-                    setEditingConvId(conv.id);
-                    setEditingTitle(conv.title);
-                  }}
-                >
-                  ✎
-                </button>
-                <button
-                  type="button"
-                  className="icon-btn-subtle icon-btn-danger"
-                  title="Delete"
-                  onClick={() => deleteConversation(conv.id)}
-                >
-                  ×
-                </button>
-              </div>
+                  <div className="conv-item-actions" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      className="icon-btn-subtle conv-menu-trigger"
+                      title="More options"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpenConvId(menuOpenConvId === conv.id ? null : conv.id);
+                      }}
+                      aria-label="More options"
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="12" cy="5" r="2.2" />
+                        <circle cx="12" cy="12" r="2.2" />
+                        <circle cx="12" cy="19" r="2.2" />
+                      </svg>
+                    </button>
+
+                    {menuOpenConvId === conv.id && (
+                      <div className="conv-popover-menu" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          className="conv-popover-item"
+                          onClick={() => {
+                            togglePinConversation(conv.id);
+                            setMenuOpenConvId(null);
+                          }}
+                        >
+                          <span className="conv-popover-icon">📌</span>
+                          <span>{conv.pinned ? 'Unpin' : 'Pin'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="conv-popover-item"
+                          onClick={() => {
+                            setEditingConvId(conv.id);
+                            setEditingTitle(conv.title);
+                            setMenuOpenConvId(null);
+                          }}
+                        >
+                          <span className="conv-popover-icon">✏️</span>
+                          <span>Rename</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="conv-popover-item conv-popover-item--danger"
+                          onClick={() => {
+                            deleteConversation(conv.id);
+                            setMenuOpenConvId(null);
+                          }}
+                        >
+                          <span className="conv-popover-icon">🗑️</span>
+                          <span>Delete</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
             </div>
           ))
         )}
@@ -501,16 +587,19 @@ export default function ChatPage() {
 
       {/* Main Container */}
       <main className="assistant-main">
-        {/* Top Header bar with slide-over toggle button */}
+        {/* Top Header bar with slide-over toggle icon */}
         <header className="assistant-top-bar">
           <button
             type="button"
             className="history-toggle-btn"
             onClick={() => setIsSlideOverOpen(!isSlideOverOpen)}
-            title="Recent Conversations"
-            aria-label="Recent Conversations"
+            title="Recent chats"
+            aria-label="Recent chats"
           >
-            💬 Recent chats
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="3" ry="3"></rect>
+              <line x1="9" y1="3" x2="9" y2="21"></line>
+            </svg>
           </button>
           <span className="top-bar-title">HireTrack AI Assistant</span>
           <button
@@ -540,16 +629,17 @@ export default function ChatPage() {
                 {renderComposer()}
               </div>
 
-              {/* Suggestion chips BELOW composer */}
+              {/* Claude-style suggestion chips BELOW composer */}
               <div className="suggestion-chips">
-                {SUGGESTED_PROMPTS.map((prompt, idx) => (
+                {SUGGESTED_PROMPTS.map((item, idx) => (
                   <button
                     key={idx}
                     type="button"
                     className="chip-btn"
-                    onClick={() => handleSendMessage(prompt)}
+                    onClick={() => handleSendMessage(item.prompt)}
                   >
-                    {prompt}
+                    <span className="chip-icon">{item.icon}</span>
+                    <span className="chip-label">{item.label}</span>
                   </button>
                 ))}
               </div>

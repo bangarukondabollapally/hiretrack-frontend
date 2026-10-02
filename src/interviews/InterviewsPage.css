@@ -12,6 +12,22 @@
   gap: 16px;
 }
 
+@media (max-width: 480px) {
+  .interviews-header {
+    align-items: center;
+    gap: 10px;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+
+  .interviews-subtitle {
+    font-size: 12.5px;
+    margin-top: 2px;
+  }
+}
+
 .page-title {
   font-size: 24px;
   font-weight: var(--weight-bold);
