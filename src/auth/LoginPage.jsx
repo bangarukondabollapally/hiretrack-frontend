@@ -18,9 +18,10 @@
  * deliberate placeholder; TASK-010 wires the real navigation.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
+
 import axiosInstance from '../api/axiosInstance';
 import { ROUTES } from '../lib/constants';
 import './Auth.css';
