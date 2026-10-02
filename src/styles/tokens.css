@@ -15,10 +15,10 @@
   --font-stamp: 'VT323', monospace;
   --font-prose: 'Source Serif 4', Georgia, Cambria, 'Times New Roman', serif;
 
-  /* Font sizes — per DESIGN.md token reference */
-  --text-display: 30px;
-  --text-page-heading: 20px;
-  --text-section-heading: 12px;
+  /* Font sizes — minimal, crisp & professional scale */
+  --text-display: 22px;
+  --text-page-heading: 16px;
+  --text-section-heading: 13px;
   --text-body: 12px;
   --text-meta: 10px;
   --text-button: 11px;
@@ -99,14 +99,14 @@
   --content-narrow: 720px;
 }
 
-/* Mobile type scale reduction per DESIGN.md §24 */
+/* Mobile type scale reduction */
 @media (max-width: 480px) {
   :root {
-    --text-display: 26px;
-    --text-page-heading: 20px;
-    --text-section-heading: 15px;
-    --text-body: 13px;
-    --text-meta: 11px;
-    --text-button: 12px;
+    --text-display: 19px;
+    --text-page-heading: 15px;
+    --text-section-heading: 12px;
+    --text-body: 11.5px;
+    --text-meta: 10px;
+    --text-button: 10.5px;
   }
 }
