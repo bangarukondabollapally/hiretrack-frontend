@@ -27,7 +27,7 @@
 }
 
 .recent-conversations-title {
-  font-size: 12px;
+  font-size: var(--text-section-heading, 12px);
   font-weight: var(--weight-semibold);
   color: var(--text-tertiary);
   text-transform: uppercase;
@@ -35,8 +35,8 @@
 }
 
 .btn-new-chat {
-  padding: 4px 8px;
-  font-size: 12px;
+  padding: 3px 8px;
+  font-size: var(--text-button, 11px);
   background-color: var(--surface-sunken);
   color: var(--accent);
   border: 1px solid var(--border);
@@ -58,7 +58,7 @@
 }
 
 .no-conversations-text {
-  font-size: 12px;
+  font-size: var(--text-meta, 10px);
   color: var(--text-tertiary);
   padding: 8px 4px;
 }
@@ -67,11 +67,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 10px;
+  padding: 5px 8px;
   border-radius: 6px;
   cursor: pointer;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: var(--text-body, 12px);
   transition: background-color var(--transition-fast);
 }
 
@@ -110,7 +110,7 @@
   border: none;
   color: var(--text-tertiary);
   cursor: pointer;
-  font-size: 13px;
+  font-size: 12px;
   padding: 2px 4px;
 }
 
@@ -124,7 +124,7 @@
 
 .conv-rename-input {
   width: 100%;
-  font-size: 13px;
+  font-size: var(--text-body, 12px);
   padding: 2px 6px;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -645,13 +645,13 @@
 .composer-card {
   background-color: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  padding: 6px 10px;
-  min-height: 48px;
+  padding: 4px 8px 4px 12px;
+  min-height: 44px;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 8px;
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
@@ -661,11 +661,49 @@
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 0 0 2px var(--focus);
 }
 
-.composer-toolbar {
+.composer-attach-btn {
+  font-size: 18px;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  color: var(--text-tertiary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+  justify-content: center;
+  transition: color 150ms ease;
+  flex-shrink: 0;
+}
+
+.composer-attach-btn:hover {
+  color: var(--text-primary);
+}
+
+.composer-input {
+  flex: 1;
+  min-height: 24px;
+  max-height: 140px;
+  padding: 4px 0;
+  overflow-y: auto;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent;
+  font-family: var(--font-primary);
+  font-size: 14px;
+  color: var(--text-primary);
+  resize: none;
+  line-height: 1.4;
+}
+
+.composer-right-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .context-picker-wrapper {
@@ -675,12 +713,12 @@
 .context-pill {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
+  gap: 4px;
+  padding: 3px 8px;
   background-color: var(--surface-sunken);
   border: 1px solid var(--border-subtle);
-  border-radius: 16px;
-  font-size: 12.5px;
+  border-radius: 14px;
+  font-size: 11.5px;
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 150ms ease;
@@ -692,7 +730,7 @@
 }
 
 .context-pill-clear {
-  margin-left: 4px;
+  margin-left: 2px;
   font-weight: bold;
   color: var(--text-tertiary);
 }
@@ -701,8 +739,8 @@
 .context-dropdown {
   position: absolute;
   bottom: calc(100% + 8px);
-  left: 0;
-  width: 320px;
+  right: 0;
+  width: 300px;
   background-color: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -727,7 +765,7 @@
 }
 
 .context-dropdown-list {
-  max-height: 260px;
+  max-height: 240px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -735,8 +773,8 @@
 }
 
 .context-dropdown-item {
-  padding: 8px 10px;
-  font-size: 13px;
+  padding: 7px 10px;
+  font-size: 12.5px;
   color: var(--text-secondary);
   border-radius: 6px;
   cursor: pointer;
@@ -749,67 +787,33 @@
   color: var(--text-primary);
 }
 
-/* Textarea inside composer (Reduced height at rest) */
-.composer-input {
-  width: 100%;
-  min-height: 28px;
-  max-height: 160px;
-  padding: 4px 6px;
-  overflow-y: auto;
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
-  background: transparent;
-  font-family: var(--font-primary);
-  font-size: 14.5px;
-  color: var(--text-primary);
-  resize: none;
-  line-height: 1.45;
-}
-
-.composer-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 8px;
-  border-top: 1px solid var(--border-subtle);
-}
-
-.btn-attach {
-  font-size: 13px;
-  color: var(--text-secondary);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.btn-attach:hover {
-  color: var(--text-primary);
-}
-
-.btn-submit {
-  padding: 6px 16px;
-  font-size: 13.5px;
-  font-weight: var(--weight-medium);
-  background-color: var(--border);
+.composer-send-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: var(--surface-sunken);
   color: var(--text-tertiary);
   border: none;
-  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: not-allowed;
   transition: all 150ms ease;
+  flex-shrink: 0;
+  padding: 0;
 }
 
-.btn-submit--active {
+.composer-send-btn--active {
   background-color: var(--accent);
   color: #ffffff;
   cursor: pointer;
 }
 
-.btn-submit--active:hover {
+.composer-send-btn--active:hover {
   background-color: var(--accent-hover);
 }
 
-.btn-stop {
+.composer-send-btn--stop {
   background-color: var(--danger);
   color: #ffffff;
   cursor: pointer;

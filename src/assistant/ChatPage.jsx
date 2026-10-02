@@ -704,12 +704,41 @@ export default function ChatPage() {
     </div>
   );
 
-  // Helper render method for Composer (item 3.2 spec)
+  // Helper render method for Composer (Claude-style single pill bar)
   function renderComposer() {
     return (
       <div className="composer-card">
-        {/* Context Pill Toolbar */}
-        <div className="composer-toolbar">
+        {/* Left: Attach File Button */}
+        <button
+          type="button"
+          className="composer-attach-btn"
+          onClick={() => fileInputRef.current?.click()}
+          title="Attach text or markdown file"
+          aria-label="Attach file"
+        >
+          +
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".txt,.md"
+          style={{ display: 'none' }}
+          onChange={handleFileAttach}
+        />
+
+        {/* Center: Textarea input */}
+        <textarea
+          ref={textareaRef}
+          className="composer-input"
+          placeholder="Write a message..."
+          value={inputText}
+          onChange={(e) => setInputText(e.target.value)}
+          onKeyDown={handleKeyDown}
+          rows={1}
+        />
+
+        {/* Right: Context Selector & Send Button */}
+        <div className="composer-right-actions">
           <div className="context-picker-wrapper" ref={contextPickerRef}>
             <button
               type="button"
@@ -721,9 +750,8 @@ export default function ChatPage() {
               aria-expanded={isAppPickerOpen}
               aria-label="Select application context"
             >
-              <span className="context-pill-icon">🎯</span>
               <span className="context-pill-text">
-                {selectedApp ? `${selectedApp.companyName} — ${selectedApp.jobRole}` : 'All applications'}
+                {selectedApp ? `${selectedApp.companyName}` : 'All applications'}
               </span>
               {selectedApp ? (
                 <span
@@ -741,16 +769,6 @@ export default function ChatPage() {
               )}
             </button>
 
-            {selectedApp && (
-              <button
-                type="button"
-                className="chip-btn chip-btn--fit"
-                onClick={() => handleSendMessage('How well do I match this role?')}
-              >
-                ✨ How well do I match this role?
-              </button>
-            )}
-
             {/* Mobile Backdrop for Context Picker Sheet */}
             {isAppPickerOpen && (
               <div
@@ -759,7 +777,7 @@ export default function ChatPage() {
               />
             )}
 
-            {/* Searchable Context Dropdown Popover / Mobile Bottom Sheet */}
+            {/* Searchable Context Dropdown Popover */}
             {isAppPickerOpen && (
               <div
                 className="context-dropdown"
@@ -809,60 +827,32 @@ export default function ChatPage() {
               </div>
             )}
           </div>
-        </div>
 
-        {/* Textarea: borderless container with inner textarea outline removed */}
-        <textarea
-          ref={textareaRef}
-          className="composer-input"
-          placeholder="Ask anything about your job search, interviews, or resume..."
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          rows={1}
-        />
-
-        {/* Composer Footer Actions */}
-        <div className="composer-footer">
-          <div className="composer-footer-left">
+          {/* Send or Stop Button */}
+          {isGenerating ? (
             <button
               type="button"
-              className="btn-attach"
-              onClick={() => fileInputRef.current?.click()}
-              title="Attach text or markdown file"
+              className="composer-send-btn composer-send-btn--stop"
+              onClick={handleStopGeneration}
+              title="Stop generating"
             >
-              + Attach file
+              ■
             </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".txt,.md"
-              style={{ display: 'none' }}
-              onChange={handleFileAttach}
-            />
-          </div>
-
-          <div className="composer-footer-right">
-            {isGenerating ? (
-              <button
-                type="button"
-                className="btn-submit btn-stop"
-                onClick={handleStopGeneration}
-                title="Stop generating"
-              >
-                ■ Stop
-              </button>
-            ) : (
-              <button
-                type="button"
-                className={`btn-submit ${inputText.trim() ? 'btn-submit--active' : ''}`}
-                onClick={() => handleSendMessage()}
-                disabled={!inputText.trim()}
-              >
-                Send ➔
-              </button>
-            )}
-          </div>
+          ) : (
+            <button
+              type="button"
+              className={`composer-send-btn ${inputText.trim() ? 'composer-send-btn--active' : ''}`}
+              onClick={() => handleSendMessage()}
+              disabled={!inputText.trim()}
+              title="Send message"
+              aria-label="Send message"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="19" x2="12" y2="5"></line>
+                <polyline points="5 12 12 5 19 12"></polyline>
+              </svg>
+            </button>
+          )}
         </div>
       </div>
     );
