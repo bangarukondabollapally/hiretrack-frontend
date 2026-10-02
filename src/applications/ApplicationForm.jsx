@@ -66,13 +66,12 @@ export default function ApplicationForm() {
     try {
       if (isEdit) {
         await axiosInstance.put(`/api/applications/${id}`, formData);
+        navigate('/applications');
       } else {
-        const response = await axiosInstance.post('/api/applications', formData);
-        const newApp = response.data;
-        navigate(`/applications/${newApp.id}`);
-        return;
+        await axiosInstance.post('/api/applications', formData);
+        navigate('/applications', { replace: true, state: { toastMessage: 'Application created successfully!' } });
       }
-      navigate('/applications');
+
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to save application.');
     } finally {
