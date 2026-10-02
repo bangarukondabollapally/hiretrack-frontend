@@ -589,32 +589,6 @@ export default function ChatPage() {
                             )}
                           </div>
 
-                          {/* Minimal Claude-style "Thought for Ns" disclosure (item 3.2) */}
-                          {(msg.reasoning || (isGenerating && idx === messages.length - 1 && reasoningTimeSeconds > 0)) && (
-                            <div className="thought-container">
-                              {msg.reasoning ? (
-                                <button
-                                  type="button"
-                                  className="thought-toggle-btn"
-                                  onClick={() => setIsReasoningExpanded(!isReasoningExpanded)}
-                                >
-                                  <span className="thought-chevron">{isReasoningExpanded ? '▼' : '►'}</span>
-                                  <span>Thought for {reasoningTimeSeconds || 1}s</span>
-                                </button>
-                              ) : (
-                                <div className="thought-static-label">
-                                  Thought for {reasoningTimeSeconds || 1}s
-                                </div>
-                              )}
-
-                              {isReasoningExpanded && msg.reasoning && (
-                                <div className="thought-reasoning-panel">
-                                  {normalizeText(msg.reasoning)}
-                                </div>
-                              )}
-                            </div>
-                          )}
-
                           {/* Assistant Message Body in proportional serif font per item 3.2 */}
                           <div className="assistant-prose">
                             <Suspense fallback={<div>{normalizeText(msg.text)}</div>}>
