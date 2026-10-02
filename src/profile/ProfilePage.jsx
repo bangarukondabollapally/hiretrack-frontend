@@ -6,8 +6,29 @@ import { extractTextFromFile } from '../lib/fileParser';
 import './ProfilePage.css';
 
 const TABS = [
-  { id: 'account', label: 'Account', icon: '👤' },
-  { id: 'job-search', label: 'Job search', icon: '🎯' },
+  {
+    id: 'account',
+    label: 'Account',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+      </svg>
+    ),
+  },
+  {
+    id: 'job-search',
+    label: 'Job search',
+    icon: (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="22" y1="12" x2="18" y2="12" />
+        <line x1="6" y1="12" x2="2" y2="12" />
+        <line x1="12" y1="6" x2="12" y2="2" />
+        <line x1="12" y1="22" x2="12" y2="18" />
+      </svg>
+    ),
+  },
 ];
 
 export default function ProfilePage() {
@@ -431,7 +452,13 @@ export default function ProfilePage() {
                         }}
                         onClick={() => fileInputRef.current?.click()}
                       >
-                        <span className="dropzone-icon">📥</span>
+                        <span className="dropzone-icon">
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                          </svg>
+                        </span>
                         <span className="dropzone-text">
                           {isParsing ? 'Extracting text from file...' : 'Upload PDF, DOCX, or TXT file'}
                         </span>

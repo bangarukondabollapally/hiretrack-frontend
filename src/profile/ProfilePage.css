@@ -15,14 +15,14 @@
 }
 
 .settings-title {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: var(--weight-bold);
   color: var(--text-primary);
   letter-spacing: -0.02em;
 }
 
 .settings-subtitle {
-  font-size: 14px;
+  font-size: 11.5px;
   color: var(--text-secondary);
 }
 
@@ -30,7 +30,7 @@
   padding: 40px;
   text-align: center;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: 12px;
 }
 
 /* Settings Desktop Layout: Left nav section list + Right content pane */
@@ -53,9 +53,9 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: var(--weight-medium);
   color: var(--text-secondary);
   background: transparent;
@@ -78,7 +78,14 @@
 }
 
 .settings-nav__icon {
-  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+}
+
+.settings-nav__item--active .settings-nav__icon {
+  color: var(--text-primary);
 }
 
 .settings-nav__label {
@@ -108,13 +115,13 @@
 }
 
 .settings-section__title {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: var(--weight-semibold);
   color: var(--text-primary);
 }
 
 .settings-section__desc {
-  font-size: 13.5px;
+  font-size: 11.5px;
   color: var(--text-secondary);
 }
 
@@ -156,16 +163,17 @@
 }
 
 .claude-row__label {
-  font-size: 14px;
-  font-weight: var(--weight-medium);
+  font-size: 12.5px;
+  font-weight: var(--weight-semibold);
   color: var(--text-primary);
   display: block;
 }
 
 .claude-row__desc {
-  font-size: 12.5px;
+  font-size: 11px;
   color: var(--text-tertiary);
-  margin-top: 2px;
+  margin-top: 3px;
+  line-height: 1.45;
 }
 
 .claude-row__control {
@@ -184,15 +192,15 @@
 }
 
 .read-only-value {
-  font-size: 14px;
+  font-size: 11.5px;
   color: var(--text-secondary);
   font-family: var(--font-mono);
 }
 
 .form-input {
   width: 100%;
-  padding: 8px 12px;
-  font-size: 14px;
+  padding: 7px 10px;
+  font-size: 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background-color: var(--surface-sunken);
@@ -208,8 +216,8 @@
 
 .form-textarea {
   width: 100%;
-  padding: 12px;
-  font-size: 13.5px;
+  padding: 10px;
+  font-size: 11.5px;
   font-family: var(--font-mono);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -226,7 +234,7 @@
 }
 
 .character-count {
-  font-size: 12px;
+  font-size: 10.5px;
   color: var(--text-tertiary);
   font-family: var(--font-mono);
 }
@@ -240,8 +248,8 @@
 }
 
 .sub-label {
-  font-size: 13px;
-  font-weight: var(--weight-medium);
+  font-size: 11.5px;
+  font-weight: var(--weight-semibold);
   color: var(--text-secondary);
   display: block;
   margin-bottom: 4px;
@@ -266,7 +274,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 12px 16px;
+  padding: 10px 14px;
   background-color: var(--surface-sunken);
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
@@ -274,7 +282,7 @@
 }
 
 .saved-resume-text {
-  font-size: 13.5px;
+  font-size: 12px;
   color: var(--text-primary);
   font-weight: var(--weight-medium);
 }
@@ -296,9 +304,9 @@
 }
 
 .btn-primary {
-  padding: 8px 18px;
-  font-size: 14px;
-  font-weight: var(--weight-medium);
+  padding: 7px 16px;
+  font-size: 11.5px;
+  font-weight: var(--weight-semibold);
   background-color: var(--accent);
   color: #ffffff;
   border: none;
@@ -320,8 +328,8 @@
 }
 
 .btn-secondary {
-  padding: 8px 14px;
-  font-size: 13px;
+  padding: 6px 12px;
+  font-size: 11.5px;
   font-weight: var(--weight-medium);
   background-color: var(--surface-sunken);
   color: var(--text-primary);
@@ -336,8 +344,8 @@
 }
 
 .btn-sm {
-  padding: 4px 10px;
-  font-size: 12.5px;
+  padding: 3px 8px;
+  font-size: 11px;
 }
 
 .btn-danger-outline {
