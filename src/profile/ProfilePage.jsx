@@ -1,19 +1,31 @@
 import { useState, useEffect, useRef } from 'react';
+import { useAuth } from '../auth/AuthContext';
 import axiosInstance from '../api/axiosInstance';
 import { extractTextFromFile } from '../lib/fileParser';
 import './ProfilePage.css';
 
 export default function ProfilePage() {
+  const { user, logout } = useAuth();
+  
+  const [activeTab, setActiveTab] = useState('account'); // 'account' | 'jobsearch' | 'resume'
+
+  // Form states
   const [name, setName] = useState('');
-  const [resumeText, setResumeText] = useState('');
   const [targetRole, setTargetRole] = useState('');
+  const [resumeText, setResumeText] = useState('');
+
+  // UI states
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [showTextArea, setShowTextArea] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState('');
-  const [message, setMessage] = useState({ type: '', text: '' });
-  
+
+  // Per-section status: { loading: boolean, success: boolean, error: string }
+  const [accountStatus, setAccountStatus] = useState({ loading: false, success: false, error: '' });
+  const [jobSearchStatus, setJobSearchStatus] = useState({ loading: false, success: false, error: '' });
+  const [resumeStatus, setResumeStatus] = useState({ loading: false, success: false, error: '' });
+
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -25,20 +37,74 @@ export default function ProfilePage() {
     try {
       const response = await axiosInstance.get('/api/profile');
       setName(response.data.name || '');
-      setResumeText(response.data.resumeText || '');
       setTargetRole(response.data.targetRole || '');
+      setResumeText(response.data.resumeText || '');
     } catch (err) {
-      setMessage({ type: 'error', text: 'Failed to load profile data.' });
+      console.error(err);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Section 1: Save Account
+  const handleSaveAccount = async (e) => {
+    e.preventDefault();
+    setAccountStatus({ loading: true, success: false, error: '' });
+    try {
+      await axiosInstance.put('/api/profile', { name });
+      setAccountStatus({ loading: false, success: true, error: '' });
+      setTimeout(() => setAccountStatus((prev) => ({ ...prev, success: false })), 3000);
+    } catch (err) {
+      setAccountStatus({ loading: false, success: false, error: 'Failed to save account details.' });
+    }
+  };
+
+  // Section 2: Save Job Search
+  const handleSaveJobSearch = async (e) => {
+    e.preventDefault();
+    setJobSearchStatus({ loading: true, success: false, error: '' });
+    try {
+      await axiosInstance.put('/api/profile', { targetRole });
+      setJobSearchStatus({ loading: false, success: true, error: '' });
+      setTimeout(() => setJobSearchStatus((prev) => ({ ...prev, success: false })), 3000);
+    } catch (err) {
+      setJobSearchStatus({ loading: false, success: false, error: 'Failed to save target role.' });
+    }
+  };
+
+  // Section 3: Save Resume
+  const handleSaveResume = async (e) => {
+    if (e) e.preventDefault();
+    setResumeStatus({ loading: true, success: false, error: '' });
+    try {
+      await axiosInstance.put('/api/profile', { resumeText });
+      setResumeStatus({ loading: false, success: true, error: '' });
+      setTimeout(() => setResumeStatus((prev) => ({ ...prev, success: false })), 3000);
+    } catch (err) {
+      setResumeStatus({ loading: false, success: false, error: 'Failed to save resume.' });
+    }
+  };
+
+  const handleRemoveResume = async () => {
+    if (window.confirm('Are you sure you want to remove your stored resume?')) {
+      setResumeText('');
+      setUploadedFileName('');
+      setShowTextArea(false);
+      setResumeStatus({ loading: true, success: false, error: '' });
+      try {
+        await axiosInstance.put('/api/profile', { resumeText: '' });
+        setResumeStatus({ loading: false, success: true, error: '' });
+        setTimeout(() => setResumeStatus((prev) => ({ ...prev, success: false })), 3000);
+      } catch (err) {
+        setResumeStatus({ loading: false, success: false, error: 'Failed to remove resume.' });
+      }
+    }
+  };
+
   const handleFileSelect = async (file) => {
     if (!file) return;
-    
     setIsParsing(true);
-    setMessage({ type: 'info', text: `Processing ${file.name}...` });
+    setResumeStatus({ loading: false, success: false, error: '' });
 
     try {
       const extractedText = await extractTextFromFile(file);
@@ -47,165 +113,274 @@ export default function ProfilePage() {
       }
       setResumeText(extractedText);
       setUploadedFileName(file.name);
-      setMessage({
-        type: 'success',
-        text: `Successfully extracted resume text from "${file.name}". Click "Save Resume" to confirm.`,
-      });
+      setShowTextArea(true);
     } catch (err) {
-      setMessage({
-        type: 'error',
-        text: err.message || 'Failed to parse file. Please try pasting the text manually.',
+      setResumeStatus({
+        loading: false,
+        success: false,
+        error: err.message || 'Failed to parse file. Please try pasting text instead.',
       });
     } finally {
       setIsParsing(false);
     }
   };
 
-  const handleFileInputChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      handleFileSelect(file);
-    }
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      handleFileSelect(e.dataTransfer.files[0]);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSaving(true);
-    setMessage({ type: '', text: '' });
-
-    try {
-      await axiosInstance.put('/api/profile', { name, resumeText, targetRole });
-      setMessage({ type: 'success', text: 'Profile updated successfully!' });
-    } catch (err) {
-      setMessage({ type: 'error', text: 'Failed to update profile.' });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   if (isLoading) {
-    return <div className="profile-loading">Loading profile...</div>;
+    return <div className="settings-loading">Loading settings...</div>;
   }
 
   return (
-    <div className="profile-container">
-      <div className="profile-header">
-        <h1 className="page-title">Profile & Master Resume</h1>
-        <p className="profile-subtitle">
-          Upload your resume PDF or Document to extract its text, or paste your master resume below.
-          The AI Assistant uses this to generate tailored responses for your applications.
-        </p>
+    <div className="settings-page">
+      <div className="settings-header">
+        <h1 className="settings-title">Settings</h1>
+        <p className="settings-subtitle">Manage your account credentials, job search targets, and master resume.</p>
       </div>
 
-      {message.text && (
-        <div className={`profile-alert profile-alert--${message.type}`}>
-          {message.text}
+      <div className="settings-layout">
+        {/* Desktop Left Nav Tabs / Mobile Top Tabs */}
+        <div className="settings-nav">
+          <button
+            type="button"
+            className={`settings-nav__item ${activeTab === 'account' ? 'settings-nav__item--active' : ''}`}
+            onClick={() => setActiveTab('account')}
+          >
+            Account
+          </button>
+          <button
+            type="button"
+            className={`settings-nav__item ${activeTab === 'jobsearch' ? 'settings-nav__item--active' : ''}`}
+            onClick={() => setActiveTab('jobsearch')}
+          >
+            Job search
+          </button>
+          <button
+            type="button"
+            className={`settings-nav__item ${activeTab === 'resume' ? 'settings-nav__item--active' : ''}`}
+            onClick={() => setActiveTab('resume')}
+          >
+            Resume {resumeText ? '✓' : '(optional)'}
+          </button>
         </div>
-      )}
 
-      {/* PDF / Document Dropzone */}
-      <div
-        className={`resume-dropzone ${isDragging ? 'resume-dropzone--dragging' : ''} ${isParsing ? 'resume-dropzone--parsing' : ''}`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf,.doc,.docx,.txt,.md"
-          className="resume-file-input"
-          onChange={handleFileInputChange}
-          disabled={isParsing}
-        />
+        {/* Content Area */}
+        <div className="settings-content">
+          {/* Section 1: Account */}
+          {(activeTab === 'account' || window.innerWidth < 768) && (
+            <section className="settings-section" id="section-account">
+              <div className="settings-section__header">
+                <h2 className="settings-section__title">Account</h2>
+                <p className="settings-section__desc">Personal details and login account.</p>
+              </div>
 
-        <div className="dropzone-icon" aria-hidden="true">
-          📄
-        </div>
+              <form onSubmit={handleSaveAccount} className="settings-form">
+                <div className="form-group">
+                  <label htmlFor="settings-name" className="form-label">Full Name</label>
+                  <input
+                    id="settings-name"
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. Jane Doe"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                  />
+                </div>
 
-        <div className="dropzone-text">
-          {isParsing ? (
-            <span className="dropzone-status">Extracting text from document...</span>
-          ) : uploadedFileName ? (
-            <span className="dropzone-status">
-              Uploaded: <strong>{uploadedFileName}</strong> (Click or drag to replace)
-            </span>
-          ) : (
-            <>
-              <span className="dropzone-primary">Click to upload PDF / Document</span>
-              <span className="dropzone-secondary">or drag and drop your file here (.pdf, .docx, .txt)</span>
-            </>
+                <div className="form-group">
+                  <label htmlFor="settings-email" className="form-label">Email Address</label>
+                  <input
+                    id="settings-email"
+                    type="email"
+                    className="form-input form-input--disabled"
+                    value={user?.email || ''}
+                    readOnly
+                    disabled
+                  />
+                  <span className="field-hint">Email address cannot be changed.</span>
+                </div>
+
+                <div className="settings-section__actions">
+                  <button type="submit" className="btn-primary" disabled={accountStatus.loading}>
+                    {accountStatus.loading ? 'Saving...' : 'Save Account'}
+                  </button>
+                  <button type="button" onClick={logout} className="btn-secondary btn-danger-outline">
+                    Sign out
+                  </button>
+                  {accountStatus.success && <span className="status-badge status-badge--success">Saved ✓</span>}
+                  {accountStatus.error && <span className="status-badge status-badge--error">{accountStatus.error}</span>}
+                </div>
+              </form>
+            </section>
+          )}
+
+          {/* Section 2: Job search */}
+          {(activeTab === 'jobsearch' || window.innerWidth < 768) && (
+            <section className="settings-section" id="section-jobsearch">
+              <div className="settings-section__header">
+                <h2 className="settings-section__title">Job search</h2>
+                <p className="settings-section__desc">Specify your target role for tailored AI guidance.</p>
+              </div>
+
+              <form onSubmit={handleSaveJobSearch} className="settings-form">
+                <div className="form-group">
+                  <label htmlFor="settings-target-role" className="form-label">Target Role</label>
+                  <input
+                    id="settings-target-role"
+                    type="text"
+                    className="form-input"
+                    placeholder="e.g. Senior Frontend Engineer"
+                    value={targetRole}
+                    onChange={(e) => setTargetRole(e.target.value)}
+                  />
+                  <span className="field-hint">Used by the AI assistant to focus answers on your target domain.</span>
+                </div>
+
+                <div className="settings-section__actions">
+                  <button type="submit" className="btn-primary" disabled={jobSearchStatus.loading}>
+                    {jobSearchStatus.loading ? 'Saving...' : 'Save Job Search'}
+                  </button>
+                  {jobSearchStatus.success && <span className="status-badge status-badge--success">Saved ✓</span>}
+                  {jobSearchStatus.error && <span className="status-badge status-badge--error">{jobSearchStatus.error}</span>}
+                </div>
+              </form>
+            </section>
+          )}
+
+          {/* Section 3: Resume */}
+          {(activeTab === 'resume' || window.innerWidth < 768) && (
+            <section className="settings-section" id="section-resume">
+              <div className="settings-section__header">
+                <h2 className="settings-section__title">Resume <span className="title-optional">(optional)</span></h2>
+                <p className="settings-section__desc">Your master resume text is used by the AI Assistant to customize interview responses.</p>
+              </div>
+
+              {resumeStatus.error && (
+                <div className="status-badge status-badge--error status-badge--block">
+                  {resumeStatus.error}
+                </div>
+              )}
+
+              {/* Added state: Compact summary row */}
+              {resumeText && !showTextArea ? (
+                <div className="resume-compact-row">
+                  <div className="resume-compact-info">
+                    <span className="resume-compact-icon">📄</span>
+                    <div className="resume-compact-details">
+                      <span className="resume-compact-title">Master Resume Added</span>
+                      <span className="resume-compact-meta">
+                        {uploadedFileName ? `${uploadedFileName} • ` : ''}{resumeText.length} characters
+                      </span>
+                    </div>
+                  </div>
+                  <div className="resume-compact-actions">
+                    <button
+                      type="button"
+                      className="btn-sm btn-secondary"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      Replace
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-sm btn-secondary"
+                      onClick={() => setShowTextArea(true)}
+                    >
+                      Edit text
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-sm btn-danger-link"
+                      onClick={handleRemoveResume}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Empty state or editing state */
+                <div className="resume-editor-area">
+                  {!resumeText && !showTextArea ? (
+                    <div className="resume-empty-box">
+                      <div
+                        className={`resume-dropzone ${isDragging ? 'resume-dropzone--dragging' : ''}`}
+                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                        onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setIsDragging(false);
+                          if (e.dataTransfer.files?.[0]) handleFileSelect(e.dataTransfer.files[0]);
+                        }}
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <span className="dropzone-icon">📥</span>
+                        <span className="dropzone-text">
+                          {isParsing ? 'Extracting text...' : 'Upload PDF, DOCX, or TXT file'}
+                        </span>
+                        <span className="dropzone-subtext">or drag and drop here</span>
+                      </div>
+                      <button
+                        type="button"
+                        className="paste-text-link"
+                        onClick={() => setShowTextArea(true)}
+                      >
+                        or paste text instead
+                      </button>
+                    </div>
+                  ) : (
+                    /* Textarea active */
+                    <div className="resume-textarea-container">
+                      <div className="textarea-header">
+                        <span className="textarea-label">Master Resume Text</span>
+                        <span className="character-count">{resumeText.length} characters</span>
+                      </div>
+                      <textarea
+                        rows="12"
+                        className="form-textarea"
+                        placeholder="Paste your master resume text here..."
+                        value={resumeText}
+                        onChange={(e) => setResumeText(e.target.value)}
+                      />
+                      {resumeText && (
+                        <div className="textarea-footer-actions">
+                          <button
+                            type="button"
+                            className="btn-sm btn-secondary"
+                            onClick={() => setShowTextArea(false)}
+                          >
+                            Collapse preview
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="settings-section__actions">
+                    <button
+                      type="button"
+                      onClick={handleSaveResume}
+                      className="btn-primary"
+                      disabled={resumeStatus.loading || isParsing}
+                    >
+                      {resumeStatus.loading ? 'Saving...' : 'Save Resume'}
+                    </button>
+                    {resumeStatus.success && <span className="status-badge status-badge--success">Saved ✓</span>}
+                  </div>
+                </div>
+              )}
+
+              {/* Hidden file input for file pickers */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.doc,.docx,.txt,.md"
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  if (e.target.files?.[0]) handleFileSelect(e.target.files[0]);
+                }}
+              />
+            </section>
           )}
         </div>
       </div>
-
-      <form onSubmit={handleSubmit} className="profile-form">
-        <div className="form-group">
-          <label className="form-label" htmlFor="profile-name">Full Name</label>
-          <input
-            id="profile-name"
-            type="text"
-            className="profile-target-role-input"
-            placeholder="e.g. Jane Doe"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-        </div>
-        <div className="form-group">
-          <label className="form-label" htmlFor="target-role">Target Role</label>
-          <input
-            id="target-role"
-            type="text"
-            className="profile-target-role-input"
-            placeholder="e.g. Frontend Engineer, Product Manager"
-            value={targetRole}
-            onChange={(e) => setTargetRole(e.target.value)}
-          />
-          <p className="profile-field-hint">Used by the AI assistant for general career questions.</p>
-        </div>
-        <div className="form-group">
-          <div className="form-group-header">
-            <label className="form-label">Resume Text Preview & Editor</label>
-            <span className="character-count">{resumeText.length} characters</span>
-          </div>
-          <textarea
-            rows="16"
-            className="resume-textarea"
-            placeholder="Uploaded resume text will appear here. You can also type or edit directly..."
-            value={resumeText}
-            onChange={(e) => setResumeText(e.target.value)}
-          />
-        </div>
-
-        <div className="form-actions">
-          <button type="submit" disabled={isSaving || isParsing} className="btn-primary">
-            {isSaving ? 'Saving...' : 'Save Resume'}
-          </button>
-        </div>
-      </form>
     </div>
   );
 }
