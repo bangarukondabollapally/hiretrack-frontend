@@ -189,10 +189,19 @@
 }
 
 .conv-popover-icon {
-  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 16px;
-  display: inline-block;
-  text-align: center;
+  height: 16px;
+  color: currentColor;
+}
+
+.conv-pin-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 /* Inline rename row */

@@ -14,12 +14,54 @@ const ReactMarkdown = lazy(() => import('react-markdown'));
 const INITIAL_GREETING = "What can I help you with today?";
 
 const SUGGESTED_PROMPTS = [
-  { icon: '</>', category: 'Code', label: 'Tailor resume for this role', prompt: 'Tailor my resume for this role' },
-  { icon: '🎓', category: 'Prep', label: 'Summarize prep notes', prompt: 'Summarize my interview preparation notes' },
-  { icon: '💼', category: 'Status', label: 'Applications in Interview stage', prompt: 'Show applications in Interview stage' },
-  { icon: '💡', category: 'Strategy', label: 'What applications need follow-up?', prompt: 'What applications need follow-up?' },
-  { icon: '✏️', category: 'Draft', label: 'Research before interview', prompt: 'What should I research before my interview?' },
+  { type: 'code', category: 'Code', label: 'Tailor resume for this role', prompt: 'Tailor my resume for this role' },
+  { type: 'prep', category: 'Prep', label: 'Summarize prep notes', prompt: 'Summarize my interview preparation notes' },
+  { type: 'status', category: 'Status', label: 'Applications in Interview stage', prompt: 'Show applications in Interview stage' },
+  { type: 'strategy', category: 'Strategy', label: 'What applications need follow-up?', prompt: 'What applications need follow-up?' },
+  { type: 'draft', category: 'Draft', label: 'Research before interview', prompt: 'What should I research before my interview?' },
 ];
+
+const renderPromptIcon = (type) => {
+  switch (type) {
+    case 'code':
+      return (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+      );
+    case 'prep':
+      return (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+      );
+    case 'status':
+      return (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+        </svg>
+      );
+    case 'strategy':
+      return (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9 18h6"></path>
+          <path d="M10 22h4"></path>
+          <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1.55.6 2.87 1.5 3.5.76.76 1.23 1.52 1.41 2.5"></path>
+        </svg>
+      );
+    case 'draft':
+    default:
+      return (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+      );
+  }
+};
 
 const ROTATING_THINKING_WORDS = ['Thinking', 'Musing', 'Pondering', 'Mulling it over'];
 
@@ -508,7 +550,15 @@ export default function ChatPage() {
               ) : (
                 <>
                   <div className="conv-item-left">
-                    {conv.pinned && <span className="conv-pin-badge" title="Pinned">📌</span>}
+                    {conv.pinned && (
+                      <span className="conv-pin-badge" title="Pinned">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="12" y1="17" x2="12" y2="22"></line>
+                          <path d="M5 17h14l-1.5-6h-11L5 17z"></path>
+                          <path d="M9 11V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v7"></path>
+                        </svg>
+                      </span>
+                    )}
                     <span className="conv-item-title">{conv.title}</span>
                   </div>
 
@@ -552,7 +602,13 @@ export default function ChatPage() {
               setMenuOpenConvId(null);
             }}
           >
-            <span className="conv-popover-icon">📌</span>
+            <span className="conv-popover-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="17" x2="12" y2="22"></line>
+                <path d="M5 17h14l-1.5-6h-11L5 17z"></path>
+                <path d="M9 11V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v7"></path>
+              </svg>
+            </span>
             <span>{sortedConversations.find(c => c.id === menuOpenConvId)?.pinned ? 'Unpin' : 'Pin'}</span>
           </button>
           <button
@@ -567,7 +623,12 @@ export default function ChatPage() {
               setMenuOpenConvId(null);
             }}
           >
-            <span className="conv-popover-icon">✏️</span>
+            <span className="conv-popover-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+            </span>
             <span>Rename</span>
           </button>
           <button
@@ -578,7 +639,12 @@ export default function ChatPage() {
               setMenuOpenConvId(null);
             }}
           >
-            <span className="conv-popover-icon">🗑️</span>
+            <span className="conv-popover-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </span>
             <span>Delete</span>
           </button>
         </div>,
@@ -670,7 +736,7 @@ export default function ChatPage() {
                     className="chip-btn"
                     onClick={() => handleSendMessage(item.prompt)}
                   >
-                    <span className="chip-icon">{item.icon}</span>
+                    <span className="chip-icon">{renderPromptIcon(item.type)}</span>
                     <span className="chip-label">{item.label}</span>
                   </button>
                 ))}
