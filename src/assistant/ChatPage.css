@@ -607,55 +607,108 @@
   color: #ffffff;
 }
 
-/* Code Block Wrapper with Language Label & Copy Button */
-.code-block-wrapper {
-  margin: 16px 0;
+/* Single-Line Code Box (Claude-style simple box with copy icon and NO header tag) */
+.single-line-code-box {
+  margin: 10px 0;
+  padding: 8px 12px;
+  background-color: var(--surface-sunken);
   border: 1px solid var(--border);
   border-radius: 8px;
-  background-color: var(--surface-sunken);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 100%;
+}
+
+.single-line-code-text {
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Multi-Line Code Container (Claude-style Dark Code Card) */
+.code-block-wrapper {
+  margin: 16px 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background-color: #1e1e1e;
+  color: #e3e3e3;
   overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
 }
 
 .code-block-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 12px;
-  background-color: var(--surface);
-  border-bottom: 1px solid var(--border-subtle);
+  padding: 8px 14px;
+  background-color: #252526;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--text-tertiary);
+  color: #999999;
 }
 
 .code-block-lang {
-  text-transform: uppercase;
-  font-weight: var(--weight-medium);
+  text-transform: lowercase;
+  font-weight: 400;
+  letter-spacing: 0.02em;
 }
 
 .code-block-copy-btn {
   font-size: 12px;
-  color: var(--text-secondary);
+  color: #aaaaaa;
   background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 2px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 3px 8px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 150ms ease;
+}
+
+.single-line-code-box .code-block-copy-btn {
+  border: none;
+  color: var(--text-tertiary);
+  padding: 4px;
+}
+
+.single-line-code-box .code-block-copy-btn:hover {
+  color: var(--text-primary);
+  background-color: var(--border-subtle);
 }
 
 .code-block-copy-btn:hover {
-  color: var(--text-primary);
-  background-color: var(--surface-sunken);
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.copy-btn-inner {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
 }
 
 .code-block-content {
-  padding: 14px 16px;
+  padding: 16px;
   margin: 0;
   overflow-x: auto;
   font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--text-primary);
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #e3e3e3;
+}
+
+.code-block-content code {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
 }
 
 /* Pre-wrap for text-like blocks (e.g. email drafts) */
