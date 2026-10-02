@@ -312,7 +312,10 @@
 }
 
 .btn-primary:disabled {
-  opacity: 0.5;
+  background-color: var(--surface-sunken);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border);
+  opacity: 1;
   cursor: not-allowed;
 }
 

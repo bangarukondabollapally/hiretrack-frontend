@@ -40,10 +40,10 @@
   --surface-sunken: #F1EFE9;  /* Recessed: input backgrounds, active nav, user bubbles */
   --surface-mid: #ECEAE3;     /* Slightly deeper recess — table headers, badges */
 
-  /* Text */
+  /* Text — high contrast warm tones for WCAG compliance */
   --text-primary: #1A1917;    /* Near-black, warm-toned */
-  --text-secondary: #64615A;  /* Muted gray-brown */
-  --text-tertiary: #9A958C;   /* Metadata, placeholders, disabled */
+  --text-secondary: #4D4A43;  /* Muted charcoal-brown */
+  --text-tertiary: #6E6A61;   /* Clear metadata, placeholders, disabled text */
 
   /* Letter spacing token — per 3.6 (floored at -0.02em) */
   --letter-spacing: -0.01em;

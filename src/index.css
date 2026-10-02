@@ -133,7 +133,10 @@ button:disabled {
 }
 
 .btn-primary:disabled {
-  opacity: 0.6;
+  background-color: var(--surface-sunken);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border);
+  opacity: 1;
   cursor: not-allowed;
 }
 
@@ -158,6 +161,11 @@ button:disabled {
   background-color: var(--surface-sunken);
 }
 
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @media (max-width: 480px) {
   .btn-primary {
     padding: 6px 12px;
@@ -180,6 +188,13 @@ select {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+input::placeholder,
+textarea::placeholder,
+select::placeholder {
+  color: var(--text-tertiary);
+  opacity: 0.85;
 }
 
 input:focus-visible,
