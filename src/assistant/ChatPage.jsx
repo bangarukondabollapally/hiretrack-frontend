@@ -503,50 +503,30 @@ export default function ChatPage() {
               }}
             >
               {editingConvId === conv.id ? (
-                <div className="conv-rename-row" onClick={(e) => e.stopPropagation()}>
-                  <input
-                    type="text"
-                    className="conv-rename-input"
-                    value={editingTitle}
-                    onChange={(e) => setEditingTitle(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        if (editingTitle.trim()) {
-                          renameConversation(conv.id, editingTitle.trim());
-                        }
-                        setEditingConvId(null);
-                      } else if (e.key === 'Escape') {
-                        setEditingConvId(null);
-                      }
-                    }}
-                    autoFocus
-                  />
-                  <button
-                    type="button"
-                    className="conv-rename-btn conv-rename-btn--save"
-                    onClick={(e) => {
-                      e.stopPropagation();
+                <input
+                  type="text"
+                  className="conv-rename-input"
+                  value={editingTitle}
+                  onChange={(e) => setEditingTitle(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
                       if (editingTitle.trim()) {
                         renameConversation(conv.id, editingTitle.trim());
                       }
                       setEditingConvId(null);
-                    }}
-                    title="Save"
-                  >
-                    ✓
-                  </button>
-                  <button
-                    type="button"
-                    className="conv-rename-btn conv-rename-btn--cancel"
-                    onClick={(e) => {
-                      e.stopPropagation();
+                    } else if (e.key === 'Escape') {
                       setEditingConvId(null);
-                    }}
-                    title="Cancel"
-                  >
-                    ✕
-                  </button>
-                </div>
+                    }
+                  }}
+                  onBlur={() => {
+                    if (editingTitle.trim()) {
+                      renameConversation(conv.id, editingTitle.trim());
+                    }
+                    setEditingConvId(null);
+                  }}
+                  autoFocus
+                  onClick={(e) => e.stopPropagation()}
+                />
               ) : (
                 <>
                   <div className="conv-item-left">
