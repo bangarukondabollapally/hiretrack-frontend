@@ -129,9 +129,12 @@ export default function ApplicationsList() {
           <h1 className="page-title">Applications</h1>
           <p className="applications-subtitle">Track and manage your active job applications</p>
         </div>
-        <button onClick={() => navigate('/applications/new')} className="btn-primary">
-          + Add application
-        </button>
+        {applications.length > 0 && (
+          <button onClick={() => navigate('/applications/new')} className="btn-primary">
+            <span className="btn-text-desktop">+ Add application</span>
+            <span className="btn-text-mobile">+</span>
+          </button>
+        )}
       </div>
 
       {/* Filter Bar: Search + Minimal Status Filter */}
@@ -178,7 +181,8 @@ export default function ApplicationsList() {
           </p>
           {applications.length === 0 && (
             <button onClick={() => navigate('/applications/new')} className="btn-primary">
-              + Add application
+              <span className="btn-text-desktop">+ Add application</span>
+              <span className="btn-text-mobile">+ Add application</span>
             </button>
           )}
         </div>

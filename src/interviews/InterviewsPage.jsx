@@ -196,13 +196,12 @@ export default function InterviewsPage() {
             Manage your upcoming and past interview schedules across all applications.
           </p>
         </div>
-        <button
-          onClick={openCreateModal}
-          className="btn-primary"
-          disabled={applications.length === 0}
-        >
-          + Add interview
-        </button>
+        {applications.length > 0 && (
+          <button onClick={openCreateModal} className="btn-primary">
+            <span className="btn-text-desktop">+ Add interview</span>
+            <span className="btn-text-mobile">+</span>
+          </button>
+        )}
       </div>
 
       {error && <div className="interviews-error">{error}</div>}
@@ -259,11 +258,13 @@ export default function InterviewsPage() {
           </p>
           {applications.length > 0 ? (
             <button onClick={openCreateModal} className="btn-primary">
-              + Schedule an interview
+              <span className="btn-text-desktop">+ Schedule an interview</span>
+              <span className="btn-text-mobile">+ Schedule interview</span>
             </button>
           ) : (
             <button onClick={() => navigate('/applications/new')} className="btn-primary">
-              + Add Application
+              <span className="btn-text-desktop">+ Add Application</span>
+              <span className="btn-text-mobile">+ Add Application</span>
             </button>
           )}
         </div>

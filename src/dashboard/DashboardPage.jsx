@@ -64,7 +64,8 @@ export default function DashboardPage() {
           <p className="dashboard-subtitle">Here is an overview of your active job search activities.</p>
         </div>
         <button onClick={() => navigate('/applications/new')} className="btn-primary">
-          + Add application
+          <span className="btn-text-desktop">+ Add application</span>
+          <span className="btn-text-mobile">+</span>
         </button>
       </div>
 

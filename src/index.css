@@ -166,6 +166,10 @@ button:disabled {
   cursor: not-allowed;
 }
 
+.btn-text-mobile {
+  display: none;
+}
+
 @media (max-width: 480px) {
   .btn-primary {
     padding: 6px 12px;
@@ -174,6 +178,12 @@ button:disabled {
   .btn-secondary {
     padding: 6px 10px;
     font-size: var(--text-button);
+  }
+  .btn-text-desktop {
+    display: none !important;
+  }
+  .btn-text-mobile {
+    display: inline !important;
   }
 }
 
