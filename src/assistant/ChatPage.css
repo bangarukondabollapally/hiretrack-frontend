@@ -551,8 +551,28 @@
 .assistant-action-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 4px;
   margin-top: 4px;
+}
+
+.action-btn-icon {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 0;
+  transition: color 150ms ease, background-color 150ms ease;
+}
+
+.action-btn-icon:hover {
+  color: var(--text-primary);
+  background-color: var(--surface-sunken);
 }
 
 .action-btn {
@@ -568,83 +588,46 @@
   color: var(--text-primary);
 }
 
-/* Minimal Claude-style "Thought for Ns" disclosure (item 3.2 spec) */
-.thought-container {
-  margin-bottom: 6px;
-}
-
-.thought-toggle-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: var(--text-tertiary);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 2px 0;
-  font-family: var(--font-primary);
-}
-
-.thought-toggle-btn:hover {
-  color: var(--text-secondary);
-}
-
-.thought-chevron {
-  font-size: 10px;
-}
-
-.thought-static-label {
-  font-size: 13px;
-  color: var(--text-tertiary);
-  padding: 2px 0;
-}
-
-.thought-reasoning-panel {
-  margin-top: 6px;
-  padding: 10px 14px;
-  background-color: var(--surface-sunken);
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  color: var(--text-secondary);
-  white-space: pre-wrap;
-  line-height: 1.5;
-}
-
-/* Logo mark animations */
+/* Logo mark matching Layout.css H badge */
 .ht-logo-mark {
-  width: 24px;
-  height: 24px;
-  color: var(--accent);
+  width: 22px;
+  height: 22px;
+  background-color: var(--accent);
+  color: #ffffff;
+  border-radius: var(--radius-sm, 5px);
   display: flex;
   align-items: center;
   justify-content: center;
+  font-weight: var(--weight-bold, 700);
+  font-size: 12px;
+  flex-shrink: 0;
+  line-height: 1;
 }
 
 .ht-logo-mark--lg {
   width: 44px;
   height: 44px;
+  border-radius: 10px;
+  font-size: 22px;
 }
 
-.ht-logo-mark--animating svg {
+.ht-logo-mark--animating {
   animation: htPulse 1.2s infinite ease-in-out;
 }
 
 @keyframes htPulse {
   0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.18); opacity: 0.7; }
+  50% { transform: scale(1.12); opacity: 0.85; }
   100% { transform: scale(1); opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ht-logo-mark--animating svg {
+  .ht-logo-mark--animating {
     animation: none;
   }
 }
 
-/* Composer Container & Card Spec (Item 3.4: ~72px rest height, auto-grow to ~160px then scroll) */
+/* Composer Container & Card Spec (Reduced height at rest) */
 .composer-container {
   width: 100%;
 }
@@ -662,13 +645,13 @@
 .composer-card {
   background-color: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 14px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  padding: 8px 12px;
-  min-height: 72px;
+  padding: 6px 10px;
+  min-height: 48px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
@@ -766,22 +749,22 @@
   color: var(--text-primary);
 }
 
-/* Textarea inside composer (3.4: min ~44px, padding 8-10px, auto-grow to ~160px then scroll) */
+/* Textarea inside composer (Reduced height at rest) */
 .composer-input {
   width: 100%;
-  min-height: 44px;
+  min-height: 28px;
   max-height: 160px;
-  padding: 8px 10px;
+  padding: 4px 6px;
   overflow-y: auto;
   border: none !important;
   outline: none !important;
   box-shadow: none !important;
   background: transparent;
   font-family: var(--font-primary);
-  font-size: 15px;
+  font-size: 14.5px;
   color: var(--text-primary);
   resize: none;
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
 .composer-footer {

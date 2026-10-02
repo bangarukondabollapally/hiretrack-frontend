@@ -530,9 +530,7 @@ export default function ChatPage() {
             <div className="assistant-empty-state">
               <div className="empty-hero">
                 <div className="ht-logo-mark ht-logo-mark--lg" aria-hidden="true">
-                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polygon points="12 2 19 21 12 17 5 21 12 2" />
-                  </svg>
+                  H
                 </div>
                 <h1 className="empty-greeting">{INITIAL_GREETING}</h1>
               </div>
@@ -573,9 +571,7 @@ export default function ChatPage() {
                         <div className="assistant-response">
                           <div className="assistant-response-header">
                             <div className={`ht-logo-mark ${isGenerating && idx === messages.length - 1 ? 'ht-logo-mark--animating' : ''}`}>
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <polygon points="12 2 19 21 12 17 5 21 12 2" />
-                              </svg>
+                              H
                             </div>
                             <span className="assistant-name">HireTrack</span>
 
@@ -643,24 +639,38 @@ export default function ChatPage() {
                             </Suspense>
                           </div>
 
-                          {/* Action Row */}
+                          {/* Minimal Icon Action Row (Claude-style Copy & Regenerate) */}
                           {msg.text && (
                             <div className="assistant-action-row">
                               <button
                                 type="button"
-                                className="action-btn"
+                                className="action-btn-icon"
                                 onClick={() => copyToClipboard(msg.text, `msg_${idx}`)}
-                                title="Copy response"
+                                title={copiedId === `msg_${idx}` ? 'Copied!' : 'Copy'}
+                                aria-label="Copy response"
                               >
-                                {copiedId === `msg_${idx}` ? '✓ Copied' : '📋 Copy'}
+                                {copiedId === `msg_${idx}` ? (
+                                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                  </svg>
+                                ) : (
+                                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                  </svg>
+                                )}
                               </button>
                               <button
                                 type="button"
-                                className="action-btn"
+                                className="action-btn-icon"
                                 onClick={() => handleRegenerate(idx)}
                                 title="Regenerate response"
+                                aria-label="Regenerate response"
                               >
-                                ↺ Regenerate
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M23 4v6h-6"></path>
+                                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                                </svg>
                               </button>
                             </div>
                           )}
