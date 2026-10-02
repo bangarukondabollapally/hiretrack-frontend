@@ -6,6 +6,8 @@ import { useAuth } from '../auth/AuthContext';
 import { useChatHistory } from './useChatHistory';
 import './ChatPage.css';
 
+import { repairMarkdownTables } from './tableRepair';
+
 // Lazy load ReactMarkdown for performance (Phase 2 code splitting)
 const ReactMarkdown = lazy(() => import('react-markdown'));
 
@@ -248,12 +250,11 @@ export default function ChatPage() {
         let dataLines = [];
 
         for (const line of block.split('\n')) {
-          const trimmed = line.trim();
-          if (!trimmed) continue;
-          if (trimmed.startsWith('event:')) {
-            eventType = trimmed.substring(6).trim();
-          } else if (trimmed.startsWith('data:')) {
-            dataLines.push(trimmed.substring(5).trim());
+          if (!line.trim()) continue;
+          if (line.startsWith('event:')) {
+            eventType = line.substring(6).trim();
+          } else if (line.startsWith('data:')) {
+            dataLines.push(line.substring(5));
           }
         }
 
@@ -636,7 +637,7 @@ export default function ChatPage() {
                                   }
                                 }}
                               >
-                                {normalizeText(msg.text) || (isGenerating && idx === messages.length - 1 ? '...' : '')}
+                                {repairMarkdownTables(normalizeText(msg.text)) || (isGenerating && idx === messages.length - 1 ? '...' : '')}
                               </ReactMarkdown>
                             </Suspense>
                           </div>
@@ -728,6 +729,16 @@ export default function ChatPage() {
                 <span className="context-pill-caret">▾</span>
               )}
             </button>
+
+            {selectedApp && (
+              <button
+                type="button"
+                className="chip-btn chip-btn--fit"
+                onClick={() => handleSendMessage('How well do I match this role?')}
+              >
+                ✨ How well do I match this role?
+              </button>
+            )}
 
             {/* Mobile Backdrop for Context Picker Sheet */}
             {isAppPickerOpen && (

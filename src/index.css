@@ -26,6 +26,7 @@ body {
   font-size: var(--text-body);
   font-weight: var(--weight-regular);
   line-height: var(--leading-body);
+  letter-spacing: var(--letter-spacing);
   color: var(--text-primary);
   background-color: var(--bg);
   min-height: 100vh;

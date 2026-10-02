@@ -231,6 +231,60 @@
   font-family: var(--font-mono);
 }
 
+/* Experience Inputs Group per 3.5 */
+.experience-inputs-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.sub-label {
+  font-size: 13px;
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.years-input-wrapper {
+  width: 200px;
+  max-width: 100%;
+}
+
+.years-input {
+  width: 100%;
+}
+
+.summary-input-wrapper {
+  width: 100%;
+}
+
+/* Saved Resume Compact Row */
+.saved-resume-compact-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  background-color: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  width: 100%;
+}
+
+.saved-resume-text {
+  font-size: 13.5px;
+  color: var(--text-primary);
+  font-weight: var(--weight-medium);
+}
+
+.saved-resume-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 /* Section Footer Actions */
 .settings-section__footer {
   display: flex;

@@ -90,208 +90,195 @@
   color: var(--text-secondary);
 }
 
-/* Desktop & Tablet Table (item 3.5 spec: fixed column widths, no horizontal scrolling) */
-.applications-table-wrapper {
-  border-top: 1px solid var(--border);
-  width: 100%;
+/* Filter Bar per 3.3 */
+.applications-filter-bar {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  flex-wrap: wrap;
 }
 
-.applications-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-  font-size: 14px;
-  table-layout: fixed;
+.applications-search-input {
+  flex: 1;
+  min-width: 200px;
+  padding: 8px 12px;
+  font-size: var(--text-body);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  outline: none;
 }
 
-.applications-table th {
-  padding: 12px 8px;
-  border-bottom: 1px solid var(--border);
-  font-size: 12px;
-  font-weight: var(--weight-semibold);
-  color: var(--text-tertiary);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+.applications-search-input:focus {
+  border-color: var(--accent);
 }
 
-.applications-table td {
-  padding: 12px 8px;
+.applications-status-filter {
+  padding: 8px 12px;
+  font-size: var(--text-button);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  cursor: pointer;
+  outline: none;
+}
+
+/* Skeleton loader for tickets */
+.skeleton-ticket {
+  height: 64px;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-lg);
+  animation: skeletonPulse 1.5s infinite ease-in-out;
+}
+
+@keyframes skeletonPulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+/* Ticket List Container */
+.ticket-list {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.ticket-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  vertical-align: middle;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
 }
 
-.cell-truncate {
+.ticket-row:last-child {
+  border-bottom: none;
+}
+
+.ticket-row:hover {
+  background-color: var(--surface-sunken);
+}
+
+.ticket-top-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.ticket-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.ticket-company {
+  font-size: var(--text-body);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.table-row-clickable {
+.ticket-role {
+  font-size: var(--text-meta);
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ticket-dates {
+  font-size: var(--text-meta);
+  color: var(--text-tertiary);
+  font-family: var(--font-numeric, inherit);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ticket-stub-divider {
+  width: 1px;
+  height: 24px;
+  border-left: 1px dashed var(--border);
+  margin: 0 var(--space-2);
+  flex-shrink: 0;
+}
+
+.ticket-right-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+}
+
+.ticket-delete-btn {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 14px;
   cursor: pointer;
-  transition: background-color var(--transition-fast);
+  padding: 4px 6px;
+  border-radius: 4px;
+  transition: color var(--transition-fast), background-color var(--transition-fast);
 }
 
-.table-row-clickable:hover {
-  background-color: var(--surface-sunken);
+.ticket-delete-btn:hover {
+  color: var(--danger);
+  background-color: rgba(176, 54, 42, 0.08);
 }
 
-.font-medium {
-  font-weight: var(--weight-medium);
-  color: var(--text-primary);
-}
-
-.table-tags {
+.ticket-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  overflow: hidden;
-  max-height: 28px;
+  gap: 6px;
+  margin-top: 2px;
 }
 
-.table-tag {
+.ticket-tag {
   padding: 2px 8px;
   background-color: var(--surface-sunken);
   border-radius: 4px;
-  font-size: 12px;
+  font-size: var(--text-meta);
   color: var(--text-secondary);
   white-space: nowrap;
 }
 
-.table-actions {
-  display: flex;
-  gap: 6px;
-}
-
-.action-btn {
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 12.5px;
-  cursor: pointer;
-  font-family: var(--font-primary);
-  white-space: nowrap;
-}
-
-.action-btn--edit {
-  background-color: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-primary);
-}
-
-.action-btn--edit:hover {
-  background-color: var(--surface-sunken);
-}
-
-.action-btn--delete {
-  background-color: transparent;
-  border: 1px solid rgba(176, 54, 42, 0.3);
-  color: var(--danger);
-}
-
-.action-btn--delete:hover {
-  background-color: var(--danger);
-  color: white;
-}
-
-/* Mobile Stacked Cards Container (<768px) */
-.mobile-app-cards {
-  display: none;
-}
-
-/* 768px - 1023px tablet breakpoint: hide lower-priority columns (Tags, Applied) */
-@media (max-width: 1023px) and (min-width: 768px) {
-  .col-tags,
-  .col-applied {
-    display: none;
-  }
-}
-
-/* Mobile breakpoint (<768px): replace table with stacked cards (DESIGN §8) */
+/* Mobile responsive stacked tickets per 3.3 */
 @media (max-width: 767px) {
-  .applications-table-wrapper {
+  .ticket-top-line {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .ticket-stub-divider {
     display: none;
   }
 
-  .mobile-app-cards {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+  .ticket-info {
     width: 100%;
+    flex: none;
   }
 
-  .app-card {
-    background-color: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-    transition: all 150ms ease;
+  .ticket-dates {
+    width: 100%;
+    margin-top: 2px;
   }
 
-  .app-card:hover {
-    border-color: var(--border-strong);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  }
-
-  .app-card__header {
-    display: flex;
+  .ticket-right-group {
+    width: 100%;
     justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
-  }
-
-  .app-card__title-group {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    overflow: hidden;
-    flex: 1;
-  }
-
-  .app-card__company {
-    font-size: 16px;
-    font-weight: var(--weight-bold);
-    color: var(--text-primary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .app-card__role {
-    font-size: 14px;
-    color: var(--text-secondary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .app-card__status-wrapper {
-    flex-shrink: 0;
-  }
-
-  .app-card__dates {
-    display: flex;
-    gap: 16px;
-    font-size: 12.5px;
-    color: var(--text-tertiary);
-    flex-wrap: wrap;
-  }
-
-  .app-card__tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-  }
-
-  .app-card__footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-    padding-top: 8px;
+    margin-top: var(--space-2);
+    padding-top: var(--space-2);
     border-top: 1px solid var(--border-subtle);
   }
 }

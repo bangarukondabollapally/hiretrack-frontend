@@ -47,7 +47,13 @@ export default function DashboardPage() {
     return <div className="dashboard-error">{error}</div>;
   }
 
-  const { statusCounts = {}, upcomingInterviews = [], followUpsDue = [] } = dashboardData || {};
+  const { statusCounts = {}, upcomingInterviews = [], followUpsDue = [], upcomingFollowUps = [] } = dashboardData || {};
+
+  const now = new Date();
+  const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+  const prominentInterviews = upcomingInterviews.filter(item => new Date(item.interviewDate) <= in7Days);
+  const laterInterviews = upcomingInterviews.filter(item => new Date(item.interviewDate) > in7Days);
 
   return (
     <div className="dashboard-container">
@@ -94,17 +100,19 @@ export default function DashboardPage() {
             <h2 className="section-title">Upcoming Interviews</h2>
           </div>
           {upcomingInterviews.length === 0 ? (
-            <p className="section-empty">No upcoming interviews scheduled for the next 7 days.</p>
+            <p className="section-empty">No upcoming interviews scheduled.</p>
           ) : (
             <div className="section-list">
-              {upcomingInterviews.map((item, idx) => (
+              {prominentInterviews.map((item, idx) => (
                 <div
-                  key={idx}
+                  key={`prominent-int-${idx}`}
                   onClick={() => navigate(`/applications/${item.applicationId}`)}
                   className="section-row"
                 >
                   <div className="section-row__main">
-                    <span className="section-row__title">{item.companyName}</span>
+                    <span className="section-row__title">
+                      {item.companyName} {item.jobRole ? `— ${item.jobRole}` : ''}
+                    </span>
                     <span className="section-row__meta">
                       {new Date(item.interviewDate).toLocaleString()}
                     </span>
@@ -112,22 +120,45 @@ export default function DashboardPage() {
                   <span className="section-row__action">View →</span>
                 </div>
               ))}
+
+              {laterInterviews.length > 0 && (
+                <div className="sublist-group">
+                  <div className="sublist-header">Later</div>
+                  {laterInterviews.map((item, idx) => (
+                    <div
+                      key={`later-int-${idx}`}
+                      onClick={() => navigate(`/applications/${item.applicationId}`)}
+                      className="section-row section-row--quiet"
+                    >
+                      <div className="section-row__main">
+                        <span className="section-row__title">
+                          {item.companyName} {item.jobRole ? `— ${item.jobRole}` : ''}
+                        </span>
+                        <span className="section-row__meta">
+                          {new Date(item.interviewDate).toLocaleString()}
+                        </span>
+                      </div>
+                      <span className="section-row__action">View →</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
 
-        {/* Right column: Follow-ups Due */}
+        {/* Right column: Follow-ups */}
         <div className="dashboard-section">
           <div className="section-header">
-            <h2 className="section-title">Follow-ups Due</h2>
+            <h2 className="section-title">Follow-ups</h2>
           </div>
-          {followUpsDue.length === 0 ? (
-            <p className="section-empty">No follow-ups due today.</p>
+          {followUpsDue.length === 0 && upcomingFollowUps.length === 0 ? (
+            <p className="section-empty">No follow-ups due or upcoming.</p>
           ) : (
             <div className="section-list">
               {followUpsDue.map((item, idx) => (
                 <div
-                  key={idx}
+                  key={`due-fu-${idx}`}
                   onClick={() => navigate(`/applications/${item.applicationId}`)}
                   className="section-row"
                 >
@@ -138,6 +169,25 @@ export default function DashboardPage() {
                   <span className="section-row__action">View →</span>
                 </div>
               ))}
+
+              {upcomingFollowUps.length > 0 && (
+                <div className="sublist-group">
+                  <div className="sublist-header">Upcoming</div>
+                  {upcomingFollowUps.map((item, idx) => (
+                    <div
+                      key={`upcoming-fu-${idx}`}
+                      onClick={() => navigate(`/applications/${item.applicationId}`)}
+                      className="section-row section-row--quiet"
+                    >
+                      <div className="section-row__main">
+                        <span className="section-row__title">{item.companyName}</span>
+                        <span className="section-row__meta">Upcoming: {item.followUpDate}</span>
+                      </div>
+                      <span className="section-row__action">View →</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

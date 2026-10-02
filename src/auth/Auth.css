@@ -6,11 +6,11 @@
 
 /* ── Page layout ─────────────────────────────────────────────────── */
 .auth-page {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: var(--space-6);
+  min-height: 100dvh;
+  width: 100%;
+  display: grid;
+  place-items: center;
+  padding: 24px;
   background-color: var(--bg);
 }
 
@@ -19,6 +19,7 @@
 .auth-card {
   width: 100%;
   max-width: 400px;
+  margin: 0 auto;
   background-color: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);

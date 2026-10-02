@@ -16,12 +16,12 @@
   --font-prose: 'Source Serif 4', Georgia, Cambria, 'Times New Roman', serif;
 
   /* Font sizes — per DESIGN.md token reference */
-  --text-display: 34px;
-  --text-page-heading: 24px;
-  --text-section-heading: 16px;
-  --text-body: 14px;
-  --text-meta: 11.5px;
-  --text-button: 12.5px;
+  --text-display: 30px;
+  --text-page-heading: 20px;
+  --text-section-heading: 12px;
+  --text-body: 12px;
+  --text-meta: 10px;
+  --text-button: 11px;
 
   /* Font weights */
   --weight-regular: 400;
@@ -45,16 +45,20 @@
   --text-secondary: #64615A;  /* Muted gray-brown */
   --text-tertiary: #9A958C;   /* Metadata, placeholders, disabled */
 
-  /* Borders */
-  --border: #E3E0D8;          /* Default dividers and input borders */
-  --border-subtle: #EDEAE3;   /* Barely-there separators inside grouped sections */
-  --border-strong: #C9C6BC;   /* Stronger rule — active states, focused inputs */
+  /* Letter spacing token — per 3.6 (floored at -0.02em) */
+  --letter-spacing: -0.01em;
+  --letter-spacing-tight: -0.02em;
+
+  /* Borders — slightly darker, still warm dividers per 3.6 */
+  --border: #DDD8CE;          /* Default dividers and input borders */
+  --border-subtle: #E8E4DB;   /* Barely-there separators inside grouped sections */
+  --border-strong: #BFB9AC;   /* Stronger rule — active states, focused inputs */
 
   /* Brand accent — forest green */
   --accent: #2A5C4B;
   --accent-hover: #1F473A;
   --accent-dim: rgba(42, 92, 75, 0.08);  /* Very subtle tint — active state bg */
-  --focus: rgba(42, 92, 75, 0.35);
+  /* --focus: rgba(42, 92, 75, 0.35); */
 
   /* Functional / status colors */
   --success: #3F7D5C;

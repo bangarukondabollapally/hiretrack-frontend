@@ -5,10 +5,38 @@ import StatusControl from './StatusControl';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import './ApplicationsList.css';
 
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  try {
+    const parts = dateStr.split('T')[0].split('-');
+    if (parts.length < 3) return dateStr;
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    const date = new Date(year, month, day);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  } catch (e) {
+    return dateStr;
+  }
+}
+
+function getFlightLegDates(appliedDate, followUpDate) {
+  const appliedFormatted = formatDate(appliedDate);
+  const followUpFormatted = formatDate(followUpDate);
+  if (appliedFormatted && followUpFormatted) {
+    return `${appliedFormatted} → ${followUpFormatted}`;
+  }
+  if (appliedFormatted) return appliedFormatted;
+  if (followUpFormatted) return `→ ${followUpFormatted}`;
+  return '';
+}
+
 export default function ApplicationsList() {
   const [applications, setApplications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -17,10 +45,8 @@ export default function ApplicationsList() {
   const location = useLocation();
 
   useEffect(() => {
-    // Read toast message from create redirect if present (item 3.3)
     if (location.state?.toastMessage) {
       setToastMessage(location.state.toastMessage);
-      // Clear location state
       window.history.replaceState({}, document.title);
       setTimeout(() => setToastMessage(''), 4000);
     }
@@ -82,9 +108,16 @@ export default function ApplicationsList() {
     }
   };
 
+  const filteredApps = applications.filter(app => {
+    const matchesSearch = !searchQuery ||
+      (app.companyName && app.companyName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (app.jobRole && app.jobRole.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesStatus = statusFilter === 'ALL' || app.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div className="applications-container">
-      {/* Brief success toast notification */}
       {toastMessage && (
         <div className="applications-toast" role="status">
           ✓ {toastMessage}
@@ -101,132 +134,102 @@ export default function ApplicationsList() {
         </button>
       </div>
 
+      {/* Filter Bar: Search + Minimal Status Filter */}
+      <div className="applications-filter-bar">
+        <input
+          type="text"
+          placeholder="Search by company or role..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="applications-search-input"
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="applications-status-filter"
+        >
+          <option value="ALL">All Statuses</option>
+          <option value="APPLIED">Applied</option>
+          <option value="SCREENING">Screening</option>
+          <option value="INTERVIEW">Interview</option>
+          <option value="OFFER">Offer</option>
+          <option value="REJECTED">Rejected</option>
+          <option value="WITHDRAWN">Withdrawn</option>
+        </select>
+      </div>
+
       {error && <div className="applications-error">{error}</div>}
 
       {isLoading ? (
         <div className="applications-loading-skeleton">
-          <div className="skeleton-row" />
-          <div className="skeleton-row" />
-          <div className="skeleton-row" />
+          <div className="skeleton-ticket" />
+          <div className="skeleton-ticket" />
+          <div className="skeleton-ticket" />
         </div>
-      ) : applications.length === 0 ? (
+      ) : filteredApps.length === 0 ? (
         <div className="applications-empty">
-          <h2 className="empty-title">No applications yet</h2>
-          <p className="empty-subtitle">Start tracking your job search in one place.</p>
-          <button onClick={() => navigate('/applications/new')} className="btn-primary">
-            + Add application
-          </button>
+          <h2 className="empty-title">
+            {applications.length === 0 ? 'No applications yet' : 'No matching applications'}
+          </h2>
+          <p className="empty-subtitle">
+            {applications.length === 0
+              ? 'Start tracking your job search in one place.'
+              : 'Try clearing your search or status filter.'}
+          </p>
+          {applications.length === 0 && (
+            <button onClick={() => navigate('/applications/new')} className="btn-primary">
+              + Add application
+            </button>
+          )}
         </div>
       ) : (
-        <>
-          {/* Desktop & Tablet Table (>=768px) */}
-          <div className="applications-table-wrapper">
-            <table className="applications-table">
-              <thead>
-                <tr>
-                  <th style={{ width: '22%' }}>Company</th>
-                  <th style={{ width: '24%' }}>Role</th>
-                  <th style={{ width: '18%' }}>Status</th>
-                  <th className="col-applied" style={{ width: '12%' }}>Applied</th>
-                  <th style={{ width: '12%' }}>Follow-up</th>
-                  <th className="col-tags" style={{ width: '12%' }}>Tags</th>
-                  <th style={{ width: '10%' }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {applications.map((app) => (
-                  <tr key={app.id} onClick={() => navigate(`/applications/${app.id}`)} className="table-row-clickable">
-                    <td className="font-medium cell-truncate" title={app.companyName}>{app.companyName}</td>
-                    <td className="cell-truncate" title={app.jobRole}>{app.jobRole}</td>
-                    <td onClick={(e) => e.stopPropagation()}>
-                      <StatusControl
-                        value={app.status}
-                        onChange={(newStatus) => handleStatusChange(app.id, newStatus)}
-                      />
-                    </td>
-                    <td className="col-applied cell-truncate">{app.appliedDate || '—'}</td>
-                    <td className="cell-truncate">{app.followUpDate || '—'}</td>
-                    <td className="col-tags">
-                      <div className="table-tags">
-                        {app.tags && app.tags.map((t, idx) => (
-                          <span key={idx} className="table-tag">{t}</span>
-                        ))}
-                      </div>
-                    </td>
-                    <td onClick={(e) => e.stopPropagation()} className="table-actions">
-                      <button
-                        onClick={() => navigate(`/applications/${app.id}`)}
-                        className="action-btn action-btn--edit"
-                        title="Edit application"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => setDeleteTarget(app)}
-                        className="action-btn action-btn--delete"
-                        title="Delete application"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="ticket-list">
+          {filteredApps.map((app) => {
+            const dateLeg = getFlightLegDates(app.appliedDate, app.followUpDate);
+            const hasTags = app.tags && app.tags.length > 0;
 
-          {/* Mobile Stacked Cards (<768px per item 3.5 & DESIGN §8) */}
-          <div className="mobile-app-cards">
-            {applications.map((app) => (
+            return (
               <div
                 key={app.id}
-                className="app-card"
+                className="ticket-row"
                 onClick={() => navigate(`/applications/${app.id}`)}
               >
-                <div className="app-card__header">
-                  <div className="app-card__title-group">
-                    <h3 className="app-card__company" title={app.companyName}>{app.companyName}</h3>
-                    <p className="app-card__role" title={app.jobRole}>{app.jobRole}</p>
+                <div className="ticket-top-line">
+                  <div className="ticket-info">
+                    <span className="ticket-company">{app.companyName}</span>
+                    <span className="ticket-role">{app.jobRole}</span>
                   </div>
-                  <div onClick={(e) => e.stopPropagation()} className="app-card__status-wrapper">
+
+                  {dateLeg && <div className="ticket-dates">{dateLeg}</div>}
+
+                  <div className="ticket-stub-divider" />
+
+                  <div className="ticket-right-group" onClick={(e) => e.stopPropagation()}>
                     <StatusControl
                       value={app.status}
                       onChange={(newStatus) => handleStatusChange(app.id, newStatus)}
                     />
+                    <button
+                      className="ticket-delete-btn"
+                      onClick={() => setDeleteTarget(app)}
+                      title="Delete application"
+                    >
+                      ✕
+                    </button>
                   </div>
                 </div>
 
-                <div className="app-card__dates">
-                  {app.appliedDate && <span>Applied: {app.appliedDate}</span>}
-                  {app.followUpDate && <span>Follow-up: {app.followUpDate}</span>}
-                </div>
-
-                {app.tags && app.tags.length > 0 && (
-                  <div className="app-card__tags">
+                {hasTags && (
+                  <div className="ticket-tags">
                     {app.tags.map((t, idx) => (
-                      <span key={idx} className="table-tag">{t}</span>
+                      <span key={idx} className="ticket-tag">{t}</span>
                     ))}
                   </div>
                 )}
-
-                <div className="app-card__footer" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    onClick={() => navigate(`/applications/${app.id}`)}
-                    className="action-btn action-btn--edit"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => setDeleteTarget(app)}
-                    className="action-btn action-btn--delete"
-                  >
-                    Delete
-                  </button>
-                </div>
               </div>
-            ))}
-          </div>
-        </>
+            );
+          })}
+        </div>
       )}
 
       <DeleteConfirmModal
