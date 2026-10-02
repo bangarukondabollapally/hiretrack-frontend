@@ -1,8 +1,3 @@
-import * as pdfjsLib from 'pdfjs-dist';
-
-// Set up pdf.js worker using unpkg CDN matching pdfjsLib version
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
-
 /**
  * Extract plain text from uploaded PDF, TXT, or DOC file.
  * @param {File} file 
@@ -16,12 +11,14 @@ export async function extractTextFromFile(file) {
   } else if (['txt', 'md', 'json', 'csv'].includes(extension)) {
     return extractTextFromTextFile(file);
   } else {
-    // Fallback for doc/docx or raw text binary extraction
     return extractTextFromBinaryFile(file);
   }
 }
 
 async function extractTextFromPdf(file) {
+  const pdfjsLib = await import('pdfjs-dist');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+
   const arrayBuffer = await file.arrayBuffer();
   const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
   const pdf = await loadingTask.promise;

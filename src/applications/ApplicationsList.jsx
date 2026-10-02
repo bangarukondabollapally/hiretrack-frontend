@@ -14,16 +14,29 @@ export default function ApplicationsList() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const cached = sessionStorage.getItem('ht_cache_applications');
+    if (cached) {
+      try {
+        setApplications(JSON.parse(cached));
+        setIsLoading(false);
+      } catch (e) {
+        setIsLoading(true);
+      }
+    } else {
+      setIsLoading(true);
+    }
     fetchApplications();
   }, []);
 
   const fetchApplications = async () => {
-    setIsLoading(true);
     try {
       const response = await axiosInstance.get('/api/applications');
       setApplications(response.data);
+      sessionStorage.setItem('ht_cache_applications', JSON.stringify(response.data));
     } catch (err) {
-      setError('Failed to fetch applications.');
+      if (!applications.length) {
+        setError('Failed to fetch applications.');
+      }
     } finally {
       setIsLoading(false);
     }

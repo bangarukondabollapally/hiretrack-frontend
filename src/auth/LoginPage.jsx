@@ -47,6 +47,12 @@ export default function LoginPage() {
   const [touched, setTouched] = useState({ email: false, password: false });
   const [serverError, setServerError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSlowWaking, setIsSlowWaking] = useState(false);
+
+  useEffect(() => {
+    // Early health ping to wake up free-tier backend instance
+    import('../api/axiosInstance').then(mod => mod.pingBackendHealth());
+  }, []);
 
   // Derive inline field errors (shown only after the field has been touched)
   const errors = {
@@ -70,12 +76,16 @@ export default function LoginPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    // Mark all fields touched so errors become visible on submit
     setTouched({ email: true, password: true });
     if (hasErrors) return;
 
     setIsSubmitting(true);
+    setIsSlowWaking(false);
     setServerError('');
+
+    const slowTimer = setTimeout(() => {
+      setIsSlowWaking(true);
+    }, 3000);
 
     try {
       const response = await axiosInstance.post('/api/auth/login', {
@@ -92,7 +102,9 @@ export default function LoginPage() {
         setServerError('Something went wrong. Check your connection and try again.');
       }
     } finally {
+      clearTimeout(slowTimer);
       setIsSubmitting(false);
+      setIsSlowWaking(false);
     }
   }
 
@@ -109,6 +121,12 @@ export default function LoginPage() {
         {serverError && (
           <div className="auth-error" role="alert">
             {serverError}
+          </div>
+        )}
+
+        {isSlowWaking && (
+          <div className="auth-error" style={{ backgroundColor: 'var(--accent-dim)', color: 'var(--accent)', borderColor: 'var(--accent)' }} role="alert">
+            Waking up the server, the first load can take up to a minute...
           </div>
         )}
 

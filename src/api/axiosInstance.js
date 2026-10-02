@@ -22,4 +22,8 @@ const axiosInstance = axios.create({
   },
 });
 
+export function pingBackendHealth() {
+  return axiosInstance.get('/api/health').catch(() => {});
+}
+
 export default axiosInstance;

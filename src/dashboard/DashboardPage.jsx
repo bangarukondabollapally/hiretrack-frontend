@@ -10,16 +10,30 @@ export default function DashboardPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // SWR: Load from cache immediately if present
+    const cached = sessionStorage.getItem('ht_cache_dashboard');
+    if (cached) {
+      try {
+        setDashboardData(JSON.parse(cached));
+        setIsLoading(false);
+      } catch (e) {
+        setIsLoading(true);
+      }
+    } else {
+      setIsLoading(true);
+    }
     fetchDashboard();
   }, []);
 
   const fetchDashboard = async () => {
-    setIsLoading(true);
     try {
       const response = await axiosInstance.get('/api/dashboard');
       setDashboardData(response.data);
+      sessionStorage.setItem('ht_cache_dashboard', JSON.stringify(response.data));
     } catch (err) {
-      setError('Failed to load dashboard metrics.');
+      if (!dashboardData) {
+        setError('Failed to load dashboard metrics.');
+      }
     } finally {
       setIsLoading(false);
     }
