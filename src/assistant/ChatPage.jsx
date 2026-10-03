@@ -340,7 +340,8 @@ export default function ChatPage() {
         attachments: currentAttachments
       };
 
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+      const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
+      const API_BASE_URL = rawBaseUrl.replace(/\/+$/, '');
       const response = await fetch(`${API_BASE_URL}/api/assistant/chat/stream`, {
         method: 'POST',
         headers: {

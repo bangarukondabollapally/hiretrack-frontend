@@ -13,7 +13,7 @@
  *   }
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 const STORAGE_VERSION = 1;
 
@@ -54,23 +54,38 @@ export function clearChatHistory(userId) {
 
 /** React hook — returns state + actions for chat history management. */
 export function useChatHistory(userId, initialGreeting) {
+  const effectiveUserId = userId ? String(userId) : 'guest';
+
   const [conversations, setConversations] = useState(() => {
-    if (!userId) return [];
-    const stored = loadFromStorage(userId);
+    const stored = loadFromStorage(effectiveUserId);
     return stored?.conversations || [];
   });
 
   const [activeId, setActiveId] = useState(() => {
-    if (!userId) return null;
-    const stored = loadFromStorage(userId);
+    const stored = loadFromStorage(effectiveUserId);
     return stored?.activeConversationId || null;
   });
 
+  // When effectiveUserId changes (e.g. login completes), load chat history for the user
+  const lastUserIdRef = useRef(effectiveUserId);
+  useEffect(() => {
+    if (lastUserIdRef.current !== effectiveUserId) {
+      lastUserIdRef.current = effectiveUserId;
+      const stored = loadFromStorage(effectiveUserId);
+      if (stored && stored.conversations) {
+        setConversations(stored.conversations);
+        setActiveId(stored.activeConversationId || (stored.conversations.length > 0 ? stored.conversations[0].id : null));
+      } else {
+        setConversations([]);
+        setActiveId(null);
+      }
+    }
+  }, [effectiveUserId]);
+
   // Persist whenever conversations or activeId change
   useEffect(() => {
-    if (!userId) return;
-    saveToStorage(userId, { conversations, activeConversationId: activeId });
-  }, [conversations, activeId, userId]);
+    saveToStorage(effectiveUserId, { conversations, activeConversationId: activeId });
+  }, [conversations, activeId, effectiveUserId]);
 
   /** Active conversation object, or null if none selected. */
   const activeConversation = conversations.find(c => c.id === activeId) || null;
@@ -97,9 +112,8 @@ export function useChatHistory(userId, initialGreeting) {
     return id;
   }, [initialGreeting]);
 
-  /** Ensure there is always an active conversation when userId is set. */
+  /** Ensure there is always an active conversation. */
   useEffect(() => {
-    if (!userId) return;
     if (!activeId || !conversations.find(c => c.id === activeId)) {
       if (conversations.length > 0) {
         setActiveId(conversations[0].id);
@@ -107,8 +121,7 @@ export function useChatHistory(userId, initialGreeting) {
         newConversation();
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId]);
+  }, [conversations, activeId, newConversation]);
 
   /** Switch to an existing conversation by id. */
   const switchConversation = useCallback((id) => {
