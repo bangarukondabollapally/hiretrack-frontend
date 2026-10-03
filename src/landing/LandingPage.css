@@ -1,39 +1,46 @@
-/* Landing Page Styles — HireTrack Design System (Green Accent) */
+/* Landing Page Styles — Full Width & Mobile Optimized (HireTrack Design System) */
 .landing-page {
+  width: 100%;
   min-height: 100vh;
   background-color: var(--bg, #F8F7F4);
   color: var(--text-primary, #1C1B19);
   font-family: var(--font-main, 'JetBrains Mono', monospace);
   line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
-/* Nav Link Scroll Margin Fix — prevents header from overlapping section titles */
-#features, #how-it-works, #faq {
-  scroll-margin-top: 90px;
-}
-
+/* Nav Bar */
 .landing-nav {
   position: sticky;
   top: 0;
   z-index: 100;
+  width: 100%;
   background-color: rgba(248, 247, 244, 0.92);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border, #DDD8CE);
 }
 
 .landing-nav__container {
-  max-width: 1100px;
+  width: 100%;
+  max-width: 1140px;
   margin: 0 auto;
   padding: 1rem 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  box-sizing: border-box;
 }
 
 .landing-brand {
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
 }
 
 .landing-brand__logo-mark {
@@ -53,22 +60,28 @@
   font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: -0.02em;
+  color: var(--text-primary, #1C1B19);
 }
 
 .landing-nav__links {
   display: flex;
-  gap: 2rem;
+  gap: 1.75rem;
+  align-items: center;
 }
 
-.landing-nav__links a {
+.landing-nav__link-btn {
+  background: none;
+  border: none;
   color: var(--text-secondary, #4D4A43);
-  text-decoration: none;
+  font-family: inherit;
   font-size: 0.9rem;
   font-weight: 500;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
   transition: color 0.2s ease;
 }
 
-.landing-nav__links a:hover {
+.landing-nav__link-btn:hover {
   color: var(--accent, #2A5C4B);
 }
 
@@ -81,6 +94,7 @@
 .landing-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   padding: 0.55rem 1.1rem;
   border-radius: 6px;
@@ -89,6 +103,7 @@
   text-decoration: none;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .landing-btn--ghost {
@@ -124,13 +139,19 @@
 
 /* Hero Section */
 .landing-hero {
+  width: 100%;
   padding: 4rem 1.5rem 5rem;
   text-align: center;
+  box-sizing: border-box;
 }
 
 .landing-hero__container {
+  width: 100%;
   max-width: 960px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .landing-badge {
@@ -153,6 +174,7 @@
   letter-spacing: -0.03em;
   margin-bottom: 1.25rem;
   color: var(--text-primary, #1C1B19);
+  max-width: 840px;
 }
 
 .landing-hero__subtitle {
@@ -169,10 +191,12 @@
   gap: 1rem;
   margin-bottom: 3.5rem;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 /* Interactive Preview Window */
 .landing-hero__preview {
+  width: 100%;
   max-width: 820px;
   margin: 0 auto;
   border-radius: 10px;
@@ -254,6 +278,8 @@
   border: 1px solid var(--border, #DDD8CE);
   border-radius: 6px;
   background: var(--surface, #FFFFFF);
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .ticket-left {
@@ -293,13 +319,20 @@
   color: #3730A3;
 }
 
-/* Container & Layout Center Alignment Fix */
+/* Sections Base & Centering */
+.landing-problem, .landing-features, .landing-faq {
+  width: 100%;
+}
+
 .landing-container {
   width: 100%;
-  max-width: 1000px;
+  max-width: 1080px;
   margin: 0 auto;
   padding: 4rem 1.5rem;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .landing-section__title {
@@ -321,7 +354,7 @@
 
 .problem-grid, .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1.5rem;
   width: 100%;
 }
@@ -331,6 +364,7 @@
   border: 1px solid var(--border, #DDD8CE);
   padding: 1.75rem;
   border-radius: 8px;
+  box-sizing: border-box;
 }
 
 .problem-icon, .feature-icon {
@@ -357,7 +391,7 @@
   line-height: 1.5;
 }
 
-/* Workflow Section Alignment */
+/* Workflow Section Full Width */
 .landing-workflow {
   width: 100%;
   background: var(--surface-sunken, #F3F1EC);
@@ -436,19 +470,21 @@
   line-height: 1.6;
 }
 
-/* Final CTA Section — Redesigned with Green Accent Card */
+/* Final CTA Section */
 .landing-cta-wrapper {
-  padding: 1rem 0 3rem;
   width: 100%;
+  padding: 1rem 0 3rem;
 }
 
 .landing-cta {
+  width: 100%;
   text-align: center;
   background-color: var(--accent, #2A5C4B);
   color: #FFFFFF;
   padding: 3.5rem 2rem;
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(42, 92, 75, 0.15);
+  box-sizing: border-box;
 }
 
 .landing-cta h2 {
@@ -477,27 +513,56 @@
 
 /* Footer */
 .landing-footer {
+  width: 100%;
   text-align: center;
   padding: 2rem 1.5rem;
   border-top: 1px solid var(--border, #DDD8CE);
   font-size: 0.8rem;
   color: var(--text-secondary, #4D4A43);
   background-color: var(--bg, #F8F7F4);
+  box-sizing: border-box;
 }
 
 .landing-footer .landing-container {
   padding: 0;
 }
 
-/* Responsive Styles */
+/* Mobile & Tablet Responsiveness */
 @media (max-width: 768px) {
-  .landing-hero__title {
-    font-size: 2rem;
+  .landing-hero {
+    padding: 2.5rem 1rem 3.5rem;
   }
+
+  .landing-hero__title {
+    font-size: 1.75rem;
+  }
+
+  .landing-hero__subtitle {
+    font-size: 0.95rem;
+  }
+
   .landing-nav__links {
     display: none;
   }
+
   .preview-stats {
     grid-template-columns: 1fr;
+  }
+
+  .landing-container {
+    padding: 3rem 1rem;
+  }
+
+  .problem-grid, .features-grid, .workflow-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-hero__ctas {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .landing-hero__ctas .landing-btn {
+    width: 100%;
   }
 }

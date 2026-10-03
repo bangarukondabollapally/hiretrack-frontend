@@ -15,10 +15,21 @@ export default function LandingPage() {
     setOpenFaq(openFaq === index ? null : index);
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const scrollToSection = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const faqs = [
     {
       q: "What is HireTrack?",
-      a: "HireTrack is a streamlined placement and job search management platform. It helps students discover internally managed placement openings, track personal job applications, organize interview timelines, and receive context-aware guidance from an AI assistant."
+      a: "HireTrack is a placement and job search management platform. It helps students discover internally managed placement openings, track personal job applications, organize interview timelines, and receive context-aware guidance from an AI assistant."
     },
     {
       q: "How does placement opening discovery work?",
@@ -43,15 +54,15 @@ export default function LandingPage() {
       {/* Navigation Header */}
       <header className="landing-nav">
         <div className="landing-nav__container">
-          <div className="landing-brand">
+          <button type="button" className="landing-brand" onClick={scrollToTop} aria-label="HireTrack Home">
             <span className="landing-brand__logo-mark">H</span>
             <span className="landing-brand__logo-text">HireTrack</span>
-          </div>
+          </button>
 
           <nav className="landing-nav__links">
-            <a href="#features">Features</a>
-            <a href="#how-it-works">How It Works</a>
-            <a href="#faq">FAQ</a>
+            <button type="button" className="landing-nav__link-btn" onClick={() => scrollToSection('features')}>Features</button>
+            <button type="button" className="landing-nav__link-btn" onClick={() => scrollToSection('how-it-works')}>How It Works</button>
+            <button type="button" className="landing-nav__link-btn" onClick={() => scrollToSection('faq')}>FAQ</button>
           </nav>
 
           <div className="landing-nav__actions">
@@ -152,6 +163,7 @@ export default function LandingPage() {
               <h3>Spreadsheet Overload</h3>
               <p>Cluttered tables make it hard to see which roles are progressing and where you stand.</p>
             </div>
+
             <div className="problem-card">
               <div className="problem-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -162,6 +174,7 @@ export default function LandingPage() {
               <h3>Missed Follow-ups</h3>
               <p>Without reminders, critical follow-up dates and interview round deadlines slip past unnoticed.</p>
             </div>
+
             <div className="problem-card">
               <div className="problem-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
