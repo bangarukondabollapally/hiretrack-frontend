@@ -7,9 +7,7 @@ export default function LandingPage() {
   const { isAuthenticated, user } = useAuth();
   const [openFaq, setOpenFaq] = useState(null);
 
-  if (isAuthenticated) {
-    return <Navigate to={user?.role === 'ADMIN' ? '/admin/openings' : '/dashboard'} replace />;
-  }
+  const targetWorkspace = user?.role === 'ADMIN' ? '/admin/openings' : '/dashboard';
 
   const toggleFaq = (index) => {
     setOpenFaq(openFaq === index ? null : index);
@@ -66,8 +64,16 @@ export default function LandingPage() {
           </nav>
 
           <div className="landing-nav__actions">
-            <Link to="/login" className="landing-btn landing-btn--ghost">Sign in</Link>
-            <Link to="/register" className="landing-btn landing-btn--primary">Get Started</Link>
+            {isAuthenticated ? (
+              <Link to={targetWorkspace} className="landing-btn landing-btn--primary">
+                Go to Workspace →
+              </Link>
+            ) : (
+              <>
+                <Link to="/login" className="landing-btn landing-btn--ghost">Sign in</Link>
+                <Link to="/register" className="landing-btn landing-btn--primary">Get Started</Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -84,15 +90,26 @@ export default function LandingPage() {
           </p>
 
           <div className="landing-hero__ctas">
-            <Link to="/register" className="landing-btn landing-btn--hero">
-              Get Started Free
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14M12 5l7 7-7 7"/>
-              </svg>
-            </Link>
-            <Link to="/login" className="landing-btn landing-btn--secondary">
-              Sign In to Your Workspace
-            </Link>
+            {isAuthenticated ? (
+              <Link to={targetWorkspace} className="landing-btn landing-btn--hero">
+                Go to Your Workspace
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </Link>
+            ) : (
+              <>
+                <Link to="/register" className="landing-btn landing-btn--hero">
+                  Get Started Free
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
+                </Link>
+                <Link to="/login" className="landing-btn landing-btn--secondary">
+                  Sign In to Your Workspace
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Interactive UI Showcase Card */}

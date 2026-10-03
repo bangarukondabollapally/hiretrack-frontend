@@ -55,6 +55,7 @@ export default function RegisterPage() {
     email: '',
     password: '',
     confirmPassword: '',
+    role: 'USER',
   });
   const [touched, setTouched] = useState({
     email: false,
@@ -95,6 +96,7 @@ export default function RegisterPage() {
       await axiosInstance.post('/api/auth/register', {
         email: fields.email,
         password: fields.password,
+        role: fields.role,
       });
 
       // Automatically log in after registration
@@ -104,12 +106,15 @@ export default function RegisterPage() {
       });
 
       login(loginRes.data);
-      navigate(ROUTES.DASHBOARD);
+      if (loginRes.data?.role === 'ADMIN') {
+        navigate('/admin/openings');
+      } else {
+        navigate(ROUTES.DASHBOARD);
+      }
     } catch (err) {
       if (err.response?.status === 409) {
         setServerError('An account with this email already exists. Try signing in instead.');
       } else if (err.response?.status === 400) {
-        // Should not normally reach here given client-side validation, but handle gracefully
         const msg = err.response?.data?.message;
         setServerError(msg || 'Check your details and try again.');
       } else {
@@ -142,6 +147,23 @@ export default function RegisterPage() {
           noValidate
           aria-label="Create account form"
         >
+          {/* Account Role Selector */}
+          <div className="field">
+            <label className="field-label" htmlFor="register-role">
+              Account Type <span className="required" aria-hidden="true">*</span>
+            </label>
+            <select
+              id="register-role"
+              name="role"
+              className="field-input field-select"
+              value={fields.role}
+              onChange={handleChange}
+              disabled={isSubmitting}
+            >
+              <option value="USER">🎓 Student / Applicant</option>
+              <option value="ADMIN">🔒 Placement Officer / Admin</option>
+            </select>
+          </div>
           {/* Email */}
           <div className="field">
             <label className="field-label" htmlFor="register-email">
