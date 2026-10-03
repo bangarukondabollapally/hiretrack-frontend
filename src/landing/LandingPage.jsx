@@ -75,7 +75,9 @@ export default function LandingPage() {
           <div className="landing-hero__ctas">
             <Link to="/register" className="landing-btn landing-btn--hero">
               Get Started Free
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
             </Link>
             <Link to="/login" className="landing-btn landing-btn--secondary">
               Sign In to Your Workspace
@@ -141,17 +143,31 @@ export default function LandingPage() {
 
           <div className="problem-grid">
             <div className="problem-card">
-              <div className="problem-icon">📊</div>
+              <div className="problem-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect width="18" height="18" x="3" y="3" rx="2"/>
+                  <path d="M3 9h18M3 15h18M9 3v18M15 3v18"/>
+                </svg>
+              </div>
               <h3>Spreadsheet Overload</h3>
               <p>Cluttered tables make it hard to see which roles are progressing and where you stand.</p>
             </div>
             <div className="problem-card">
-              <div className="problem-icon">⏰</div>
+              <div className="problem-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12 6 12 12 16 14"/>
+                </svg>
+              </div>
               <h3>Missed Follow-ups</h3>
               <p>Without reminders, critical follow-up dates and interview round deadlines slip past unnoticed.</p>
             </div>
             <div className="problem-card">
-              <div className="problem-icon">📁</div>
+              <div className="problem-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/>
+                </svg>
+              </div>
               <h3>Fragmented Prep</h3>
               <p>Re-copying job descriptions and resumes for every interview prep session wastes valuable time.</p>
             </div>
@@ -169,22 +185,46 @@ export default function LandingPage() {
 
           <div className="features-grid">
             <div className="feature-card">
-              <div className="feature-icon">🏢</div>
+              <div className="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
+                  <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>
+                  <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/>
+                  <path d="M10 6h4M10 10h4M10 14h4M10 18h4"/>
+                </svg>
+              </div>
               <h3>Campus Placement Discovery</h3>
               <p>Browse verified placement openings posted by your campus admin, complete with eligibility criteria, stipend details, and 1-click tracking.</p>
             </div>
+
             <div className="feature-card">
-              <div className="feature-icon">📋</div>
+              <div className="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect width="20" height="14" x="2" y="7" rx="2"/>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                </svg>
+              </div>
               <h3>Ticket Pipeline Tracking</h3>
               <p>Organize applications into clear ticket rows with status stages (Applied, Screening, Interview, Offer, Rejected).</p>
             </div>
+
             <div className="feature-card">
-              <div className="feature-icon">🗓️</div>
+              <div className="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect width="18" height="18" x="3" y="4" rx="2"/>
+                  <path d="M16 2v4M8 2v4M3 10h18"/>
+                </svg>
+              </div>
               <h3>Interview Timeline</h3>
               <p>Schedule technical rounds, video interviews, and follow-ups with chronological date tracking and outcomes.</p>
             </div>
+
             <div className="feature-card">
-              <div className="feature-icon">🤖</div>
+              <div className="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z"/>
+                </svg>
+              </div>
               <h3>AI Career Assistant</h3>
               <p>Ask questions about specific applications. The AI analyzes your resume and job description stored in MySQL to deliver tailored advice.</p>
             </div>
@@ -245,13 +285,18 @@ export default function LandingPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="landing-cta">
+      <section className="landing-cta-wrapper">
         <div className="landing-container">
-          <h2>Ready to organize your placement hunt?</h2>
-          <p>Get started with HireTrack today and keep your job search focused.</p>
-          <Link to="/register" className="landing-btn landing-btn--hero">
-            Get Started Now
-          </Link>
+          <div className="landing-cta">
+            <h2>Ready to organize your placement hunt?</h2>
+            <p>Get started with HireTrack today and keep your job search focused.</p>
+            <Link to="/register" className="landing-btn landing-btn--hero">
+              Get Started Now
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </Link>
+          </div>
         </div>
       </section>
 

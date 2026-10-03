@@ -1,22 +1,28 @@
-/* Landing Page Styles — matching HireTrack design language */
+/* Landing Page Styles — HireTrack Design System (Green Accent) */
 .landing-page {
   min-height: 100vh;
   background-color: var(--bg, #F8F7F4);
   color: var(--text-primary, #1C1B19);
   font-family: var(--font-main, 'JetBrains Mono', monospace);
+  line-height: 1.5;
+}
+
+/* Nav Link Scroll Margin Fix — prevents header from overlapping section titles */
+#features, #how-it-works, #faq {
+  scroll-margin-top: 90px;
 }
 
 .landing-nav {
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: rgba(248, 247, 244, 0.9);
+  background-color: rgba(248, 247, 244, 0.92);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border, #DDD8CE);
 }
 
 .landing-nav__container {
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 1rem 1.5rem;
   display: flex;
@@ -33,7 +39,7 @@
 .landing-brand__logo-mark {
   width: 32px;
   height: 32px;
-  background: var(--text-primary, #1C1B19);
+  background-color: var(--accent, #2A5C4B);
   color: #FFFFFF;
   display: flex;
   align-items: center;
@@ -63,7 +69,7 @@
 }
 
 .landing-nav__links a:hover {
-  color: var(--text-primary, #1C1B19);
+  color: var(--accent, #2A5C4B);
 }
 
 .landing-nav__actions {
@@ -95,13 +101,14 @@
 }
 
 .landing-btn--primary, .landing-btn--hero {
-  background-color: var(--text-primary, #1C1B19);
+  background-color: var(--accent, #2A5C4B);
   color: #FFFFFF;
-  border: 1px solid var(--text-primary, #1C1B19);
+  border: 1px solid var(--accent, #2A5C4B);
 }
 
 .landing-btn--primary:hover, .landing-btn--hero:hover {
-  opacity: 0.9;
+  background-color: var(--accent-hover, #1F473A);
+  border-color: var(--accent-hover, #1F473A);
   transform: translateY(-1px);
 }
 
@@ -129,13 +136,13 @@
 .landing-badge {
   display: inline-block;
   padding: 0.35rem 0.85rem;
-  background-color: var(--surface-sunken, #F3F1EC);
-  border: 1px solid var(--border, #DDD8CE);
+  background-color: rgba(42, 92, 75, 0.08);
+  border: 1px solid var(--accent, #2A5C4B);
   border-radius: 20px;
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.05em;
-  color: var(--text-secondary, #4D4A43);
+  color: var(--accent, #2A5C4B);
   margin-bottom: 1.5rem;
 }
 
@@ -145,6 +152,7 @@
   line-height: 1.2;
   letter-spacing: -0.03em;
   margin-bottom: 1.25rem;
+  color: var(--text-primary, #1C1B19);
 }
 
 .landing-hero__subtitle {
@@ -165,7 +173,7 @@
 
 /* Interactive Preview Window */
 .landing-hero__preview {
-  max-width: 800px;
+  max-width: 820px;
   margin: 0 auto;
   border-radius: 10px;
   border: 1px solid var(--border, #DDD8CE);
@@ -229,6 +237,7 @@
   font-size: 1.5rem;
   font-weight: 700;
   margin-top: 0.2rem;
+  color: var(--accent, #2A5C4B);
 }
 
 .preview-tickets {
@@ -284,11 +293,13 @@
   color: #3730A3;
 }
 
-/* Problem & Features & Workflow & FAQ */
+/* Container & Layout Center Alignment Fix */
 .landing-container {
+  width: 100%;
   max-width: 1000px;
   margin: 0 auto;
   padding: 4rem 1.5rem;
+  box-sizing: border-box;
 }
 
 .landing-section__title {
@@ -312,6 +323,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1.5rem;
+  width: 100%;
 }
 
 .problem-card, .feature-card {
@@ -322,8 +334,15 @@
 }
 
 .problem-icon, .feature-icon {
-  font-size: 2rem;
-  margin-bottom: 1rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background-color: rgba(42, 92, 75, 0.08);
+  color: var(--accent, #2A5C4B);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
 }
 
 .problem-card h3, .feature-card h3 {
@@ -338,7 +357,9 @@
   line-height: 1.5;
 }
 
+/* Workflow Section Alignment */
 .landing-workflow {
+  width: 100%;
   background: var(--surface-sunken, #F3F1EC);
   border-top: 1px solid var(--border, #DDD8CE);
   border-bottom: 1px solid var(--border, #DDD8CE);
@@ -348,6 +369,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 2rem;
+  width: 100%;
 }
 
 .workflow-step {
@@ -357,9 +379,9 @@
 .step-num {
   font-size: 2.25rem;
   font-weight: 800;
-  color: var(--text-secondary, #4D4A43);
+  color: var(--accent, #2A5C4B);
   margin-bottom: 0.5rem;
-  opacity: 0.4;
+  opacity: 0.7;
 }
 
 .workflow-step h3 {
@@ -374,13 +396,14 @@
   line-height: 1.5;
 }
 
-/* FAQ */
+/* FAQ Section */
 .faq-list {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   max-width: 760px;
   margin: 0 auto;
+  width: 100%;
 }
 
 .faq-item {
@@ -413,34 +436,60 @@
   line-height: 1.6;
 }
 
-/* Final CTA & Footer */
+/* Final CTA Section — Redesigned with Green Accent Card */
+.landing-cta-wrapper {
+  padding: 1rem 0 3rem;
+  width: 100%;
+}
+
 .landing-cta {
   text-align: center;
-  background: var(--text-primary, #1C1B19);
+  background-color: var(--accent, #2A5C4B);
   color: #FFFFFF;
-  padding: 4rem 1.5rem;
+  padding: 3.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(42, 92, 75, 0.15);
 }
 
 .landing-cta h2 {
   font-size: 2rem;
   font-weight: 800;
   margin-bottom: 0.75rem;
+  color: #FFFFFF;
 }
 
 .landing-cta p {
-  color: #AAA;
+  color: rgba(255, 255, 255, 0.85);
   margin-bottom: 2rem;
+  font-size: 1rem;
 }
 
+.landing-cta .landing-btn--hero {
+  background-color: #FFFFFF;
+  color: var(--accent, #2A5C4B);
+  border: 1px solid #FFFFFF;
+}
+
+.landing-cta .landing-btn--hero:hover {
+  background-color: var(--surface-sunken, #F3F1EC);
+  color: var(--accent-hover, #1F473A);
+}
+
+/* Footer */
 .landing-footer {
   text-align: center;
   padding: 2rem 1.5rem;
   border-top: 1px solid var(--border, #DDD8CE);
   font-size: 0.8rem;
   color: var(--text-secondary, #4D4A43);
+  background-color: var(--bg, #F8F7F4);
 }
 
-/* Responsive query */
+.landing-footer .landing-container {
+  padding: 0;
+}
+
+/* Responsive Styles */
 @media (max-width: 768px) {
   .landing-hero__title {
     font-size: 2rem;
