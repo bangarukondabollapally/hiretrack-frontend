@@ -132,6 +132,11 @@ export default function ChatPage() {
   const [isAppPickerOpen, setIsAppPickerOpen] = useState(false);
   const [pickerHighlightedIdx, setPickerHighlightedIdx] = useState(0);
 
+  // Attachments state
+  const [attachments, setAttachments] = useState([]);
+  const [isAttachMenuOpen, setIsAttachMenuOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
   // Streaming & status states
   const [isGenerating, setIsGenerating] = useState(false);
   const [streamPhase, setStreamPhase] = useState(null); // 'retrieving' | 'thinking' | 'generating' | null
@@ -289,10 +294,14 @@ export default function ChatPage() {
   // SSE Stream Handler (item 3.2: TextDecoder stream:true, \n\n buffering)
   const handleSendMessage = useCallback(async (overrideText) => {
     const messageText = (overrideText || inputText).trim();
-    if (!messageText || isGenerating) return;
+    if ((!messageText && attachments.length === 0) || isGenerating) return;
 
     if (!overrideText) {
       setInputText('');
+    }
+    const currentAttachments = [...attachments];
+    if (!overrideText) {
+      setAttachments([]);
     }
 
     // Auto-create new conversation if needed
@@ -302,6 +311,9 @@ export default function ChatPage() {
 
     // Append User Message
     const userMsg = { id: `msg_${Date.now()}`, sender: 'user', text: messageText };
+    if (currentAttachments.length > 0) {
+      userMsg.attachments = currentAttachments;
+    }
     appendMessage(userMsg);
 
     setIsGenerating(true);
@@ -325,6 +337,7 @@ export default function ChatPage() {
       const payload = {
         message: messageText,
         applicationId: selectedAppId ? Number(selectedAppId) : null,
+        attachments: currentAttachments
       };
 
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
@@ -408,6 +421,7 @@ export default function ChatPage() {
           const fallbackRes = await axiosInstance.post('/api/assistant/chat', {
             message: messageText,
             applicationId: selectedAppId ? Number(selectedAppId) : null,
+            attachments: currentAttachments
           });
           updateMessageText(assistantMsgId, fallbackRes.data.reply);
         } catch (fallbackErr) {
@@ -421,7 +435,7 @@ export default function ChatPage() {
       setStreamPhase(null);
       abortControllerRef.current = null;
     }
-  }, [inputText, isGenerating, activeId, selectedAppId, token, appendMessage, newConversation, updateMessageText, updateReasoningText]);
+  }, [inputText, attachments, isGenerating, activeId, selectedAppId, token, appendMessage, newConversation, updateMessageText, updateReasoningText]);
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -430,18 +444,43 @@ export default function ChatPage() {
     }
   };
 
-  // Quick file attach (.txt / .md)
-  const handleFileAttach = (e) => {
-    const file = e.target.files?.[0];
-    if (fileInputRef.current) fileInputRef.current.value = '';
-    if (!file) return;
+  const processFiles = (files) => {
+    let count = attachments.length;
+    for (const file of files) {
+      if (count >= 5) break;
+      const isImage = file.type.startsWith('image/');
+      const isText = file.name.endsWith('.txt') || file.name.endsWith('.md') || file.name.endsWith('.pdf') || file.name.endsWith('.docx') || file.type === 'text/plain';
+      
+      if (isImage) {
+        if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) continue;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const base64Data = e.target.result.split(',')[1];
+          setAttachments(prev => [...prev, { type: 'image', name: file.name, mimeType: file.type, data: base64Data }].slice(0, 5));
+        };
+        reader.readAsDataURL(file);
+        count++;
+      } else if (isText) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const text = e.target.result || '';
+          setAttachments(prev => [...prev, { type: 'text', name: file.name, content: text.substring(0, 20000) }].slice(0, 5));
+        };
+        reader.readAsText(file);
+        count++;
+      }
+    }
+    setIsAttachMenuOpen(false);
+  };
 
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const text = ev.target.result;
-      setInputText(prev => prev ? `${prev}\n\n[Attached ${file.name}]:\n${text}` : text);
-    };
-    reader.readAsText(file);
+  const handleFileAttach = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    processFiles(files);
+  };
+
+  const removeAttachment = (index) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
   };
 
   const copyToClipboard = (text, id) => {
@@ -663,7 +702,7 @@ export default function ChatPage() {
   );
 
   return (
-    <div className="assistant-layout">
+    <div className={`assistant-layout ${isDragging ? 'assistant-layout--dragging' : ''}`} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
       {/* Portal recent conversations into expanded sidebar if available */}
       {!isSidebarCollapsed && portalTarget && createPortal(renderConversationsList(), portalTarget)}
 
@@ -954,35 +993,74 @@ export default function ChatPage() {
   // Helper render method for Composer (Claude-style single pill bar)
   function renderComposer() {
     return (
-      <div className="composer-card">
-        {/* Left: Attach File Button */}
-        <button
-          type="button"
-          className="composer-attach-btn"
-          onClick={() => fileInputRef.current?.click()}
-          title="Attach text or markdown file"
-          aria-label="Attach file"
-        >
-          +
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".txt,.md"
-          style={{ display: 'none' }}
-          onChange={handleFileAttach}
-        />
+      <div className={`composer-card ${attachments.length > 0 ? 'composer-card--has-attachments' : ''}`}>
+        
+        {/* Attachment Chips */}
+        {attachments.length > 0 && (
+          <div className="composer-attachments">
+            {attachments.map((att, idx) => (
+              <div key={idx} className="attachment-chip">
+                <span className="attachment-chip-icon">
+                  {att.type === 'image' ? (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                  ) : (
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                  )}
+                </span>
+                <span className="attachment-chip-name">{att.name}</span>
+                <button type="button" className="attachment-chip-remove" onClick={() => removeAttachment(idx)} aria-label="Remove attachment">×</button>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        <div className="composer-input-row">
+          {/* Left: Attach File Menu */}
+          <div className="composer-attach-wrapper">
+            <button
+              type="button"
+              className="composer-attach-btn"
+              onClick={() => setIsAttachMenuOpen(!isAttachMenuOpen)}
+              title="Attach files"
+              aria-expanded={isAttachMenuOpen}
+            >
+              +
+            </button>
+            {isAttachMenuOpen && (
+              <>
+                <div className="attach-menu-backdrop" onClick={() => setIsAttachMenuOpen(false)} />
+                <div className="attach-popover-menu">
+                  <button type="button" onClick={() => { fileInputRef.current.accept = ".png,.jpeg,.jpg,.webp,.gif"; fileInputRef.current?.click(); setIsAttachMenuOpen(false); }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    Upload image
+                  </button>
+                  <button type="button" onClick={() => { fileInputRef.current.accept = ".txt,.md,.pdf,.docx"; fileInputRef.current?.click(); setIsAttachMenuOpen(false); }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    Upload text file
+                  </button>
+                </div>
+              </>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              style={{ display: 'none' }}
+              onChange={handleFileAttach}
+            />
+          </div>
 
-        {/* Center: Textarea input */}
-        <textarea
-          ref={textareaRef}
-          className="composer-input"
-          placeholder="Write a message..."
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          rows={1}
-        />
+          {/* Center: Textarea input */}
+          <textarea
+            ref={textareaRef}
+            className="composer-input"
+            placeholder="Write a message..."
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
+            rows={1}
+          />
 
         {/* Right: Context Selector & Send Button */}
         <div className="composer-right-actions">
@@ -1088,9 +1166,9 @@ export default function ChatPage() {
           ) : (
             <button
               type="button"
-              className={`composer-send-btn ${inputText.trim() ? 'composer-send-btn--active' : ''}`}
+              className={`composer-send-btn ${(inputText.trim() || attachments.length > 0) ? 'composer-send-btn--active' : ''}`}
               onClick={() => handleSendMessage()}
-              disabled={!inputText.trim()}
+              disabled={!inputText.trim() && attachments.length === 0}
               title="Send message"
               aria-label="Send message"
             >
@@ -1102,6 +1180,7 @@ export default function ChatPage() {
           )}
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 }
