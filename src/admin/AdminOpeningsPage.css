@@ -1,0 +1,132 @@
+.admin-openings-page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.admin-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary, #1C1B19);
+  margin-bottom: 0.25rem;
+}
+
+.admin-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #4D4A43);
+}
+
+.admin-alert {
+  padding: 0.85rem 1.1rem;
+  border-radius: 6px;
+  margin-bottom: 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.admin-alert--success {
+  background-color: #DEF7EC;
+  color: #03543F;
+  border: 1px solid #BCF0DA;
+}
+
+.admin-alert--error {
+  background-color: #FDE8E8;
+  color: #9B1C1C;
+  border: 1px solid #FBD5D5;
+}
+
+.admin-loading, .admin-empty {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  background: var(--surface, #FFFFFF);
+  border: 1px solid var(--border, #DDD8CE);
+  border-radius: 8px;
+}
+
+.admin-openings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.admin-opening-card {
+  background: var(--surface, #FFFFFF);
+  border: 1px solid var(--border, #DDD8CE);
+  border-radius: 8px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.admin-opening-card--closed {
+  opacity: 0.65;
+  background-color: var(--surface-sunken, #F3F1EC);
+}
+
+.admin-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.admin-card__company {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.admin-card__role {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #4D4A43);
+}
+
+.admin-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.admin-card__eligibility {
+  font-size: 0.825rem;
+  color: var(--text-secondary, #4D4A43);
+}
+
+.admin-card__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.btn-danger {
+  background-color: #DC2626;
+  color: #FFFFFF;
+  border: 1px solid #B91C1C;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-danger:hover {
+  background-color: #B91C1C;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.delete-warning {
+  color: #DC2626;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}

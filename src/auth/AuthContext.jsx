@@ -49,7 +49,7 @@ export function AuthProvider({ children }) {
 
   const login = (authData) => {
     setToken(authData.token);
-    setUser({ userId: authData.userId, email: authData.email });
+    setUser({ userId: authData.userId, email: authData.email, role: authData.role || 'USER' });
   };
 
   const logout = () => {
@@ -61,8 +61,10 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('ht_user');
   };
 
+  const isAdmin = user?.role === 'ADMIN';
+
   return (
-    <AuthContext.Provider value={{ token, user, login, logout, isAuthenticated: !!token }}>
+    <AuthContext.Provider value={{ token, user, login, logout, isAuthenticated: !!token, isAdmin, role: user?.role || 'USER' }}>
       {children}
     </AuthContext.Provider>
   );

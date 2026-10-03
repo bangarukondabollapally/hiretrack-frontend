@@ -15,14 +15,18 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import ProtectedRoute from './auth/ProtectedRoute';
+import AdminRoute from './auth/AdminRoute';
 import Layout from './components/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
+import LandingPage from './landing/LandingPage';
 import LoginPage from './auth/LoginPage';
 import RegisterPage from './auth/RegisterPage';
 import DashboardPage from './dashboard/DashboardPage';
 import ApplicationsList from './applications/ApplicationsList';
 import ApplicationForm from './applications/ApplicationForm';
 import InterviewsPage from './interviews/InterviewsPage';
+import OpeningsPage from './openings/OpeningsPage';
+import AdminOpeningsPage from './admin/AdminOpeningsPage';
 import ProfilePage from './profile/ProfilePage';
 import ChatPage from './assistant/ChatPage';
 
@@ -32,7 +36,10 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* Public routes — TASK-009 ✓ */}
+            {/* Public Landing Page at / */}
+            <Route path="/" element={<LandingPage />} />
+
+            {/* Public auth routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 
@@ -40,18 +47,23 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route element={<Layout />}>
                 <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/openings" element={<OpeningsPage />} />
                 <Route path="/applications" element={<ApplicationsList />} />
                 <Route path="/applications/new" element={<ApplicationForm />} />
                 <Route path="/applications/:id" element={<ApplicationForm />} />
                 <Route path="/interviews" element={<InterviewsPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/assistant" element={<ChatPage />} />
+
+                {/* Admin-only routes */}
+                <Route element={<AdminRoute />}>
+                  <Route path="/admin/openings" element={<AdminOpeningsPage />} />
+                </Route>
               </Route>
             </Route>
 
-            {/* Default redirects */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            {/* Fallback redirect */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

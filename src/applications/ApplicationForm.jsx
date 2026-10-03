@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
 import StatusControl from './StatusControl';
 import TagSelector from './TagSelector';
@@ -10,17 +9,21 @@ export default function ApplicationForm() {
   const { id } = useParams();
   const isEdit = Boolean(id);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const prefillOpening = location.state?.opening;
 
   const [formData, setFormData] = useState({
-    companyName: '',
-    jobRole: '',
+    companyName: prefillOpening?.companyName || '',
+    jobRole: prefillOpening?.jobRole || '',
     status: 'APPLIED',
-    jobType: 'Full-time',
-    jobUrl: '',
-    notes: '',
+    jobType: prefillOpening?.jobType || 'Full-time',
+    jobUrl: prefillOpening?.applicationLink || '',
+    notes: prefillOpening?.id ? `Tracked from Placement Opening #${prefillOpening.id}` : '',
     appliedDate: new Date().toISOString().split('T')[0],
     followUpDate: '',
-    jobDescription: ''
+    jobDescription: prefillOpening?.description || '',
+    placementOpeningId: prefillOpening?.id || null
   });
 
   const [currentTags, setCurrentTags] = useState([]);
