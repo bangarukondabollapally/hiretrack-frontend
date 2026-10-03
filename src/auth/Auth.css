@@ -188,6 +188,44 @@
   color: var(--accent-hover);
 }
 
+/* ── Role Segmented Toggle Buttons ────────────────────────────────── */
+.role-segmented-buttons {
+  display: flex;
+  gap: 8px;
+  background-color: var(--surface-sunken);
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.role-btn {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: var(--text-button);
+  font-weight: var(--weight-semibold);
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.role-btn:hover:not(:disabled) {
+  color: var(--text-primary);
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.role-btn--active {
+  background-color: var(--surface);
+  color: var(--accent);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
 /* ── Responsive ──────────────────────────────────────────────────── */
 @media (max-width: 480px) {
   .auth-card {

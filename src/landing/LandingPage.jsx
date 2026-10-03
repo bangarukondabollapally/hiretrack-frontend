@@ -64,15 +64,9 @@ export default function LandingPage() {
           </nav>
 
           <div className="landing-nav__actions">
-            <Link to="/login" className="landing-btn landing-btn--ghost">Sign in</Link>
-            <Link to="/register" className="landing-btn landing-btn--ghost">Register</Link>
-            {isAuthenticated ? (
-              <Link to={targetWorkspace} className="landing-btn landing-btn--primary">
-                Go to Workspace →
-              </Link>
-            ) : (
-              <Link to="/register" className="landing-btn landing-btn--primary">Get Started</Link>
-            )}
+            <Link to="/login" className="landing-btn landing-btn--ghost">Student Sign in</Link>
+            <Link to="/login?role=ADMIN" className="landing-btn landing-btn--ghost">Admin Sign in</Link>
+            <Link to="/register" className="landing-btn landing-btn--primary">Register</Link>
           </div>
         </div>
       </header>
@@ -89,19 +83,14 @@ export default function LandingPage() {
           </p>
 
           <div className="landing-hero__ctas">
-            {isAuthenticated && (
-              <Link to={targetWorkspace} className="landing-btn landing-btn--hero">
-                Go to Your Workspace
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12h14M12 5l7 7-7 7"/>
-                </svg>
-              </Link>
-            )}
-            <Link to="/register" className="landing-btn landing-btn--secondary">
-              Get Started Free
+            <Link to="/register?role=USER" className="landing-btn landing-btn--hero">
+              Student Portal
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
             </Link>
-            <Link to="/login" className="landing-btn landing-btn--secondary">
-              Sign In
+            <Link to="/register?role=ADMIN" className="landing-btn landing-btn--secondary">
+              Admin Portal
             </Link>
           </div>
 

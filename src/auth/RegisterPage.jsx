@@ -19,7 +19,7 @@
  */
 
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import axiosInstance from '../api/axiosInstance';
 import { ROUTES } from '../lib/constants';
@@ -50,12 +50,15 @@ function validateConfirmPassword(value, password) {
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const [searchParams] = useSearchParams();
+
+  const initialRole = searchParams.get('role')?.toUpperCase() === 'ADMIN' ? 'ADMIN' : 'USER';
 
   const [fields, setFields] = useState({
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'USER',
+    role: initialRole,
   });
   const [touched, setTouched] = useState({
     email: false,
@@ -147,22 +150,29 @@ export default function RegisterPage() {
           noValidate
           aria-label="Create account form"
         >
-          {/* Account Role Selector */}
+          {/* Account Role Buttons (No dropdowns) */}
           <div className="field">
-            <label className="field-label" htmlFor="register-role">
+            <label className="field-label">
               Account Type <span className="required" aria-hidden="true">*</span>
             </label>
-            <select
-              id="register-role"
-              name="role"
-              className="field-input field-select"
-              value={fields.role}
-              onChange={handleChange}
-              disabled={isSubmitting}
-            >
-              <option value="USER">🎓 Student / Applicant</option>
-              <option value="ADMIN">🔒 Placement Officer / Admin</option>
-            </select>
+            <div className="role-segmented-buttons">
+              <button
+                type="button"
+                className={`role-btn ${fields.role === 'USER' ? 'role-btn--active' : ''}`}
+                onClick={() => setFields(prev => ({ ...prev, role: 'USER' }))}
+                disabled={isSubmitting}
+              >
+                <span>🎓 Student</span>
+              </button>
+              <button
+                type="button"
+                className={`role-btn ${fields.role === 'ADMIN' ? 'role-btn--active' : ''}`}
+                onClick={() => setFields(prev => ({ ...prev, role: 'ADMIN' }))}
+                disabled={isSubmitting}
+              >
+                <span>🔒 Admin</span>
+              </button>
+            </div>
           </div>
           {/* Email */}
           <div className="field">
