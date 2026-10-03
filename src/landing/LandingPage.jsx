@@ -67,12 +67,6 @@ export default function LandingPage() {
 
           <div className="landing-nav__actions">
             <Link to="/login" className="landing-btn landing-btn--ghost">Sign in</Link>
-            <Link to="/login?role=admin" className="landing-btn landing-btn--ghost admin-nav-btn" title="Admin Portal Sign In">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}>
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              </svg>
-              Admin Portal
-            </Link>
             <Link to="/register" className="landing-btn landing-btn--primary">Get Started</Link>
           </div>
         </div>
@@ -97,13 +91,7 @@ export default function LandingPage() {
               </svg>
             </Link>
             <Link to="/login" className="landing-btn landing-btn--secondary">
-              Student Sign In
-            </Link>
-            <Link to="/login?role=admin" className="landing-btn landing-btn--secondary landing-btn--admin">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '6px' }}>
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              </svg>
-              Admin Portal
+              Sign In to Your Workspace
             </Link>
           </div>
 
