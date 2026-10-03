@@ -29,13 +29,13 @@
 }
 
 .page-title {
-  font-size: 24px;
+  font-size: var(--text-page-heading, 18px);
   font-weight: var(--weight-bold);
   color: var(--text-primary);
 }
 
 .interviews-subtitle {
-  font-size: 14px;
+  font-size: var(--text-body, 13px);
   color: var(--text-secondary);
   margin-top: 4px;
 }

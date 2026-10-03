@@ -15,13 +15,13 @@
   --font-stamp: 'VT323', monospace;
   --font-prose: 'Source Serif 4', Georgia, Cambria, 'Times New Roman', serif;
 
-  /* Font sizes — minimal, crisp & professional scale */
-  --text-display: 22px;
-  --text-page-heading: 16px;
-  --text-section-heading: 13px;
-  --text-body: 12px;
-  --text-meta: 10px;
-  --text-button: 11px;
+  /* Font sizes — clean, consistent & professional scale */
+  --text-display: 24px;
+  --text-page-heading: 18px;
+  --text-section-heading: 14px;
+  --text-body: 13px;
+  --text-button: 12px;
+  --text-meta: 11px;
 
   /* Font weights */
   --weight-regular: 400;

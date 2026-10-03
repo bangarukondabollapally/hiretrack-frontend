@@ -17,14 +17,14 @@
 }
 
 .openings-title {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: var(--text-page-heading, 18px);
+  font-weight: var(--weight-bold, 700);
   color: var(--text-primary, #1C1B19);
   margin-bottom: 0.25rem;
 }
 
 .openings-subtitle {
-  font-size: 0.875rem;
+  font-size: var(--text-body, 13px);
   color: var(--text-secondary, #4D4A43);
 }
 
