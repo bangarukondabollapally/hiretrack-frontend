@@ -1,15 +1,13 @@
-import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { useOutletContext, useLocation } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import axiosInstance from '../api/axiosInstance';
 import { useAuth } from '../auth/AuthContext';
 import { useChatHistory } from './useChatHistory';
 import { repairMarkdownTables, TABLE_BR_MARKER } from '../lib/repairMarkdownTables';
 import './ChatPage.css';
-
-// Lazy load ReactMarkdown for performance (Phase 2 code splitting)
-const ReactMarkdown = lazy(() => import('react-markdown'));
 
 const INITIAL_GREETING = "What can I help you with today?";
 

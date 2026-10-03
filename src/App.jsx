@@ -16,6 +16,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import ProtectedRoute from './auth/ProtectedRoute';
 import Layout from './components/Layout';
+import ErrorBoundary from './components/ErrorBoundary';
 import LoginPage from './auth/LoginPage';
 import RegisterPage from './auth/RegisterPage';
 import DashboardPage from './dashboard/DashboardPage';
@@ -27,32 +28,34 @@ import ChatPage from './assistant/ChatPage';
 
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Public routes — TASK-009 ✓ */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+    <ErrorBoundary>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public routes — TASK-009 ✓ */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
 
-          {/* Protected routes wrapped with Layout */}
-          <Route element={<ProtectedRoute />}>
-            <Route element={<Layout />}>
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/applications" element={<ApplicationsList />} />
-              <Route path="/applications/new" element={<ApplicationForm />} />
-              <Route path="/applications/:id" element={<ApplicationForm />} />
-              <Route path="/interviews" element={<InterviewsPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/assistant" element={<ChatPage />} />
+            {/* Protected routes wrapped with Layout */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<Layout />}>
+                <Route path="/dashboard" element={<DashboardPage />} />
+                <Route path="/applications" element={<ApplicationsList />} />
+                <Route path="/applications/new" element={<ApplicationForm />} />
+                <Route path="/applications/:id" element={<ApplicationForm />} />
+                <Route path="/interviews" element={<InterviewsPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/assistant" element={<ChatPage />} />
+              </Route>
             </Route>
-          </Route>
 
-          {/* Default redirects */}
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+            {/* Default redirects */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
