@@ -16,6 +16,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './auth/AuthContext';
 import ProtectedRoute from './auth/ProtectedRoute';
 import AdminRoute from './auth/AdminRoute';
+import StudentRoute from './auth/StudentRoute';
 import Layout from './components/Layout';
 import ErrorBoundary from './components/ErrorBoundary';
 import LandingPage from './landing/LandingPage';
@@ -46,14 +47,19 @@ function App() {
             {/* Protected routes wrapped with Layout */}
             <Route element={<ProtectedRoute />}>
               <Route element={<Layout />}>
-                <Route path="/dashboard" element={<DashboardPage />} />
+                {/* Shared routes for both Student and Admin */}
                 <Route path="/openings" element={<OpeningsPage />} />
-                <Route path="/applications" element={<ApplicationsList />} />
-                <Route path="/applications/new" element={<ApplicationForm />} />
-                <Route path="/applications/:id" element={<ApplicationForm />} />
-                <Route path="/interviews" element={<InterviewsPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/assistant" element={<ChatPage />} />
+
+                {/* Student-only routes (Admins cannot view student data) */}
+                <Route element={<StudentRoute />}>
+                  <Route path="/dashboard" element={<DashboardPage />} />
+                  <Route path="/applications" element={<ApplicationsList />} />
+                  <Route path="/applications/new" element={<ApplicationForm />} />
+                  <Route path="/applications/:id" element={<ApplicationForm />} />
+                  <Route path="/interviews" element={<InterviewsPage />} />
+                  <Route path="/assistant" element={<ChatPage />} />
+                </Route>
 
                 {/* Admin-only routes */}
                 <Route element={<AdminRoute />}>

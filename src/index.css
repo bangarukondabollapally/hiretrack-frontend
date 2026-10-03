@@ -187,7 +187,7 @@ button:disabled {
   }
 }
 
-/* ── Inputs base ─────────────────────────────────────────────────── */
+/* ── Inputs & Dropdowns ─────────────────────────────────────────── */
 input,
 textarea,
 select {
@@ -196,8 +196,37 @@ select {
   color: var(--text-primary);
   background-color: var(--surface-sunken);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border-radius: 10px;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+select,
+.field-select,
+.applications-status-filter,
+.status-select {
+  border-radius: 10px !important;
+  padding: 8px 34px 8px 12px;
+  background-color: var(--surface, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  font-family: inherit;
+  font-size: var(--text-body);
+  color: var(--text-primary);
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%232A5C4B' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+select option {
+  padding: 10px;
+  background-color: #ffffff;
+  color: #1a1917;
+  border-radius: 8px;
 }
 
 input::placeholder,
@@ -213,6 +242,29 @@ select:focus-visible {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--focus);
+}
+
+/* ── Modal Enhancements ─────────────────────────────────────────── */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.modal-card {
+  border-radius: 16px !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.16);
+  border: 1px solid var(--border);
+  overflow: hidden;
 }
 
 /* ── #root ───────────────────────────────────────────────────────── */

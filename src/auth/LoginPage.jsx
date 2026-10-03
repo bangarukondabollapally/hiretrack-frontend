@@ -19,7 +19,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 
 import axiosInstance from '../api/axiosInstance';
@@ -43,6 +43,9 @@ function validatePassword(value) {
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isAdminLoginIntent = searchParams.get('role')?.toLowerCase() === 'admin';
+
   const { login } = useAuth();
   const [fields, setFields] = useState({ email: '', password: '' });
   const [touched, setTouched] = useState({ email: false, password: false });
@@ -95,7 +98,11 @@ export default function LoginPage() {
       });
 
       login(response.data);
-      navigate(ROUTES.DASHBOARD);
+      if (response.data?.role === 'ADMIN') {
+        navigate('/admin/openings');
+      } else {
+        navigate(ROUTES.DASHBOARD);
+      }
     } catch (err) {
       if (err.response?.status === 401) {
         setServerError('Incorrect email or password. Please try again.');
@@ -116,7 +123,13 @@ export default function LoginPage() {
         <div className="auth-brand" aria-label="HireTrack">HireTrack</div>
         <p className="auth-tagline">Stay organized. Know what's next.</p>
 
-        <h1 className="auth-heading">Sign in</h1>
+        <h1 className="auth-heading">{isAdminLoginIntent ? 'Admin Portal Sign In' : 'Sign in'}</h1>
+
+        {isAdminLoginIntent && (
+          <div className="auth-error" style={{ backgroundColor: '#EEF6F3', color: '#2A5C4B', borderColor: '#2A5C4B', marginBottom: '16px' }}>
+            🔒 Sign in with Administrator credentials to publish and manage campus placement openings.
+          </div>
+        )}
 
         {/* Server error — per DESIGN.md §17: what happened + what to do */}
         {serverError && (

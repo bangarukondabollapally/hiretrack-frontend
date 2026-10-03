@@ -31,6 +31,15 @@ export default function AdminOpeningsPage() {
   const [deletingOpening, setDeletingOpening] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const [currency, setCurrency] = useState('₹');
+  const [packageAmount, setPackageAmount] = useState('');
+
+  // Enhanced eligibility fields
+  const [targetBatch, setTargetBatch] = useState('2026 Batch');
+  const [minCgpa, setMinCgpa] = useState('CGPA ≥ 7.0');
+  const [eligibleBranches, setEligibleBranches] = useState('B.Tech CSE, IT, ECE');
+  const [customCriteria, setCustomCriteria] = useState('');
+
   useEffect(() => {
     fetchOpenings();
   }, []);
@@ -54,6 +63,12 @@ export default function AdminOpeningsPage() {
 
   const openCreateForm = () => {
     setEditingOpening(null);
+    setCurrency('₹');
+    setPackageAmount('');
+    setTargetBatch('2026 Batch');
+    setMinCgpa('CGPA ≥ 7.0');
+    setEligibleBranches('B.Tech CSE, IT, ECE');
+    setCustomCriteria('');
     setFormData({
       companyName: '',
       jobRole: '',
@@ -73,6 +88,20 @@ export default function AdminOpeningsPage() {
 
   const openEditForm = (opening) => {
     setEditingOpening(opening);
+
+    // Extract currency if present
+    let rawPkg = opening.packageDetails || '';
+    let foundCurr = '₹';
+    if (rawPkg.startsWith('$')) { foundCurr = '$'; rawPkg = rawPkg.replace('$', '').trim(); }
+    else if (rawPkg.startsWith('€')) { foundCurr = '€'; rawPkg = rawPkg.replace('€', '').trim(); }
+    else if (rawPkg.startsWith('₩')) { foundCurr = '₩'; rawPkg = rawPkg.replace('₩', '').trim(); }
+    else if (rawPkg.startsWith('¥')) { foundCurr = '¥'; rawPkg = rawPkg.replace('¥', '').trim(); }
+    else if (rawPkg.startsWith('£')) { foundCurr = '£'; rawPkg = rawPkg.replace('£', '').trim(); }
+    else if (rawPkg.startsWith('₹')) { foundCurr = '₹'; rawPkg = rawPkg.replace('₹', '').trim(); }
+
+    setCurrency(foundCurr);
+    setPackageAmount(rawPkg);
+
     setFormData({
       companyName: opening.companyName || '',
       jobRole: opening.jobRole || '',
@@ -86,6 +115,7 @@ export default function AdminOpeningsPage() {
       applicationLink: opening.applicationLink || '',
       status: opening.status || 'OPEN'
     });
+    setCustomCriteria(opening.eligibility || '');
     setFormErrors({});
     setIsFormOpen(true);
   };
@@ -110,12 +140,33 @@ export default function AdminOpeningsPage() {
     setIsSubmitting(true);
     setError('');
 
+    // Format package details with currency
+    let formattedPackage = packageAmount.trim();
+    if (formattedPackage && !/^[₹$€₩¥£A\$]/.test(formattedPackage)) {
+      formattedPackage = `${currency} ${formattedPackage}`;
+    } else if (!formattedPackage && packageAmount) {
+      formattedPackage = `${currency} ${packageAmount}`;
+    }
+
+    // Compile eligibility criteria
+    let compiledEligibility = customCriteria.trim();
+    if (!compiledEligibility) {
+      const parts = [eligibleBranches, targetBatch, minCgpa].filter(Boolean);
+      compiledEligibility = parts.join(' | ');
+    }
+
+    const payload = {
+      ...formData,
+      packageDetails: formattedPackage || formData.packageDetails,
+      eligibility: compiledEligibility || formData.eligibility
+    };
+
     try {
       if (editingOpening) {
-        await axiosInstance.put(`/api/admin/openings/${editingOpening.id}`, formData);
+        await axiosInstance.put(`/api/admin/openings/${editingOpening.id}`, payload);
         setSuccessMsg(`Placement opening for "${formData.companyName}" updated.`);
       } else {
-        await axiosInstance.post('/api/admin/openings', formData);
+        await axiosInstance.post('/api/admin/openings', payload);
         setSuccessMsg(`Placement opening for "${formData.companyName}" created.`);
       }
 
@@ -165,7 +216,7 @@ export default function AdminOpeningsPage() {
       <div className="admin-header">
         <div>
           <h1 className="admin-title">Placement Opening Management</h1>
-          <p className="admin-subtitle">Create, edit, close, and manage campus placement listings.</p>
+          <p className="admin-subtitle">Create, edit, close, and publish campus placement listings.</p>
         </div>
         <button type="button" className="btn-primary" onClick={openCreateForm}>
           + Publish Opening
@@ -222,10 +273,6 @@ export default function AdminOpeningsPage() {
                   )}
                   {op.packageDetails && (
                     <span className="meta-tag meta-tag--package">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '3px' }}>
-                        <line x1="12" x2="12" y1="2" y2="22"/>
-                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                      </svg>
                       {op.packageDetails}
                     </span>
                   )}
@@ -312,7 +359,7 @@ export default function AdminOpeningsPage() {
                   <div className="field">
                     <label className="field-label">Job Type</label>
                     <select
-                      className="field-input"
+                      className="field-input field-select"
                       value={formData.jobType}
                       onChange={(e) => setFormData({ ...formData, jobType: e.target.value })}
                     >
@@ -325,7 +372,7 @@ export default function AdminOpeningsPage() {
                   <div className="field">
                     <label className="field-label">Work Mode</label>
                     <select
-                      className="field-input"
+                      className="field-input field-select"
                       value={formData.workMode}
                       onChange={(e) => setFormData({ ...formData, workMode: e.target.value })}
                     >
@@ -338,7 +385,7 @@ export default function AdminOpeningsPage() {
                   <div className="field">
                     <label className="field-label">Status</label>
                     <select
-                      className="field-input"
+                      className="field-input field-select"
                       value={formData.status}
                       onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                     >
@@ -361,14 +408,31 @@ export default function AdminOpeningsPage() {
                   </div>
 
                   <div className="field">
-                    <label className="field-label">Package / Stipend</label>
-                    <input
-                      type="text"
-                      className="field-input"
-                      value={formData.packageDetails}
-                      onChange={(e) => setFormData({ ...formData, packageDetails: e.target.value })}
-                      placeholder="e.g. 12 LPA or 50,000/pm"
-                    />
+                    <label className="field-label">Currency & Amount (Default: ₹ INR)</label>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <select
+                        className="field-input field-select"
+                        style={{ width: '100px', flexShrink: 0 }}
+                        value={currency}
+                        onChange={(e) => setCurrency(e.target.value)}
+                      >
+                        <option value="₹">₹ (INR)</option>
+                        <option value="$">$ (USD)</option>
+                        <option value="€">€ (EUR)</option>
+                        <option value="₩">₩ (KRW)</option>
+                        <option value="¥">¥ (JPY)</option>
+                        <option value="£">£ (GBP)</option>
+                        <option value="A$">A$ (AUD)</option>
+                      </select>
+                      <input
+                        type="text"
+                        className="field-input"
+                        style={{ flex: 1 }}
+                        value={packageAmount}
+                        onChange={(e) => setPackageAmount(e.target.value)}
+                        placeholder="e.g. 12 LPA or 50,000/pm"
+                      />
+                    </div>
                   </div>
 
                   <div className="field">
@@ -394,25 +458,49 @@ export default function AdminOpeningsPage() {
                   {formErrors.applicationLink && <span className="field-error">{formErrors.applicationLink}</span>}
                 </div>
 
-                <div className="field">
-                  <label className="field-label">Eligibility Criteria</label>
+                {/* Enhanced Eligibility Criteria Section */}
+                <div className="eligibility-builder-section">
+                  <label className="field-label">Eligibility Criteria Builder</label>
+                  <div className="form-row" style={{ marginBottom: '8px' }}>
+                    <input
+                      type="text"
+                      className="field-input"
+                      value={eligibleBranches}
+                      onChange={(e) => setEligibleBranches(e.target.value)}
+                      placeholder="Branches e.g. B.Tech CSE, IT, ECE"
+                    />
+                    <input
+                      type="text"
+                      className="field-input"
+                      value={targetBatch}
+                      onChange={(e) => setTargetBatch(e.target.value)}
+                      placeholder="Batch e.g. 2026 Batch"
+                    />
+                    <input
+                      type="text"
+                      className="field-input"
+                      value={minCgpa}
+                      onChange={(e) => setMinCgpa(e.target.value)}
+                      placeholder="Min Criteria e.g. CGPA ≥ 7.5"
+                    />
+                  </div>
                   <input
                     type="text"
                     className="field-input"
-                    value={formData.eligibility}
-                    onChange={(e) => setFormData({ ...formData, eligibility: e.target.value })}
-                    placeholder="e.g. B.Tech CSE 2026 Batch, CGPA >= 7.5"
+                    value={customCriteria}
+                    onChange={(e) => setCustomCriteria(e.target.value)}
+                    placeholder="Custom Eligibility Summary (overrides builder if filled)"
                   />
                 </div>
 
-                <div className="field">
+                <div className="field" style={{ marginTop: '12px' }}>
                   <label className="field-label">Description / Notes</label>
                   <textarea
                     rows={4}
                     className="field-input field-textarea"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Detailed job responsibilities, skills required..."
+                    placeholder="Detailed job responsibilities, required skills, interview rounds..."
                   />
                 </div>
               </div>
@@ -422,7 +510,7 @@ export default function AdminOpeningsPage() {
                   Cancel
                 </button>
                 <button type="submit" className="btn-primary" disabled={isSubmitting}>
-                  {isSubmitting ? 'Saving...' : editingOpening ? 'Save Changes' : 'Publish Opening'}
+                  {isSubmitting ? 'Publishing...' : editingOpening ? 'Save Changes' : 'Publish Opening'}
                 </button>
               </div>
             </form>

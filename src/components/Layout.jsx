@@ -124,23 +124,25 @@ export default function Layout() {
         </div>
 
         <nav className="app-sidebar__nav">
-          <NavLink
-            to="/dashboard"
-            onClick={closeMobileMenu}
-            className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
-            title="Dashboard"
-            aria-label="Dashboard"
-          >
-            <span className="app-sidebar__link-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <rect width="7" height="9" x="3" y="3" rx="1" />
-                <rect width="7" height="5" x="14" y="3" rx="1" />
-                <rect width="7" height="9" x="14" y="12" rx="1" />
-                <rect width="7" height="5" x="3" y="16" rx="1" />
-              </svg>
-            </span>
-            <span className="app-sidebar__link-text">Dashboard</span>
-          </NavLink>
+          {user?.role !== 'ADMIN' && (
+            <NavLink
+              to="/dashboard"
+              onClick={closeMobileMenu}
+              className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
+              title="Dashboard"
+              aria-label="Dashboard"
+            >
+              <span className="app-sidebar__link-icon" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <rect width="7" height="9" x="3" y="3" rx="1" />
+                  <rect width="7" height="5" x="14" y="3" rx="1" />
+                  <rect width="7" height="9" x="14" y="12" rx="1" />
+                  <rect width="7" height="5" x="3" y="16" rx="1" />
+                </svg>
+              </span>
+              <span className="app-sidebar__link-text">Dashboard</span>
+            </NavLink>
+          )}
 
           <NavLink
             to="/openings"
@@ -174,54 +176,58 @@ export default function Layout() {
             </NavLink>
           )}
 
-          <NavLink
-            to="/applications"
-            onClick={closeMobileMenu}
-            className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
-            title="Applications"
-            aria-label="Applications"
-          >
-            <span className="app-sidebar__link-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <rect width="20" height="14" x="2" y="7" rx="2" />
-                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-              </svg>
-            </span>
-            <span className="app-sidebar__link-text">Applications</span>
-          </NavLink>
+          {user?.role !== 'ADMIN' && (
+            <>
+              <NavLink
+                to="/applications"
+                onClick={closeMobileMenu}
+                className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
+                title="Applications"
+                aria-label="Applications"
+              >
+                <span className="app-sidebar__link-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <rect width="20" height="14" x="2" y="7" rx="2" />
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                  </svg>
+                </span>
+                <span className="app-sidebar__link-text">Applications</span>
+              </NavLink>
 
-          <NavLink
-            to="/interviews"
-            onClick={closeMobileMenu}
-            className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
-            title="Interviews"
-            aria-label="Interviews"
-          >
-            <span className="app-sidebar__link-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <rect width="18" height="18" x="3" y="4" rx="2" />
-                <path d="M16 2v4" />
-                <path d="M8 2v4" />
-                <path d="M3 10h18" />
-              </svg>
-            </span>
-            <span className="app-sidebar__link-text">Interviews</span>
-          </NavLink>
+              <NavLink
+                to="/interviews"
+                onClick={closeMobileMenu}
+                className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
+                title="Interviews"
+                aria-label="Interviews"
+              >
+                <span className="app-sidebar__link-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <rect width="18" height="18" x="3" y="4" rx="2" />
+                    <path d="M16 2v4" />
+                    <path d="M8 2v4" />
+                    <path d="M3 10h18" />
+                  </svg>
+                </span>
+                <span className="app-sidebar__link-text">Interviews</span>
+              </NavLink>
 
-          <NavLink
-            to="/assistant"
-            onClick={closeMobileMenu}
-            className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
-            title="AI Assistant"
-            aria-label="AI Assistant"
-          >
-            <span className="app-sidebar__link-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z" />
-              </svg>
-            </span>
-            <span className="app-sidebar__link-text">AI Assistant</span>
-          </NavLink>
+              <NavLink
+                to="/assistant"
+                onClick={closeMobileMenu}
+                className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
+                title="AI Assistant"
+                aria-label="AI Assistant"
+              >
+                <span className="app-sidebar__link-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3z" />
+                  </svg>
+                </span>
+                <span className="app-sidebar__link-text">AI Assistant</span>
+              </NavLink>
+            </>
+          )}
 
           <NavLink
             to="/profile"

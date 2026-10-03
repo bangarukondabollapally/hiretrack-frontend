@@ -1,10 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
 import axiosInstance from '../api/axiosInstance';
 import './OpeningsPage.css';
 
+function formatDisplayPackage(pkg) {
+  if (!pkg) return '';
+  const trimmed = pkg.trim();
+  if (/^[₹$€₩¥£A\$]/.test(trimmed)) return trimmed;
+  return `₹ ${trimmed}`;
+}
+
 export default function OpeningsPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [openings, setOpenings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -63,6 +72,15 @@ export default function OpeningsPage() {
           <h1 className="openings-title">Placement Openings</h1>
           <p className="openings-subtitle">Discover active campus placement opportunities posted by administrators.</p>
         </div>
+        {user?.role === 'ADMIN' && (
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={() => navigate('/admin/openings')}
+          >
+            + Publish & Manage Openings
+          </button>
+        )}
       </div>
 
       {/* Filter & Search Bar */}
@@ -152,11 +170,7 @@ export default function OpeningsPage() {
                   )}
                   {op.packageDetails && (
                     <span className="meta-tag meta-tag--package">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '3px' }}>
-                        <line x1="12" x2="12" y1="2" y2="22"/>
-                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                      </svg>
-                      {op.packageDetails}
+                      {formatDisplayPackage(op.packageDetails)}
                     </span>
                   )}
                 </div>
@@ -228,7 +242,7 @@ export default function OpeningsPage() {
                 <div><strong>Job Type:</strong> {selectedOpening.jobType || 'N/A'}</div>
                 <div><strong>Work Mode:</strong> {selectedOpening.workMode || 'N/A'}</div>
                 <div><strong>Location:</strong> {selectedOpening.location || 'N/A'}</div>
-                <div><strong>Package/Stipend:</strong> {selectedOpening.packageDetails || 'N/A'}</div>
+                <div><strong>Package/Stipend:</strong> {formatDisplayPackage(selectedOpening.packageDetails) || 'N/A'}</div>
                 <div><strong>Deadline:</strong> {selectedOpening.deadline || 'Rolling'}</div>
                 <div>
                   <strong>Status: </strong>

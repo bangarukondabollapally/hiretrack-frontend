@@ -10,6 +10,20 @@ export default class ErrorBoundary extends React.Component {
     return { hasError: true, error };
   }
 
+  componentDidMount() {
+    window.addEventListener('popstate', this.handlePopState);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('popstate', this.handlePopState);
+  }
+
+  handlePopState = () => {
+    if (this.state.hasError) {
+      this.setState({ hasError: false, error: null });
+    }
+  };
+
   componentDidCatch(error, errorInfo) {
     console.error('Uncaught UI Error:', error, errorInfo);
   }
@@ -24,7 +38,10 @@ export default class ErrorBoundary extends React.Component {
           </p>
           <button
             type="button"
-            onClick={() => window.location.reload()}
+            onClick={() => {
+              this.setState({ hasError: false, error: null });
+              window.location.reload();
+            }}
             style={{
               padding: '8px 16px',
               backgroundColor: '#2A5C4B',
