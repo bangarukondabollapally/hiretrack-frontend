@@ -1051,262 +1051,106 @@
 
 .composer-card--has-attachments {
   flex-direction: column;
-  align-items: stretch;
-  padding: 8px 12px;
 }
 
 .composer-input-row {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 8px;
   width: 100%;
 }
 
-.attachment-chips-bar {
+.composer-attachments {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border-subtle);
-  margin-bottom: 4px;
+  padding: 8px 12px 0;
   width: 100%;
 }
 
 .attachment-chip {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background-color: var(--surface-sunken);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 4px 8px;
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--text-primary);
-  max-width: 200px;
-  transition: all 150ms ease;
+  max-width: 150px;
 }
 
-.attachment-chip--loading {
-  opacity: 0.75;
-}
-
-.attachment-chip__thumb {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-  object-fit: cover;
-  flex-shrink: 0;
-  border: 1px solid var(--border-subtle);
-}
-
-.attachment-chip__icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  background-color: var(--surface-mid, #ECEAE3);
+.attachment-chip-icon {
   display: flex;
   align-items: center;
-  justify-content: center;
   color: var(--accent);
-  flex-shrink: 0;
 }
 
-.attachment-chip__info {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  flex: 1;
-}
-
-.attachment-chip__name {
+.attachment-chip-name {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-weight: var(--weight-medium);
-  font-size: 11.5px;
-  color: var(--text-primary);
+  flex: 1;
 }
 
-.attachment-chip__meta {
-  font-size: 10px;
-  color: var(--text-tertiary);
-}
-
-.attachment-chip__status {
-  color: var(--accent);
-  font-weight: var(--weight-medium);
-}
-
-.attachment-chip__remove {
+.attachment-chip-remove {
   background: none;
   border: none;
-  padding: 2px 4px;
+  padding: 0 4px;
   cursor: pointer;
   color: var(--text-tertiary);
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1;
-  border-radius: 4px;
 }
 
-.attachment-chip__remove:hover {
-  color: var(--danger);
-  background-color: rgba(239, 68, 68, 0.1);
+.attachment-chip-remove:hover {
+  color: var(--text-primary);
 }
 
 .composer-attach-wrapper {
   position: relative;
-  display: inline-flex;
 }
 
-/* Attach Popover Menu (Desktop) */
-.attach-menu-popover {
+.attach-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.attach-popover-menu {
   position: absolute;
   bottom: calc(100% + 8px);
   left: 0;
-  width: 220px;
   background-color: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
-  box-shadow: var(--shadow-overlay, 0 4px 20px rgba(0, 0, 0, 0.15));
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   z-index: 1001;
-  padding: 6px;
+  padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+  width: 160px;
   animation: popoverFadeIn 150ms ease;
 }
 
-.attach-menu-item {
+.attach-popover-menu button {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  padding: 8px 10px;
-  background: transparent;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  color: var(--text-primary);
-  font-size: 12.5px;
-  font-weight: var(--weight-medium);
-  text-align: left;
-  transition: background-color var(--transition-fast);
-}
-
-.attach-menu-item:hover {
-  background-color: var(--surface-sunken);
-}
-
-.attach-menu-item--mobile-only {
-  display: none;
-}
-
-.attach-menu-disclaimer {
-  padding: 8px 10px 4px;
-  font-size: 10.5px;
-  color: var(--text-tertiary);
-  line-height: 1.35;
-  border-top: 1px solid var(--border-subtle);
-  margin-top: 4px;
-}
-
-/* Inline Error Banner above composer */
-.composer-inline-error {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 12px;
-  background-color: rgba(239, 68, 68, 0.1);
-  border: 1px solid var(--danger);
-  border-radius: 8px;
-  color: var(--danger);
-  font-size: 12px;
-  margin-bottom: 8px;
-}
-
-.composer-inline-error__dismiss {
+  padding: 8px 12px;
   background: none;
   border: none;
-  color: var(--danger);
-  font-weight: bold;
-  cursor: pointer;
-  padding: 0 4px;
-}
-
-/* Message Bubble Attachments */
-.message-attachments-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.message-attachment-badge {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
-  background-color: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
-  font-size: 11px;
-  color: inherit;
-  max-width: 180px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-align: left;
 }
 
-.message-attachment-thumb {
-  width: 28px;
-  height: 28px;
-  border-radius: 4px;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-
-.message-attachment-file-icon {
-  font-size: 12px;
-  flex-shrink: 0;
-}
-
-.message-attachment-name {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Mobile Bottom Sheet for Attach Menu (<768px) */
-@media (max-width: 768px) {
-  .attach-menu-item--mobile-only {
-    display: flex;
-  }
-
-  .attach-menu-backdrop {
-    position: fixed;
-    inset: 0;
-    background-color: rgba(0, 0, 0, 0.4);
-    z-index: 1000;
-  }
-
-  .attach-menu-popover {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    top: auto;
-    width: 100%;
-    border-radius: 16px 16px 0 0;
-    padding: 16px;
-    z-index: 1001;
-    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.2);
-    animation: sheetSlideUp 200ms ease;
-  }
-
-  .attach-menu-item {
-    padding: 12px 14px;
-    font-size: 14px;
-  }
-
-  .attach-menu-disclaimer {
-    font-size: 11.5px;
-    padding-top: 10px;
-  }
+.attach-popover-menu button:hover {
+  background-color: var(--surface-sunken);
+  color: var(--text-primary);
 }
