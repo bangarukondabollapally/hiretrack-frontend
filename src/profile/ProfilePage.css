@@ -462,6 +462,18 @@
   gap: 16px;
 }
 
+.admin-role-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  background-color: rgba(42, 92, 75, 0.12);
+  color: var(--accent);
+  border: 1px solid var(--accent-dim);
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: var(--weight-semibold);
+}
+
 /* Mobile Responsive Segmented Controls (<768px) */
 @media (max-width: 768px) {
   .settings-layout {
