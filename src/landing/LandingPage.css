@@ -529,6 +529,27 @@
 
 /* Mobile & Tablet Responsiveness */
 @media (max-width: 768px) {
+  .landing-nav__container {
+    padding: 0.75rem 1rem;
+  }
+
+  .landing-nav__actions {
+    gap: 6px;
+  }
+
+  .landing-nav__actions .landing-btn--ghost {
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .landing-nav__actions .landing-btn--primary {
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 8px;
+  }
+
   .landing-hero {
     padding: 2.5rem 1rem 3.5rem;
   }
@@ -558,11 +579,24 @@
   }
 
   .landing-hero__ctas {
+    display: flex;
     flex-direction: column;
+    align-items: center;
+    gap: 10px;
     width: 100%;
+    margin-bottom: 2.5rem;
   }
 
   .landing-hero__ctas .landing-btn {
     width: 100%;
+    max-width: 320px;
+    height: 44px;
+    font-size: 13.5px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    box-sizing: border-box;
   }
 }

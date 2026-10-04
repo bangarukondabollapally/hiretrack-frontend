@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '../auth/AuthContext';
 import axiosInstance from '../api/axiosInstance';
 import './OpeningsPage.css';
@@ -9,6 +10,40 @@ function formatDisplayPackage(pkg) {
   const trimmed = pkg.trim();
   if (/^[₹$€₩¥£A\$]/.test(trimmed)) return trimmed;
   return `₹ ${trimmed}`;
+}
+
+function formatDeadlineWithCountdown(deadline) {
+  if (!deadline) return null;
+  const parts = deadline.split('-');
+  let d;
+  if (parts.length === 3) {
+    d = new Date(parts[0], parts[1] - 1, parts[2]);
+  } else {
+    d = new Date(deadline);
+  }
+
+  if (isNaN(d.getTime())) return `Deadline: ${deadline}`;
+
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const formattedDate = `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(d);
+  target.setHours(0, 0, 0, 0);
+
+  const diffMs = target - today;
+  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    return { text: `Deadline: ${formattedDate} (Expired)`, isExpired: true };
+  } else if (diffDays === 0) {
+    return { text: `Deadline: ${formattedDate} • Due today!`, isExpired: false };
+  } else if (diffDays === 1) {
+    return { text: `Deadline: ${formattedDate} • 1 day left`, isExpired: false };
+  } else {
+    return { text: `Deadline: ${formattedDate} • ${diffDays} days left`, isExpired: false };
+  }
 }
 
 export default function OpeningsPage() {
@@ -140,12 +175,18 @@ export default function OpeningsPage() {
       {/* Openings Grid */}
       {!isLoading && !error && filteredOpenings.length > 0 && (
         <div className="openings-grid">
-          {filteredOpenings.map(op => {
+          {filteredOpenings.map((op, idx) => {
             const isClosed = op.status === 'CLOSED';
             const isExpired = op.deadline && new Date(op.deadline) < new Date();
 
             return (
-              <div key={op.id} className={`opening-card ${isClosed ? 'opening-card--closed' : ''}`}>
+              <motion.div
+                key={op.id}
+                className={`opening-card ${isClosed ? 'opening-card--closed' : ''}`}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: idx * 0.04 }}
+              >
                 <div className="opening-card__header">
                   <div>
                     <h3 className="opening-card__company">{op.companyName}</h3>
@@ -181,11 +222,15 @@ export default function OpeningsPage() {
                   </p>
                 )}
 
-                {op.deadline && (
-                  <div className={`opening-card__deadline ${isExpired ? 'deadline--expired' : ''}`}>
-                    Deadline: {op.deadline} {isExpired && '(Expired)'}
-                  </div>
-                )}
+                {op.deadline && (() => {
+                  const deadlineInfo = formatDeadlineWithCountdown(op.deadline);
+                  const isExp = deadlineInfo?.isExpired || isExpired;
+                  return (
+                    <div className={`opening-card__deadline ${isExp ? 'deadline--expired' : ''}`}>
+                      {deadlineInfo?.text || `Deadline: ${op.deadline}`}
+                    </div>
+                  );
+                })()}
 
                 <div className="opening-card__actions">
                   <button
@@ -213,7 +258,7 @@ export default function OpeningsPage() {
                     Track in HireTrack
                   </button>
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>

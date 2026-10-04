@@ -68,14 +68,14 @@
 }
 
 .filter-label {
-  font-size: 13px;
-  font-weight: var(--weight-medium);
+  font-size: 12.5px;
+  font-weight: var(--weight-semibold);
   color: var(--text-secondary);
 }
 
 .filter-select {
   padding: 6px 32px 6px 12px;
-  font-size: 13px;
+  font-size: 12.5px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background-color: var(--surface, #ffffff);
@@ -89,6 +89,7 @@
   cursor: pointer;
   outline: none;
   line-height: 1.4;
+  white-space: nowrap;
 }
 
 /* Loading Skeletons & Empty States */
@@ -113,34 +114,34 @@
 .interviews-groups-container {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 28px;
 }
 
 .interview-group-section {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .group-title {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: var(--weight-semibold);
   color: var(--text-primary);
   border-bottom: 1px solid var(--border);
-  padding-bottom: 8px;
+  padding-bottom: 6px;
 }
 
 .group-title-toggle {
   background: transparent;
   border: none;
-  font-size: 18px;
+  font-size: 15px;
   font-weight: var(--weight-semibold);
   color: var(--text-primary);
   cursor: pointer;
   padding: 0;
   text-align: left;
   border-bottom: 1px solid var(--border);
-  padding-bottom: 8px;
+  padding-bottom: 6px;
   width: 100%;
 }
 

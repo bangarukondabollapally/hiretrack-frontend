@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../auth/AuthContext';
 import axiosInstance from '../api/axiosInstance';
 import { extractTextFromFile } from '../lib/fileParser';
@@ -339,6 +340,8 @@ export default function ProfilePage() {
     defaultCurrency !== initialAdminSettings.defaultCurrency ||
     adminNotify !== initialAdminSettings.adminNotify;
 
+  const userInitial = (name || user?.email || 'U').charAt(0).toUpperCase();
+
   if (isLoading) {
     return <div className="settings-loading">Loading settings...</div>;
   }
@@ -353,6 +356,25 @@ export default function ProfilePage() {
             : 'Manage your account profile, job search experience, and master resume.'}
         </p>
       </header>
+
+      {/* User Header Profile Card */}
+      <motion.div
+        className="profile-user-card"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+      >
+        <div className="profile-avatar">{userInitial}</div>
+        <div className="profile-user-info">
+          <span className="profile-user-name">{name || user?.email?.split('@')[0] || 'HireTrack User'}</span>
+          <span className="profile-user-email">{user?.email}</span>
+        </div>
+        <div style={{ marginLeft: 'auto' }}>
+          <span className="admin-role-badge">
+            {isAdmin ? '🔒 Administrator' : '🎓 Student Account'}
+          </span>
+        </div>
+      </motion.div>
 
       <div className="settings-layout">
         {/* Desktop Left Nav Section List / Mobile Top Scrollable Segmented Tabs */}

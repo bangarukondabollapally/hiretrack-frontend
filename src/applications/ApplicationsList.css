@@ -115,14 +115,16 @@
 }
 
 .applications-status-filter {
-  padding: 8px 12px;
-  font-size: var(--text-button);
+  padding: 8px 32px 8px 12px !important;
+  font-size: var(--text-button, 12px);
   background-color: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   cursor: pointer;
   outline: none;
+  white-space: nowrap !important;
+  background-position: right 10px center !important;
 }
 
 /* Skeleton loader for tickets */

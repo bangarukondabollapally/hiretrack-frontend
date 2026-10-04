@@ -208,15 +208,28 @@
 
 .opening-card__actions {
   display: flex;
+  align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
   padding-top: 0.75rem;
   border-top: 1px solid var(--border, #DDD8CE);
 }
 
-.btn-sm {
-  padding: 0.35rem 0.65rem;
-  font-size: 0.78rem;
+.opening-card__actions .btn-secondary,
+.opening-card__actions .btn-primary,
+.opening-card__actions a.btn-secondary {
+  height: 34px !important;
+  padding: 6px 14px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  text-decoration: none !important;
+  line-height: 1 !important;
+  margin: 0 !important;
 }
 
 /* Modal styles */
