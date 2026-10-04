@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import axiosInstance from '../api/axiosInstance';
 import { useAuth } from '../auth/AuthContext';
+import { useApplicationsQuery } from '../api/queries';
 import { useChatHistory } from './useChatHistory';
 import ChatHistoryList from './ChatHistoryList';
 import { repairMarkdownTables, TABLE_BR_MARKER } from '../lib/repairMarkdownTables';
@@ -135,12 +136,12 @@ export default function ChatPage() {
 
   // Input & context states
   const [inputText, setInputText] = useState('');
-  const [applications, setApplications] = useState([]);
+  const { data: applicationsData } = useApplicationsQuery(userId);
+  const applications = applicationsData || [];
   const [selectedAppId, setSelectedAppId] = useState(null);
   const [appSearchQuery, setAppSearchQuery] = useState('');
   const [isAppPickerOpen, setIsAppPickerOpen] = useState(false);
   const [pickerHighlightedIdx, setPickerHighlightedIdx] = useState(0);
-
   // Attachments state
   const [attachments, setAttachments] = useState([]);
   const [isAttachMenuOpen, setIsAttachMenuOpen] = useState(false);
@@ -166,13 +167,6 @@ export default function ChatPage() {
   const reasoningTimerRef = useRef(null);
   const contextPickerRef = useRef(null);
   const popoverRef = useRef(null);
-
-  // Load applications for context picker
-  useEffect(() => {
-    axiosInstance.get('/api/applications')
-      .then(r => setApplications(r.data || []))
-      .catch(() => {});
-  }, []);
 
   // Close popovers on Escape key or outside click
   useEffect(() => {

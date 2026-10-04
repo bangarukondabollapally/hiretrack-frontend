@@ -1,25 +1,44 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
+import { useApplicationsQuery, useInterviewsQuery, invalidateInterviewQueries } from '../api/queries';
 import axiosInstance from '../api/axiosInstance';
+import QueryStateNotice from '../components/QueryStateNotice';
 import './InterviewsPage.css';
 
 const OUTCOMES = ['PENDING', 'PASSED', 'FAILED', 'CANCELLED'];
 
 export default function InterviewsPage() {
   const navigate = useNavigate();
-
-  // Core Data
-  const [interviews, setInterviews] = useState([]);
-  const [applications, setApplications] = useState([]);
+  const { user } = useAuth();
+  const userId = user?.userId || user?.id || user?.email;
 
   // Filters
   const [selectedOutcome, setSelectedOutcome] = useState('');
   const [selectedAppIdFilter, setSelectedAppIdFilter] = useState('');
-
-  // UI States
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
   const [isPastExpanded, setIsPastExpanded] = useState(true);
+
+  // Queries
+  const { data: applicationsData } = useApplicationsQuery(userId);
+  const applications = applicationsData || [];
+
+  const filters = {
+    scope: 'all',
+    ...(selectedOutcome ? { outcome: selectedOutcome } : {}),
+    ...(selectedAppIdFilter ? { applicationId: selectedAppIdFilter } : {}),
+  };
+
+  const {
+    data: interviewsData,
+    isLoading: isIntLoading,
+    isFetching: isIntFetching,
+    isError: isIntError,
+    error: intErr,
+    refetch: refetchInterviews,
+  } = useInterviewsQuery(userId, filters);
+
+  const interviews = interviewsData || [];
+  const isLoading = isIntLoading && !interviewsData;
 
   // Modal State for Add / Edit
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -35,38 +54,6 @@ export default function InterviewsPage() {
     outcome: 'PENDING',
     notes: '',
   });
-
-  useEffect(() => {
-    fetchApplications();
-    fetchInterviews();
-  }, [selectedOutcome, selectedAppIdFilter]);
-
-  const fetchApplications = async () => {
-    try {
-      const response = await axiosInstance.get('/api/applications');
-      setApplications(response.data || []);
-    } catch (err) {
-      console.error('Failed to load applications:', err);
-    }
-  };
-
-  const fetchInterviews = async () => {
-    setIsLoading(true);
-    setError('');
-    try {
-      const params = new URLSearchParams();
-      params.append('scope', 'all');
-      if (selectedOutcome) params.append('outcome', selectedOutcome);
-      if (selectedAppIdFilter) params.append('applicationId', selectedAppIdFilter);
-
-      const response = await axiosInstance.get(`/api/interviews?${params.toString()}`);
-      setInterviews(response.data || []);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to load interviews.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const openCreateModal = () => {
     setEditingInterview(null);
@@ -127,6 +114,8 @@ export default function InterviewsPage() {
         notes: modalFormData.notes,
       };
 
+      const targetAppId = editingInterview ? editingInterview.applicationId : modalFormData.applicationId;
+
       if (editingInterview) {
         await axiosInstance.put(
           `/api/applications/${editingInterview.applicationId}/interviews/${editingInterview.id}`,
@@ -139,8 +128,8 @@ export default function InterviewsPage() {
         );
       }
 
+      invalidateInterviewQueries(userId, targetAppId);
       setIsModalOpen(false);
-      fetchInterviews();
     } catch (err) {
       setModalError(err.response?.data?.message || 'Failed to save interview.');
     } finally {
@@ -154,7 +143,7 @@ export default function InterviewsPage() {
     }
     try {
       await axiosInstance.delete(`/api/applications/${interview.applicationId}/interviews/${interview.id}`);
-      fetchInterviews();
+      invalidateInterviewQueries(userId, interview.applicationId);
     } catch (err) {
       alert('Failed to delete interview.');
     }
@@ -188,6 +177,12 @@ export default function InterviewsPage() {
 
   return (
     <div className="interviews-container">
+      <QueryStateNotice
+        isFetching={isIntFetching && !isLoading}
+        isError={isIntError && interviews.length > 0}
+        error={intErr}
+        refetch={refetchInterviews}
+      />
       {/* Header */}
       <div className="interviews-header">
         <div>

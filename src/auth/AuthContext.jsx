@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import axiosInstance from '../api/axiosInstance';
 import { clearChatHistory } from '../assistant/useChatHistory';
+import { clearAllQueryCache } from '../api/queries';
 
 const AuthContext = createContext(null);
 
@@ -48,12 +49,14 @@ export function AuthProvider({ children }) {
   }, [token]);
 
   const login = (authData) => {
+    clearAllQueryCache();
     setToken(authData.token);
     setUser({ userId: authData.userId, email: authData.email, role: authData.role || 'USER' });
   };
 
   const logout = () => {
-    // Clear this user's chat history before wiping the user reference
+    // Clear query cache and user's chat history before wiping user reference
+    clearAllQueryCache();
     clearChatHistory(userRef.current?.userId);
     setToken(null);
     setUser(null);

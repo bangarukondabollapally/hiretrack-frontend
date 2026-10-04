@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
+import { useApplicationQuery, invalidateApplicationQueries, queryClient } from '../api/queries';
 import axiosInstance from '../api/axiosInstance';
 import StatusControl from './StatusControl';
 import TagSelector from './TagSelector';
@@ -11,6 +13,11 @@ export default function ApplicationForm() {
   const isEdit = Boolean(id);
   const navigate = useNavigate();
   const location = useLocation();
+
+  const { user } = useAuth();
+  const userId = user?.userId || user?.id || user?.email;
+
+  const { data: applicationData, isLoading: isQueryLoading, refetch: refetchApp } = useApplicationQuery(userId, id);
 
   const prefillOpening = location.state?.opening;
 
@@ -28,39 +35,25 @@ export default function ApplicationForm() {
   });
 
   const [currentTags, setCurrentTags] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (isEdit) {
-      fetchApplication();
-    }
-  }, [id]);
-
-  const fetchApplication = async () => {
-    setIsLoading(true);
-    try {
-      const response = await axiosInstance.get(`/api/applications/${id}`);
-      const data = response.data;
+    if (isEdit && applicationData) {
       setFormData({
-        companyName: data.companyName || '',
-        jobRole: data.jobRole || '',
-        status: data.status || 'APPLIED',
-        jobType: data.jobType || 'Full-time',
-        jobUrl: data.jobUrl || '',
-        notes: data.notes || '',
-        appliedDate: data.appliedDate || '',
-        followUpDate: data.followUpDate || '',
-        jobDescription: data.jobDescription || ''
+        companyName: applicationData.companyName || '',
+        jobRole: applicationData.jobRole || '',
+        status: applicationData.status || 'APPLIED',
+        jobType: applicationData.jobType || 'Full-time',
+        jobUrl: applicationData.jobUrl || '',
+        notes: applicationData.notes || '',
+        appliedDate: applicationData.appliedDate || '',
+        followUpDate: applicationData.followUpDate || '',
+        jobDescription: applicationData.jobDescription || ''
       });
-      setCurrentTags(data.tags || []);
-    } catch (err) {
-      setError('Failed to load application details.');
-    } finally {
-      setIsLoading(false);
+      setCurrentTags(applicationData.tags || []);
     }
-  };
+  }, [isEdit, applicationData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -70,18 +63,22 @@ export default function ApplicationForm() {
     try {
       if (isEdit) {
         await axiosInstance.put(`/api/applications/${id}`, formData);
+        invalidateApplicationQueries(userId);
+        queryClient.invalidateQueries({ queryKey: ['application', userId, id] });
         navigate('/applications');
       } else {
         await axiosInstance.post('/api/applications', formData);
+        invalidateApplicationQueries(userId);
         navigate('/applications', { replace: true, state: { toastMessage: 'Application created successfully!' } });
       }
-
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to save application.');
     } finally {
       setIsSaving(false);
     }
   };
+
+  const isLoading = isEdit && isQueryLoading && !applicationData;
 
   if (isLoading) {
     return <div className="form-loading">Loading application...</div>;
@@ -197,7 +194,7 @@ export default function ApplicationForm() {
             <TagSelector
               applicationId={id}
               currentTags={currentTags}
-              onTagsUpdated={fetchApplication}
+              onTagsUpdated={refetchApp}
             />
           </div>
         )}

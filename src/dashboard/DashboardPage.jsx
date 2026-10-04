@@ -1,61 +1,43 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axiosInstance from '../api/axiosInstance';
+import { useAuth } from '../auth/AuthContext';
+import { useDashboardQuery, useApplicationsQuery, useOpeningsQuery } from '../api/queries';
 import StatusControl from '../applications/StatusControl';
+import QueryStateNotice from '../components/QueryStateNotice';
 import './DashboardPage.css';
 
 export default function DashboardPage() {
-  const [dashboardData, setDashboardData] = useState(null);
-  const [openingsCount, setOpeningsCount] = useState(0);
-  const [recentApplications, setRecentApplications] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const userId = user?.userId || user?.id || user?.email;
 
-  useEffect(() => {
-    // SWR: Load from cache immediately if present
-    const cachedDash = sessionStorage.getItem('ht_cache_dashboard');
-    if (cachedDash) {
-      try {
-        setDashboardData(JSON.parse(cachedDash));
-        setIsLoading(false);
-      } catch (e) {
-        setIsLoading(true);
-      }
-    } else {
-      setIsLoading(true);
-    }
-    fetchDashboardData();
-  }, []);
+  const {
+    data: dashboardData,
+    isLoading: dashLoading,
+    isFetching: dashFetching,
+    isError: dashIsError,
+    error: dashErr,
+    refetch: dashRefetch,
+  } = useDashboardQuery(userId);
 
-  const fetchDashboardData = async () => {
-    try {
-      const [dashRes, appsRes, openingsRes] = await Promise.all([
-        axiosInstance.get('/api/dashboard'),
-        axiosInstance.get('/api/applications'),
-        axiosInstance.get('/api/openings')
-      ]);
+  const {
+    data: applicationsData,
+    isFetching: appsFetching,
+    isError: appsIsError,
+    error: appsErr,
+    refetch: appsRefetch,
+  } = useApplicationsQuery(userId);
 
-      setDashboardData(dashRes.data);
-      sessionStorage.setItem('ht_cache_dashboard', JSON.stringify(dashRes.data));
+  const {
+    data: openingsData,
+    isFetching: opsFetching,
+    isError: opsIsError,
+    error: opsErr,
+    refetch: opsRefetch,
+  } = useOpeningsQuery(userId);
 
-      if (appsRes.data) {
-        setRecentApplications(appsRes.data.slice(0, 5));
-      }
+  const initialLoading = dashLoading && !dashboardData;
 
-      if (openingsRes.data) {
-        setOpeningsCount(openingsRes.data.length);
-      }
-    } catch (err) {
-      if (!dashboardData) {
-        setError('Failed to load dashboard metrics.');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (isLoading) {
+  if (initialLoading) {
     return (
       <div className="dashboard-loading">
         <span className="spinner" />
@@ -64,9 +46,29 @@ export default function DashboardPage() {
     );
   }
 
-  if (error) {
-    return <div className="dashboard-error">{error}</div>;
+  if (dashIsError && !dashboardData) {
+    return (
+      <div className="dashboard-error">
+        Failed to load dashboard metrics.
+        <button type="button" onClick={() => dashRefetch()} className="btn-secondary btn-sm" style={{ marginLeft: '12px' }}>
+          Retry
+        </button>
+      </div>
+    );
   }
+
+  const isBackgroundFetching = dashFetching || appsFetching || opsFetching;
+  const hasBackgroundError = (dashIsError || appsIsError || opsIsError) && !!dashboardData;
+  const backgroundErr = dashErr || appsErr || opsErr;
+
+  const refetchAll = () => {
+    dashRefetch();
+    appsRefetch();
+    opsRefetch();
+  };
+
+  const recentApplications = (applicationsData || []).slice(0, 5);
+  const openingsCount = (openingsData || []).length;
 
   const { statusCounts = {}, upcomingInterviews = [], followUpsDue = [], upcomingFollowUps = [] } = dashboardData || {};
 
@@ -80,6 +82,13 @@ export default function DashboardPage() {
 
   return (
     <div className="dashboard-container">
+      <QueryStateNotice
+        isFetching={isBackgroundFetching && !dashLoading}
+        isError={hasBackgroundError}
+        error={backgroundErr}
+        refetch={refetchAll}
+      />
+
       {/* Header */}
       <div className="dashboard-hero">
         <div className="dashboard-hero__content">

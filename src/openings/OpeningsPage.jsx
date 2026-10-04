@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../auth/AuthContext';
-import axiosInstance from '../api/axiosInstance';
+import { useOpeningsQuery, queryClient } from '../api/queries';
+import QueryStateNotice from '../components/QueryStateNotice';
 import './OpeningsPage.css';
 
 function formatDisplayPackage(pkg) {
@@ -49,33 +50,27 @@ function formatDeadlineWithCountdown(deadline) {
 export default function OpeningsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [openings, setOpenings] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const userId = user?.userId || user?.id || user?.email;
+
+  const {
+    data: openingsData,
+    isLoading: isOpLoading,
+    isFetching,
+    isError,
+    error: opErr,
+    refetch,
+  } = useOpeningsQuery(userId);
+
+  const openings = openingsData || [];
+  const isLoading = isOpLoading && !openingsData;
+  const isFromCache = !isOpLoading && !!openingsData;
+
   const [searchQuery, setSearchQuery] = useState('');
   const [includeClosed, setIncludeClosed] = useState(false);
   const [selectedOpening, setSelectedOpening] = useState(null);
 
-  useEffect(() => {
-    fetchOpenings();
-  }, [includeClosed]);
-
-  const fetchOpenings = async () => {
-    setIsLoading(true);
-    setError('');
-    try {
-      const response = await axiosInstance.get('/api/openings', {
-        params: { includeClosed }
-      });
-      setOpenings(response.data);
-    } catch (err) {
-      setError('Failed to load placement openings. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const filteredOpenings = openings.filter(op => {
+    if (!includeClosed && op.status === 'CLOSED') return false;
     const q = searchQuery.toLowerCase();
     return (
       op.companyName?.toLowerCase().includes(q) ||
@@ -102,6 +97,13 @@ export default function OpeningsPage() {
 
   return (
     <div className="openings-page">
+      <QueryStateNotice
+        isFetching={isFetching && !isLoading}
+        isError={isError && openings.length > 0}
+        error={opErr}
+        refetch={refetch}
+      />
+
       <div className="openings-header">
         <div>
           <h1 className="openings-title">Placement Openings</h1>
@@ -152,15 +154,15 @@ export default function OpeningsPage() {
       )}
 
       {/* Error State */}
-      {error && (
+      {isError && openings.length === 0 && (
         <div className="openings-error" role="alert">
-          {error}
-          <button type="button" onClick={fetchOpenings} className="btn-retry">Retry</button>
+          Failed to load placement openings. Please try again.
+          <button type="button" onClick={() => refetch()} className="btn-retry">Retry</button>
         </div>
       )}
 
       {/* Empty State */}
-      {!isLoading && !error && filteredOpenings.length === 0 && (
+      {!isLoading && !isError && filteredOpenings.length === 0 && (
         <div className="openings-empty">
           <div className="empty-icon">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -173,7 +175,7 @@ export default function OpeningsPage() {
       )}
 
       {/* Openings Grid */}
-      {!isLoading && !error && filteredOpenings.length > 0 && (
+      {!isLoading && filteredOpenings.length > 0 && (
         <div className="openings-grid">
           {filteredOpenings.map((op, idx) => {
             const isClosed = op.status === 'CLOSED';
@@ -183,7 +185,7 @@ export default function OpeningsPage() {
               <motion.div
                 key={op.id}
                 className={`opening-card ${isClosed ? 'opening-card--closed' : ''}`}
-                initial={{ opacity: 0, y: 10 }}
+                initial={isFromCache ? false : { opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.2, delay: idx * 0.04 }}
               >

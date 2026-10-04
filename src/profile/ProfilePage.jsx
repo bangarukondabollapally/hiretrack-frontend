@@ -2,8 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../auth/AuthContext';
+import { useProfileQuery, invalidateProfileQueries } from '../api/queries';
 import axiosInstance from '../api/axiosInstance';
 import { extractTextFromFile } from '../lib/fileParser';
+import QueryStateNotice from '../components/QueryStateNotice';
 import './ProfilePage.css';
 
 const TABS_STUDENT = [
@@ -57,7 +59,20 @@ const TABS_ADMIN = [
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
+  const userId = user?.userId || user?.id || user?.email;
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const {
+    data: profileData,
+    isLoading: isProfileLoading,
+    isFetching,
+    isError,
+    error: profileErr,
+    refetch,
+  } = useProfileQuery(userId);
+
+  const isLoading = isProfileLoading && !profileData;
+  const isFromCache = !isProfileLoading && !!profileData;
 
   const isAdmin = user?.role === 'ADMIN';
   const tabs = isAdmin ? TABS_ADMIN : TABS_STUDENT;
@@ -100,6 +115,32 @@ export default function ProfilePage() {
   const [initialExperienceSummary, setInitialExperienceSummary] = useState('');
   const [initialResumeText, setInitialResumeText] = useState('');
 
+  useEffect(() => {
+    if (profileData) {
+      const data = profileData || {};
+      const fetchedName = data.name || '';
+      const fetchedRole = data.targetRole || '';
+      const fetchedYears = data.yearsOfExperience !== null && data.yearsOfExperience !== undefined ? String(data.yearsOfExperience) : '';
+      const fetchedSummary = data.experienceSummary || '';
+      const fetchedResume = data.resumeText || '';
+
+      setName(fetchedName);
+      setInitialName(fetchedName);
+
+      setTargetRole(fetchedRole);
+      setInitialTargetRole(fetchedRole);
+
+      setYearsOfExperience(fetchedYears);
+      setInitialYearsOfExperience(fetchedYears);
+
+      setExperienceSummary(fetchedSummary);
+      setInitialExperienceSummary(fetchedSummary);
+
+      setResumeText(fetchedResume);
+      setInitialResumeText(fetchedResume);
+    }
+  }, [profileData]);
+
   // Admin Placement Office settings
   const [institutionName, setInstitutionName] = useState(() => {
     try {
@@ -138,7 +179,6 @@ export default function ProfilePage() {
   const [resumeModeOverride, setResumeModeOverride] = useState(null);
 
   // Loading & status states
-  const [isLoading, setIsLoading] = useState(true);
   const [isParsing, setIsParsing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState('');
@@ -149,42 +189,6 @@ export default function ProfilePage() {
 
   const fileInputRef = useRef(null);
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
-  const fetchProfile = async () => {
-    setIsLoading(true);
-    try {
-      const response = await axiosInstance.get('/api/profile');
-      const data = response.data || {};
-      const fetchedName = data.name || '';
-      const fetchedRole = data.targetRole || '';
-      const fetchedYears = data.yearsOfExperience !== null && data.yearsOfExperience !== undefined ? String(data.yearsOfExperience) : '';
-      const fetchedSummary = data.experienceSummary || '';
-      const fetchedResume = data.resumeText || '';
-
-      setName(fetchedName);
-      setInitialName(fetchedName);
-
-      setTargetRole(fetchedRole);
-      setInitialTargetRole(fetchedRole);
-
-      setYearsOfExperience(fetchedYears);
-      setInitialYearsOfExperience(fetchedYears);
-
-      setExperienceSummary(fetchedSummary);
-      setInitialExperienceSummary(fetchedSummary);
-
-      setResumeText(fetchedResume);
-      setInitialResumeText(fetchedResume);
-    } catch (err) {
-      console.error('Failed to load profile:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // Save Account tab
   const handleSaveAccount = async (e) => {
     e.preventDefault();
@@ -194,6 +198,7 @@ export default function ProfilePage() {
       const updatedName = res.data?.name || name;
       setName(updatedName);
       setInitialName(updatedName);
+      invalidateProfileQueries(userId);
       setAccountStatus({ loading: false, success: true, error: '' });
       setTimeout(() => setAccountStatus(prev => ({ ...prev, success: false })), 3000);
     } catch (err) {
@@ -229,6 +234,7 @@ export default function ProfilePage() {
       const newSummary = data.experienceSummary || '';
       const newResume = data.resumeText || '';
 
+      setName(data.name || name);
       setTargetRole(newRole);
       setInitialTargetRole(newRole);
 
@@ -242,6 +248,7 @@ export default function ProfilePage() {
       setInitialResumeText(newResume);
 
       setResumeModeOverride(null);
+      invalidateProfileQueries(userId);
       setJobSearchStatus({ loading: false, success: true, error: '' });
       setTimeout(() => setJobSearchStatus(prev => ({ ...prev, success: false })), 3000);
     } catch (err) {
@@ -283,6 +290,7 @@ export default function ProfilePage() {
         setInitialResumeText('');
         setUploadedFileName('');
         setResumeModeOverride(null);
+        invalidateProfileQueries(userId);
         setJobSearchStatus({ loading: false, success: true, error: '' });
         setTimeout(() => setJobSearchStatus(prev => ({ ...prev, success: false })), 3000);
       } catch (err) {
@@ -348,6 +356,13 @@ export default function ProfilePage() {
 
   return (
     <div className="settings-page">
+      <QueryStateNotice
+        isFetching={isFetching && !isLoading}
+        isError={isError && !!profileData}
+        error={profileErr}
+        refetch={refetch}
+      />
+
       <header className="settings-header">
         <h1 className="settings-title">Settings</h1>
         <p className="settings-subtitle">
@@ -360,7 +375,7 @@ export default function ProfilePage() {
       {/* User Header Profile Card */}
       <motion.div
         className="profile-user-card"
-        initial={{ opacity: 0, y: 10 }}
+        initial={isFromCache ? false : { opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
       >

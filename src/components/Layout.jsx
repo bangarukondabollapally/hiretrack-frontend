@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useChatHistory } from '../assistant/useChatHistory';
 import ChatHistoryList from '../assistant/ChatHistoryList';
+import { prefetchUserData, prefetchRouteData } from '../api/queries';
 import './Layout.css';
 
 const INITIAL_GREETING = "What can I help you with today?";
@@ -24,6 +25,19 @@ export default function Layout() {
 
   // Initialize single source of truth chat history for current user
   const chatHistory = useChatHistory(user?.userId, INITIAL_GREETING);
+
+  // Parallel data prefetching on app load / auth change
+  useEffect(() => {
+    if (user?.userId) {
+      prefetchUserData(user.userId, user.role);
+    }
+  }, [user?.userId, user?.role]);
+
+  const handleLinkPrefetch = (path) => {
+    if (user?.userId) {
+      prefetchRouteData(user.userId, path);
+    }
+  };
 
   const toggleCollapsed = () => {
     setIsCollapsed(prev => {
@@ -151,6 +165,9 @@ export default function Layout() {
             <NavLink
               to="/dashboard"
               onClick={closeMobileMenu}
+              onMouseEnter={() => handleLinkPrefetch('/dashboard')}
+              onFocus={() => handleLinkPrefetch('/dashboard')}
+              onTouchStart={() => handleLinkPrefetch('/dashboard')}
               className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
               title="Dashboard"
               aria-label="Dashboard"
@@ -170,6 +187,9 @@ export default function Layout() {
           <NavLink
             to="/openings"
             onClick={closeMobileMenu}
+            onMouseEnter={() => handleLinkPrefetch('/openings')}
+            onFocus={() => handleLinkPrefetch('/openings')}
+            onTouchStart={() => handleLinkPrefetch('/openings')}
             className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
             title="Placement Openings"
             aria-label="Placement Openings"
@@ -186,6 +206,9 @@ export default function Layout() {
             <NavLink
               to="/admin/openings"
               onClick={closeMobileMenu}
+              onMouseEnter={() => handleLinkPrefetch('/admin/openings')}
+              onFocus={() => handleLinkPrefetch('/admin/openings')}
+              onTouchStart={() => handleLinkPrefetch('/admin/openings')}
               className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
               title="Manage Openings (Admin)"
               aria-label="Manage Openings (Admin)"
@@ -204,6 +227,9 @@ export default function Layout() {
               <NavLink
                 to="/applications"
                 onClick={closeMobileMenu}
+                onMouseEnter={() => handleLinkPrefetch('/applications')}
+                onFocus={() => handleLinkPrefetch('/applications')}
+                onTouchStart={() => handleLinkPrefetch('/applications')}
                 className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
                 title="Applications"
                 aria-label="Applications"
@@ -220,6 +246,9 @@ export default function Layout() {
               <NavLink
                 to="/interviews"
                 onClick={closeMobileMenu}
+                onMouseEnter={() => handleLinkPrefetch('/interviews')}
+                onFocus={() => handleLinkPrefetch('/interviews')}
+                onTouchStart={() => handleLinkPrefetch('/interviews')}
                 className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
                 title="Interviews"
                 aria-label="Interviews"
@@ -255,6 +284,9 @@ export default function Layout() {
           <NavLink
             to="/profile"
             onClick={closeMobileMenu}
+            onMouseEnter={() => handleLinkPrefetch('/profile')}
+            onFocus={() => handleLinkPrefetch('/profile')}
+            onTouchStart={() => handleLinkPrefetch('/profile')}
             className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
             title="Settings"
             aria-label="Settings"

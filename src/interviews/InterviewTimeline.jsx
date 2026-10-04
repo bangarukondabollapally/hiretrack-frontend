@@ -1,10 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useAuth } from '../auth/AuthContext';
+import { useApplicationInterviewsQuery, invalidateInterviewQueries } from '../api/queries';
 import axiosInstance from '../api/axiosInstance';
 import './InterviewTimeline.css';
 
 export default function InterviewTimeline({ applicationId, readOnly = false }) {
-  const [interviews, setInterviews] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
+  const userId = user?.userId || user?.id || user?.email;
+
+  const { data: interviewsData, isLoading: isQueryLoading } = useApplicationInterviewsQuery(userId, applicationId);
+  const interviews = interviewsData || [];
+  const isLoading = isQueryLoading && !interviewsData;
+
   const [isAdding, setIsAdding] = useState(false);
   const [formData, setFormData] = useState({
     round: '',
@@ -14,33 +21,15 @@ export default function InterviewTimeline({ applicationId, readOnly = false }) {
     notes: ''
   });
 
-  useEffect(() => {
-    if (applicationId) {
-      fetchInterviews();
-    }
-  }, [applicationId]);
-
-  const fetchInterviews = async () => {
-    setIsLoading(true);
-    try {
-      const response = await axiosInstance.get(`/api/applications/${applicationId}/interviews`);
-      setInterviews(response.data);
-    } catch (err) {
-      console.error('Failed to load interviews:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleCreateInterview = async (e) => {
     e.preventDefault();
     if (!formData.round || !formData.interviewDate) return;
 
     try {
       await axiosInstance.post(`/api/applications/${applicationId}/interviews`, formData);
+      invalidateInterviewQueries(userId, applicationId);
       setFormData({ round: '', interviewDate: '', interviewType: 'Video', outcome: 'PENDING', notes: '' });
       setIsAdding(false);
-      fetchInterviews();
     } catch (err) {
       console.error('Failed to create interview round:', err);
     }
@@ -49,7 +38,7 @@ export default function InterviewTimeline({ applicationId, readOnly = false }) {
   const handleDeleteInterview = async (interviewId) => {
     try {
       await axiosInstance.delete(`/api/applications/${applicationId}/interviews/${interviewId}`);
-      fetchInterviews();
+      invalidateInterviewQueries(userId, applicationId);
     } catch (err) {
       console.error('Failed to delete interview round:', err);
     }

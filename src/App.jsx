@@ -31,11 +31,15 @@ import AdminOpeningsPage from './admin/AdminOpeningsPage';
 import ProfilePage from './profile/ProfilePage';
 import ChatPage from './assistant/ChatPage';
 
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './api/queries';
+
 function App() {
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <BrowserRouter>
           <Routes>
             {/* Public Landing Page at / */}
             <Route path="/" element={<LandingPage />} />
@@ -73,8 +77,9 @@ function App() {
           </Routes>
         </BrowserRouter>
       </AuthProvider>
-    </ErrorBoundary>
-  );
+    </QueryClientProvider>
+  </ErrorBoundary>
+);
 }
 
 export default App;

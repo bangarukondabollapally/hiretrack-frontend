@@ -1,10 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useAuth } from '../auth/AuthContext';
+import { useAdminOpeningsQuery, invalidateOpeningQueries } from '../api/queries';
 import axiosInstance from '../api/axiosInstance';
+import QueryStateNotice from '../components/QueryStateNotice';
 import './AdminOpeningsPage.css';
 
 export default function AdminOpeningsPage() {
-  const [openings, setOpenings] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
+  const userId = user?.userId || user?.id || user?.email;
+
+  const {
+    data: openingsData,
+    isLoading: isOpLoading,
+    isFetching,
+    isError,
+    error: opErr,
+    refetch,
+  } = useAdminOpeningsQuery(userId);
+
+  const openings = openingsData || [];
+  const isLoading = isOpLoading && !openingsData;
+
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -39,27 +55,6 @@ export default function AdminOpeningsPage() {
   const [minCgpa, setMinCgpa] = useState('CGPA ≥ 7.0');
   const [eligibleBranches, setEligibleBranches] = useState('B.Tech CSE, IT, ECE');
   const [customCriteria, setCustomCriteria] = useState('');
-
-  useEffect(() => {
-    fetchOpenings();
-  }, []);
-
-  const fetchOpenings = async () => {
-    setIsLoading(true);
-    setError('');
-    try {
-      const response = await axiosInstance.get('/api/admin/openings');
-      setOpenings(response.data);
-    } catch (err) {
-      if (err.response?.status === 403) {
-        setError('Access Denied: You must be logged in as an ADMIN to manage openings.');
-      } else {
-        setError('Failed to fetch placement openings. Please try again.');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const openCreateForm = () => {
     setEditingOpening(null);
@@ -171,7 +166,7 @@ export default function AdminOpeningsPage() {
       }
 
       setIsFormOpen(false);
-      fetchOpenings();
+      invalidateOpeningQueries(userId);
       setTimeout(() => setSuccessMsg(''), 4000);
     } catch (err) {
       if (err.response?.status === 403) {
@@ -188,7 +183,7 @@ export default function AdminOpeningsPage() {
     try {
       await axiosInstance.put(`/api/admin/openings/${opening.id}/close`);
       setSuccessMsg(`Placement opening for "${opening.companyName}" closed.`);
-      fetchOpenings();
+      invalidateOpeningQueries(userId);
       setTimeout(() => setSuccessMsg(''), 4000);
     } catch (err) {
       setError('Failed to close opening.');
@@ -202,7 +197,7 @@ export default function AdminOpeningsPage() {
       await axiosInstance.delete(`/api/admin/openings/${deletingOpening.id}`);
       setSuccessMsg(`Placement opening for "${deletingOpening.companyName}" deleted.`);
       setDeletingOpening(null);
-      fetchOpenings();
+      invalidateOpeningQueries(userId);
       setTimeout(() => setSuccessMsg(''), 4000);
     } catch (err) {
       setError('Failed to delete opening.');
@@ -213,6 +208,12 @@ export default function AdminOpeningsPage() {
 
   return (
     <div className="admin-openings-page">
+      <QueryStateNotice
+        isFetching={isFetching && !isLoading}
+        isError={isError && openings.length > 0}
+        error={opErr}
+        refetch={refetch}
+      />
       <div className="admin-header">
         <div>
           <h1 className="admin-title">Placement Opening Management</h1>

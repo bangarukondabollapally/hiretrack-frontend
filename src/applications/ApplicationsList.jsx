@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../auth/AuthContext';
+import { useApplicationsQuery, invalidateApplicationQueries, queryClient } from '../api/queries';
 import axiosInstance from '../api/axiosInstance';
 import StatusControl from './StatusControl';
 import DeleteConfirmModal from './DeleteConfirmModal';
+import QueryStateNotice from '../components/QueryStateNotice';
 import './ApplicationsList.css';
 
 function formatDate(dateStr) {
@@ -32,9 +35,21 @@ function getFlightLegDates(appliedDate, followUpDate) {
 }
 
 export default function ApplicationsList() {
-  const [applications, setApplications] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { user } = useAuth();
+  const userId = user?.userId || user?.id || user?.email;
+
+  const {
+    data: applicationsData,
+    isLoading: isQueryLoading,
+    isFetching,
+    isError,
+    error: queryErr,
+    refetch,
+  } = useApplicationsQuery(userId);
+
+  const applications = applicationsData || [];
+  const isLoading = isQueryLoading && !applicationsData;
+
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -50,46 +65,28 @@ export default function ApplicationsList() {
       window.history.replaceState({}, document.title);
       setTimeout(() => setToastMessage(''), 4000);
     }
-
-    const cached = sessionStorage.getItem('ht_cache_applications');
-    if (cached) {
-      try {
-        setApplications(JSON.parse(cached));
-        setIsLoading(false);
-      } catch (e) {
-        setIsLoading(true);
-      }
-    } else {
-      setIsLoading(true);
-    }
-    fetchApplications();
   }, [location.state]);
 
-  const fetchApplications = async () => {
-    try {
-      const response = await axiosInstance.get('/api/applications');
-      setApplications(response.data);
-      sessionStorage.setItem('ht_cache_applications', JSON.stringify(response.data));
-    } catch (err) {
-      if (!applications.length) {
-        setError('Failed to fetch applications.');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleStatusChange = async (id, newStatus) => {
-    try {
-      const appRes = await axiosInstance.get(`/api/applications/${id}`);
-      const updatedData = { ...appRes.data, status: newStatus };
-      await axiosInstance.put(`/api/applications/${id}`, updatedData);
+    const queryKey = ['applications', userId];
+    const previousApps = queryClient.getQueryData(queryKey);
 
-      setApplications(prev =>
-        prev.map(app => (app.id === id ? { ...app, status: newStatus } : app))
-      );
+    // Optimistic Update
+    queryClient.setQueryData(queryKey, (old) =>
+      (old || []).map((app) => (app.id === id ? { ...app, status: newStatus } : app))
+    );
+
+    try {
+      const targetApp = (previousApps || []).find((a) => a.id === id) || {};
+      const updatedData = { ...targetApp, status: newStatus };
+      await axiosInstance.put(`/api/applications/${id}`, updatedData);
+      invalidateApplicationQueries(userId);
     } catch (err) {
       console.error('Failed to update status:', err);
+      // Rollback on error
+      if (previousApps) {
+        queryClient.setQueryData(queryKey, previousApps);
+      }
     }
   };
 
@@ -98,8 +95,7 @@ export default function ApplicationsList() {
     setIsDeleting(true);
     try {
       await axiosInstance.delete(`/api/applications/${deleteTarget.id}`);
-      setApplications(prev => prev.filter(app => app.id !== deleteTarget.id));
-      sessionStorage.removeItem('ht_cache_applications');
+      invalidateApplicationQueries(userId);
       setDeleteTarget(null);
     } catch (err) {
       console.error('Failed to delete application:', err);
@@ -118,6 +114,12 @@ export default function ApplicationsList() {
 
   return (
     <div className="applications-container">
+      <QueryStateNotice
+        isFetching={isFetching && !isLoading}
+        isError={isError && applications.length > 0}
+        error={queryErr}
+        refetch={refetch}
+      />
       {toastMessage && (
         <div className="applications-toast" role="status">
           ✓ {toastMessage}

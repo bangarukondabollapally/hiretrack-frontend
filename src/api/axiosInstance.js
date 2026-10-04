@@ -14,6 +14,7 @@
  */
 
 import axios from 'axios';
+import { clearAllQueryCache } from './queries';
 
 const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
 const axiosInstance = axios.create({
@@ -22,6 +23,18 @@ const axiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      clearAllQueryCache();
+      localStorage.removeItem('ht_token');
+      localStorage.removeItem('ht_user');
+    }
+    return Promise.reject(error);
+  }
+);
 
 export function pingBackendHealth() {
   return axiosInstance.get('/api/health').catch(() => {});

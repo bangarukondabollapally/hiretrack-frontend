@@ -1,24 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useAuth } from '../auth/AuthContext';
+import { useTagsQuery, invalidateTagQueries } from '../api/queries';
 import axiosInstance from '../api/axiosInstance';
 import './TagSelector.css';
 
 export default function TagSelector({ applicationId, currentTags = [], onTagsUpdated }) {
-  const [availableTags, setAvailableTags] = useState([]);
+  const { user } = useAuth();
+  const userId = user?.userId || user?.id || user?.email;
+
+  const { data: availableTagsData } = useTagsQuery(userId);
+  const availableTags = availableTagsData || [];
+
   const [newTagName, setNewTagName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    fetchAvailableTags();
-  }, []);
-
-  const fetchAvailableTags = async () => {
-    try {
-      const response = await axiosInstance.get('/api/tags');
-      setAvailableTags(response.data);
-    } catch (err) {
-      console.error('Failed to load tags:', err);
-    }
-  };
 
   const handleCreateAndAssignTag = async (e) => {
     e.preventDefault();
@@ -37,7 +31,7 @@ export default function TagSelector({ applicationId, currentTags = [], onTagsUpd
       }
 
       setNewTagName('');
-      fetchAvailableTags();
+      invalidateTagQueries(userId);
     } catch (err) {
       console.error('Failed to add tag:', err);
     } finally {
@@ -49,6 +43,7 @@ export default function TagSelector({ applicationId, currentTags = [], onTagsUpd
     if (!applicationId) return;
     try {
       await axiosInstance.delete(`/api/applications/${applicationId}/tags/${tagId}`);
+      invalidateTagQueries(userId);
       if (onTagsUpdated) onTagsUpdated();
     } catch (err) {
       console.error('Failed to remove tag:', err);
