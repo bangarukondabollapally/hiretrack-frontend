@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { useChatHistory } from '../assistant/useChatHistory';
+import ChatHistoryList from '../assistant/ChatHistoryList';
 import './Layout.css';
+
+const INITIAL_GREETING = "What can I help you with today?";
 
 export default function Layout() {
   const { user, logout } = useAuth();
@@ -17,6 +21,9 @@ export default function Layout() {
   });
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Initialize single source of truth chat history for current user
+  const chatHistory = useChatHistory(user?.userId, INITIAL_GREETING);
 
   const toggleCollapsed = () => {
     setIsCollapsed(prev => {
@@ -52,6 +59,22 @@ export default function Layout() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  const handleSelectConversation = (id) => {
+    chatHistory.switchConversation(id);
+    if (location.pathname !== '/assistant') {
+      navigate('/assistant');
+    }
+    closeMobileMenu();
+  };
+
+  const handleNewChat = () => {
+    chatHistory.newConversation();
+    if (location.pathname !== '/assistant') {
+      navigate('/assistant');
+    }
+    closeMobileMenu();
+  };
 
   const userInitial = user?.email ? user.email.charAt(0).toUpperCase() : 'U';
 
@@ -98,7 +121,7 @@ export default function Layout() {
         <div className="app-sidebar__header">
           <div className="app-sidebar__brand" title="HireTrack">
             <span className="app-sidebar__logo-mark">H</span>
-            {!isCollapsed && <span className="app-sidebar__logo-text">HireTrack</span>}
+            {(!isCollapsed || mobileMenuOpen) && <span className="app-sidebar__logo-text">HireTrack</span>}
           </div>
           <button
             type="button"
@@ -245,13 +268,24 @@ export default function Layout() {
             <span className="app-sidebar__link-text">Settings</span>
           </NavLink>
 
-          {!isCollapsed && (
-            <div id="sidebar-recent-conversations-slot" className="app-sidebar__history-slot" />
+          {/* Render Chat History inside Sidebar when expanded or inside mobile drawer */}
+          {(!isCollapsed || mobileMenuOpen) && (
+            <div className="app-sidebar__history-slot">
+              <ChatHistoryList
+                conversations={chatHistory.conversations}
+                activeId={chatHistory.activeId}
+                onSelectConversation={handleSelectConversation}
+                onNewChat={handleNewChat}
+                onRenameConversation={chatHistory.renameConversation}
+                onDeleteConversation={chatHistory.deleteConversation}
+                onTogglePinConversation={chatHistory.togglePinConversation}
+              />
+            </div>
           )}
         </nav>
 
         <div className="app-sidebar__footer">
-          {isCollapsed ? (
+          {isCollapsed && !mobileMenuOpen ? (
             <div className="app-sidebar__footer-collapsed">
               <div className="app-sidebar__avatar-circle" title={user?.email}>
                 {userInitial}
@@ -295,7 +329,14 @@ export default function Layout() {
       {/* Main Content Area */}
       <main className="app-main">
         <div className="app-main__container">
-          <Outlet context={{ isSidebarCollapsed: isCollapsed }} />
+          <Outlet context={{
+            ...chatHistory,
+            isSidebarCollapsed: isCollapsed,
+            toggleCollapsed,
+            mobileMenuOpen,
+            setMobileMenuOpen,
+            closeMobileMenu,
+          }} />
         </div>
       </main>
     </div>

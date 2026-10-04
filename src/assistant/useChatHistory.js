@@ -15,6 +15,8 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 
+import { sanitizeConversation } from './chatHistoryUtils';
+
 const STORAGE_VERSION = 1;
 
 function makeConversationId() {
@@ -31,6 +33,9 @@ function loadFromStorage(userId) {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (parsed.version !== STORAGE_VERSION) return null;
+    if (Array.isArray(parsed.conversations)) {
+      parsed.conversations = parsed.conversations.map(sanitizeConversation);
+    }
     return parsed;
   } catch {
     return null;

@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
-import { createPortal } from 'react-dom';
-import { useOutletContext, useLocation } from 'react-router-dom';
+import { useOutletContext } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import axiosInstance from '../api/axiosInstance';
 import { useAuth } from '../auth/AuthContext';
 import { useChatHistory } from './useChatHistory';
+import ChatHistoryList from './ChatHistoryList';
 import { repairMarkdownTables, TABLE_BR_MARKER } from '../lib/repairMarkdownTables';
 import './ChatPage.css';
 
@@ -63,13 +63,11 @@ const renderPromptIcon = (type) => {
 
 const ROTATING_THINKING_WORDS = ['Thinking', 'Musing', 'Pondering', 'Mulling it over'];
 
-// Text normalization helper per item 3.2
 const normalizeText = (text) => {
   if (!text) return '';
   return text.replace(/\u2011/g, '-').replace(/\u202F/g, ' ');
 };
 
-// Recursive helper to split TABLE_BR_MARKER into real <br /> elements
 const renderCellContent = (children) => {
   if (typeof children === 'string') {
     if (!children.includes(TABLE_BR_MARKER)) return children;
@@ -101,26 +99,39 @@ const renderCellContent = (children) => {
 export default function ChatPage() {
   const { user, token } = useAuth();
   const userId = user?.userId;
-  const location = useLocation();
 
-  // Read layout sidebar context if provided
+  // Read layout context if provided, or fallback to local hook for standalone testability
   const outletContext = useOutletContext() || {};
   const isSidebarCollapsed = outletContext.isSidebarCollapsed ?? false;
+  const setMobileMenuOpen = outletContext.setMobileMenuOpen;
+
+  const localHistory = useChatHistory(userId, INITIAL_GREETING);
+  const history = outletContext.conversations ? outletContext : localHistory;
 
   const {
-    conversations,
     activeId,
-    activeConversation,
     messages,
     newConversation,
-    switchConversation,
     appendMessage,
     updateMessageText,
     updateReasoningText,
-    deleteConversation,
-    renameConversation,
-    togglePinConversation,
-  } = useChatHistory(userId, INITIAL_GREETING);
+  } = history;
+
+  // Window width tracking for responsive behavior
+  const [windowWidth, setWindowWidth] = useState(() => typeof window !== 'undefined' ? window.innerWidth : 1200);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isDesktopExpanded = windowWidth >= 1024 && !isSidebarCollapsed;
+  const isTabletOrCollapsed = windowWidth >= 768 && (windowWidth < 1024 || isSidebarCollapsed);
+  const isMobile = windowWidth < 768;
+
+  // History popover state for tablet/rail
+  const [isHistoryPopoverOpen, setIsHistoryPopoverOpen] = useState(false);
 
   // Input & context states
   const [inputText, setInputText] = useState('');
@@ -137,38 +148,13 @@ export default function ChatPage() {
 
   // Streaming & status states
   const [isGenerating, setIsGenerating] = useState(false);
-  const [streamPhase, setStreamPhase] = useState(null); // 'retrieving' | 'thinking' | 'generating' | null
+  const [streamPhase, setStreamPhase] = useState(null);
   const [thinkingWordIdx, setThinkingWordIdx] = useState(0);
   const [reasoningTimeSeconds, setReasoningTimeSeconds] = useState(0);
-  const [isReasoningExpanded, setIsReasoningExpanded] = useState(false);
 
-  // Slide-over history panel & popover menu states
-  const [isSlideOverOpen, setIsSlideOverOpen] = useState(false);
-  const [editingConvId, setEditingConvId] = useState(null);
-  const [editingTitle, setEditingTitle] = useState('');
-  const [menuOpenConvId, setMenuOpenConvId] = useState(null);
-  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
-
-  // Handle opening floating popover menu at trigger button coordinates
-  const handleOpenMenu = (e, convId) => {
-    e.stopPropagation();
-    if (menuOpenConvId === convId) {
-      setMenuOpenConvId(null);
-      return;
-    }
-    const rect = e.currentTarget.getBoundingClientRect();
-    setMenuPos({
-      top: rect.bottom + 4,
-      left: Math.max(10, rect.right - 140),
-    });
-    setMenuOpenConvId(convId);
-  };
-
-  // Portal mount check
-  const [portalTarget, setPortalTarget] = useState(null);
-
-  // UI state for auto-scroll & copy feedback
+  // UI state for auto-scroll, hairline header border & copy feedback
   const [showScrollBottomBtn, setShowScrollBottomBtn] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [copiedId, setCopiedId] = useState(null);
 
   // Refs
@@ -179,76 +165,43 @@ export default function ChatPage() {
   const fileInputRef = useRef(null);
   const reasoningTimerRef = useRef(null);
   const contextPickerRef = useRef(null);
+  const popoverRef = useRef(null);
 
-  // Load applications for context pill picker
+  // Load applications for context picker
   useEffect(() => {
     axiosInstance.get('/api/applications')
       .then(r => setApplications(r.data || []))
       .catch(() => {});
   }, []);
 
-  // Set portal target for expanded sidebar history slot
-  useEffect(() => {
-    const target = document.getElementById('sidebar-recent-conversations-slot');
-    setPortalTarget(target);
-  }, [isSidebarCollapsed, location.pathname]);
-
-  // Close slide-over history panel on route change
-  useEffect(() => {
-    setIsSlideOverOpen(false);
-  }, [location.pathname]);
-
-  // Close slide-over & popovers on Escape key or outside click/scroll
+  // Close popovers on Escape key or outside click
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
-        setIsSlideOverOpen(false);
+        setIsHistoryPopoverOpen(false);
         setIsAppPickerOpen(false);
-        setMenuOpenConvId(null);
-        setEditingConvId(null);
+        setIsAttachMenuOpen(false);
       }
     };
+
     const handleOutsideClick = (e) => {
-      if (!e.target.closest('.conv-popover-menu-portal') && !e.target.closest('.conv-menu-trigger')) {
-        setMenuOpenConvId(null);
+      if (popoverRef.current && !popoverRef.current.contains(e.target) && !e.target.closest('.top-bar-history-btn')) {
+        setIsHistoryPopoverOpen(false);
+      }
+      if (contextPickerRef.current && !contextPickerRef.current.contains(e.target)) {
+        setIsAppPickerOpen(false);
       }
     };
-    const handleScrollOrResize = () => setMenuOpenConvId(null);
 
     window.addEventListener('keydown', handleKeyDown);
     document.addEventListener('click', handleOutsideClick);
-    window.addEventListener('scroll', handleScrollOrResize, true);
-    window.addEventListener('resize', handleScrollOrResize);
-
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('click', handleOutsideClick);
-      window.removeEventListener('scroll', handleScrollOrResize, true);
-      window.removeEventListener('resize', handleScrollOrResize);
     };
   }, []);
 
-  // Save and close rename input when clicking outside
-  useEffect(() => {
-    if (!editingConvId) return;
-    const handleRenameOutsideClick = (e) => {
-      if (!e.target.closest('.conv-rename-input')) {
-        if (editingTitle.trim()) {
-          renameConversation(editingConvId, editingTitle.trim());
-        }
-        setEditingConvId(null);
-      }
-    };
-    const timer = setTimeout(() => {
-      document.addEventListener('click', handleRenameOutsideClick);
-    }, 100);
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener('click', handleRenameOutsideClick);
-    };
-  }, [editingConvId, editingTitle, renameConversation]);
-
-  // Rotate thinking words while in 'thinking' phase
+  // Rotate thinking words
   useEffect(() => {
     if (streamPhase === 'thinking') {
       const interval = setInterval(() => {
@@ -258,13 +211,12 @@ export default function ChatPage() {
     }
   }, [streamPhase]);
 
-  // Auto-grow textarea
+  // Auto-grow textarea up to 160px then scroll
   useEffect(() => {
     const ta = textareaRef.current;
     if (!ta) return;
     ta.style.height = 'auto';
-    const maxH = window.innerHeight * 0.4;
-    ta.style.height = `${Math.min(ta.scrollHeight, maxH)}px`;
+    ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`;
   }, [inputText]);
 
   // Auto-scroll transcript
@@ -279,6 +231,7 @@ export default function ChatPage() {
   const handleScroll = () => {
     const c = messagesContainerRef.current;
     if (!c) return;
+    setIsScrolled(c.scrollTop > 10);
     const isUp = c.scrollHeight - c.scrollTop - c.clientHeight > 120;
     setShowScrollBottomBtn(isUp);
   };
@@ -289,7 +242,7 @@ export default function ChatPage() {
     }
   };
 
-  // SSE Stream Handler (item 3.2: TextDecoder stream:true, \n\n buffering)
+  // SSE Stream Handler
   const handleSendMessage = useCallback(async (overrideText) => {
     const messageText = (overrideText || inputText).trim();
     if ((!messageText && attachments.length === 0) || isGenerating) return;
@@ -302,12 +255,10 @@ export default function ChatPage() {
       setAttachments([]);
     }
 
-    // Auto-create new conversation if needed
     if (!activeId) {
       newConversation();
     }
 
-    // Append User Message
     const userMsg = { id: `msg_${Date.now()}`, sender: 'user', text: messageText };
     if (currentAttachments.length > 0) {
       userMsg.attachments = currentAttachments;
@@ -317,7 +268,6 @@ export default function ChatPage() {
     setIsGenerating(true);
     setStreamPhase('retrieving');
     setReasoningTimeSeconds(0);
-    setIsReasoningExpanded(false);
 
     const assistantMsgId = `msg_${Date.now() + 1}`;
     const assistantMsg = { id: assistantMsgId, sender: 'assistant', text: '', reasoning: '' };
@@ -369,7 +319,7 @@ export default function ChatPage() {
 
         buffer += decoder.decode(value, { stream: true });
         const blocks = buffer.split('\n\n');
-        buffer = blocks.pop() || ''; // Keep partial block in buffer until full \n\n boundary
+        buffer = blocks.pop() || '';
 
         for (const block of blocks) {
           parseAndProcessBlock(block);
@@ -415,7 +365,6 @@ export default function ChatPage() {
       if (err.name === 'AbortError') {
         updateMessageText(assistantMsgId, prev => prev + ' [Stopped]');
       } else {
-        // Fallback to synchronous /chat endpoint if streaming fails
         try {
           const fallbackRes = await axiosInstance.post('/api/assistant/chat', {
             message: messageText,
@@ -539,7 +488,6 @@ export default function ChatPage() {
     a.jobRole.toLowerCase().includes(appSearchQuery.toLowerCase())
   );
 
-  // Application picker options array (0 is "All applications", 1..N are apps)
   const pickerOptions = [{ id: null, companyName: 'All applications', jobRole: 'General context' }, ...filteredApps];
 
   const handlePickerKeyDown = (e) => {
@@ -565,237 +513,95 @@ export default function ChatPage() {
   const nonGreetingMessages = messages.filter(m => m.text !== INITIAL_GREETING);
   const isTranscriptEmpty = nonGreetingMessages.length === 0;
 
-  // Sort conversations: Pinned first, then by creation
-  const sortedConversations = [...conversations].sort((a, b) => {
-    if (a.pinned && !b.pinned) return -1;
-    if (!a.pinned && b.pinned) return 1;
-    return 0;
-  });
-
-  // Render recent conversations list helper with Claude-style 3-dots menu & Pinning
-  const renderConversationsList = () => (
-    <div className="recent-conversations-container">
-      <div className="recent-conversations-header">
-        <span className="recent-conversations-title">Recent Chats</span>
-        <button
-          type="button"
-          className="btn-new-chat"
-          onClick={() => {
-            newConversation();
-            setIsSlideOverOpen(false);
-          }}
-          title="New Chat"
-        >
-          + New chat
-        </button>
-      </div>
-
-      <div className="recent-conversations-list">
-        {sortedConversations.length === 0 ? (
-          <div className="no-conversations-text">No recent chats</div>
-        ) : (
-          sortedConversations.map(conv => (
-            <div
-              key={conv.id}
-              className={`conv-item ${conv.id === activeId ? 'conv-item--active' : ''}`}
-              onClick={() => {
-                if (editingConvId !== conv.id) {
-                  switchConversation(conv.id);
-                  setIsSlideOverOpen(false);
-                }
-              }}
-            >
-              {editingConvId === conv.id ? (
-                <input
-                  type="text"
-                  className="conv-rename-input"
-                  value={editingTitle}
-                  onChange={(e) => setEditingTitle(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      if (editingTitle.trim()) {
-                        renameConversation(conv.id, editingTitle.trim());
-                      }
-                      setEditingConvId(null);
-                    } else if (e.key === 'Escape') {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setEditingConvId(null);
-                    }
-                  }}
-                  onFocus={(e) => e.target.select()}
-                  autoFocus
-                  onClick={(e) => e.stopPropagation()}
-                />
-              ) : (
-                <>
-                  <div className="conv-item-left">
-                    {conv.pinned && (
-                      <span className="conv-pin-badge" title="Pinned">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <line x1="12" y1="17" x2="12" y2="22"></line>
-                          <path d="M5 17h14l-1.5-6h-11L5 17z"></path>
-                          <path d="M9 11V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v7"></path>
-                        </svg>
-                      </span>
-                    )}
-                    <span className="conv-item-title">{conv.title}</span>
-                  </div>
-
-                  <div className="conv-item-actions" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      type="button"
-                      className="icon-btn-subtle conv-menu-trigger"
-                      title="More options"
-                      onClick={(e) => handleOpenMenu(e, conv.id)}
-                      aria-label="More options"
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-                        <circle cx="12" cy="5" r="2.2" />
-                        <circle cx="12" cy="12" r="2.2" />
-                        <circle cx="12" cy="19" r="2.2" />
-                      </svg>
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Floating Portal Menu for 3-dots actions (rendered directly in body to avoid scrollbar clipping) */}
-      {menuOpenConvId && createPortal(
-        <div
-          className="conv-popover-menu-portal"
-          style={{
-            top: `${menuPos.top}px`,
-            left: `${menuPos.left}px`,
-          }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <button
-            type="button"
-            className="conv-popover-item"
-            onClick={() => {
-              togglePinConversation(menuOpenConvId);
-              setMenuOpenConvId(null);
-            }}
-          >
-            <span className="conv-popover-icon">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="17" x2="12" y2="22"></line>
-                <path d="M5 17h14l-1.5-6h-11L5 17z"></path>
-                <path d="M9 11V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v7"></path>
-              </svg>
-            </span>
-            <span>{sortedConversations.find(c => c.id === menuOpenConvId)?.pinned ? 'Unpin' : 'Pin'}</span>
-          </button>
-          <button
-            type="button"
-            className="conv-popover-item"
-            onClick={() => {
-              const conv = sortedConversations.find(c => c.id === menuOpenConvId);
-              if (conv) {
-                setEditingConvId(conv.id);
-                setEditingTitle(conv.title);
-              }
-              setMenuOpenConvId(null);
-            }}
-          >
-            <span className="conv-popover-icon">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 20h9"></path>
-                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-              </svg>
-            </span>
-            <span>Rename</span>
-          </button>
-          <button
-            type="button"
-            className="conv-popover-item conv-popover-item--danger"
-            onClick={() => {
-              deleteConversation(menuOpenConvId);
-              setMenuOpenConvId(null);
-            }}
-          >
-            <span className="conv-popover-icon">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-              </svg>
-            </span>
-            <span>Delete</span>
-          </button>
-        </div>,
-        document.body
-      )}
-    </div>
-  );
-
   return (
-    <div className={`assistant-layout ${isDragging ? 'assistant-layout--dragging' : ''}`} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
-      {/* Portal recent conversations into expanded sidebar if available */}
-      {!isSidebarCollapsed && portalTarget && createPortal(renderConversationsList(), portalTarget)}
-
-      {/* Slide-over panel backdrop for collapsed sidebar or mobile */}
-      {isSlideOverOpen && (
-        <div
-          className="history-slideover-backdrop"
-          onClick={() => setIsSlideOverOpen(false)}
-          aria-hidden="true"
-        />
-      )}
-
-      {/* Slide-over panel (closed by default) */}
-      <div className={`history-slideover-panel ${isSlideOverOpen ? 'history-slideover-panel--open' : ''}`}>
-        <div className="history-slideover-close-header">
-          <span>Recent Conversations</span>
-          <button
-            type="button"
-            className="icon-btn-subtle"
-            onClick={() => setIsSlideOverOpen(false)}
-            aria-label="Close panel"
-          >
-            ×
-          </button>
-        </div>
-        {renderConversationsList()}
-      </div>
-
-      {/* Main Container */}
+    <div className={`assistant-layout assistant-theme ${isDragging ? 'assistant-layout--dragging' : ''}`} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
       <main className="assistant-main">
-        {/* Top Header bar with slide-over toggle icon */}
-        <header className="assistant-top-bar">
-          <button
-            type="button"
-            className="history-toggle-btn"
-            onClick={() => setIsSlideOverOpen(!isSlideOverOpen)}
-            title="Recent chats"
-            aria-label="Recent chats"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="3" ry="3"></rect>
-              <line x1="9" y1="3" x2="9" y2="21"></line>
-            </svg>
-          </button>
+        {/* Header Bar per specification:
+            - Desktop >=1024px expanded: Plain title row on page background, no History button, no New chat button.
+            - Tablet / Rail / Collapsed: Title + ONE History button (opens popover with ChatHistoryList).
+            - Mobile <768px: History button (opens mobile drawer) + Title + Icon-only "+ New chat" button.
+            - Hairline bottom border appears when scrolled. */}
+        <header className={`assistant-top-bar ${isScrolled ? 'assistant-top-bar--scrolled' : ''}`}>
+          <div className="top-bar-left">
+            {isMobile && (
+              <button
+                type="button"
+                className="top-bar-history-btn"
+                onClick={() => setMobileMenuOpen?.(true)}
+                title="Open Chat History"
+                aria-label="Open Chat History"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>History</span>
+              </button>
+            )}
+
+            {isTabletOrCollapsed && (
+              <div className="history-popover-wrapper" ref={popoverRef}>
+                <button
+                  type="button"
+                  className="top-bar-history-btn"
+                  onClick={() => setIsHistoryPopoverOpen(!isHistoryPopoverOpen)}
+                  title="Recent Chats History"
+                  aria-expanded={isHistoryPopoverOpen}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <span>History</span>
+                </button>
+
+                {isHistoryPopoverOpen && (
+                  <div className="history-popover-dropdown">
+                    <ChatHistoryList
+                      conversations={history.conversations}
+                      activeId={history.activeId}
+                      onSelectConversation={(id) => {
+                        history.switchConversation(id);
+                        setIsHistoryPopoverOpen(false);
+                      }}
+                      onNewChat={() => {
+                        history.newConversation();
+                        setIsHistoryPopoverOpen(false);
+                      }}
+                      onRenameConversation={history.renameConversation}
+                      onDeleteConversation={history.deleteConversation}
+                      onTogglePinConversation={history.togglePinConversation}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <span className="top-bar-title">HireTrack AI Assistant</span>
-          <button
-            type="button"
-            className="btn-new-chat-top"
-            onClick={newConversation}
-            title="Start New Chat"
-          >
-            + New chat
-          </button>
+
+          <div className="top-bar-right">
+            {isMobile && (
+              <button
+                type="button"
+                className="top-bar-new-chat-icon-btn"
+                onClick={() => {
+                  newConversation();
+                }}
+                title="Start New Chat"
+                aria-label="Start New Chat"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+              </button>
+            )}
+          </div>
         </header>
 
         {/* Content View: Empty Centered vs Docked Transcript */}
         <div className="assistant-content">
           {isTranscriptEmpty ? (
-            /* EMPTY STATE: Centered greeting & composer, chips BELOW composer */
+            /* EMPTY STATE: Centered greeting & composer, suggestion chips BELOW composer */
             <div className="assistant-empty-state">
               <div className="empty-hero">
                 <div className="ht-logo-mark ht-logo-mark--lg" aria-hidden="true">
@@ -809,7 +615,7 @@ export default function ChatPage() {
                 {renderComposer()}
               </div>
 
-              {/* Claude-style suggestion chips BELOW composer */}
+              {/* Pill-shaped suggestion chips BELOW composer (documented exception) */}
               <div className="suggestion-chips">
                 {SUGGESTED_PROMPTS.map((item, idx) => (
                   <button
@@ -849,13 +655,13 @@ export default function ChatPage() {
                             {isGenerating && idx === messages.length - 1 && (
                               <span className="stream-status-line">
                                 {streamPhase === 'retrieving' && 'Reviewing your applications…'}
-                                {streamPhase === 'thinking' && `${ROTATING_THINKING_WORDS[thinkingWordIdx]}…`}
+                                {streamPhase === 'thinking' && `${ROTATING_THINKING_WORDS[thinkingWordIdx]}… (Thought for ${reasoningTimeSeconds}s)`}
                                 {streamPhase === 'generating' && 'Generating response…'}
                               </span>
                             )}
                           </div>
 
-                          {/* Assistant Message Body in proportional serif font per item 3.2 */}
+                          {/* Assistant Message Body in proportional serif font (Source Serif 4) */}
                           <div className="assistant-prose">
                             <Suspense fallback={<div>{normalizeText(msg.text)}</div>}>
                               <ReactMarkdown
@@ -885,7 +691,6 @@ export default function ChatPage() {
                                     const lang = match ? match[1].toLowerCase() : 'text';
                                     const isSingleLine = !codeText.includes('\n');
 
-                                    // Single-line code snippet (simple box with copy icon, no top text tag)
                                     if (isSingleLine) {
                                       const singleCopyId = `code_${idx}_${codeText.slice(0, 8)}`;
                                       return (
@@ -913,7 +718,6 @@ export default function ChatPage() {
                                       );
                                     }
 
-                                    // Multi-line code container (Claude-style dark card with lowercase language label)
                                     const multiCopyId = `code_${idx}_${lang}`;
                                     return (
                                       <div className="code-block-wrapper">
@@ -959,7 +763,7 @@ export default function ChatPage() {
                             </Suspense>
                           </div>
 
-                          {/* Minimal Icon Action Row (Claude-style Copy & Regenerate) */}
+                          {/* Minimal Icon Action Row (Copy & Regenerate - Always visible on touch) */}
                           {msg.text && (
                             <div className="assistant-action-row">
                               <button
@@ -1024,11 +828,10 @@ export default function ChatPage() {
     </div>
   );
 
-  // Helper render method for Composer (Claude-style single pill bar)
+  // Helper render method for Composer
   function renderComposer() {
     return (
       <div className={`composer-card ${attachments.length > 0 ? 'composer-card--has-attachments' : ''}`}>
-        
         {/* Attachment Chips */}
         {attachments.length > 0 && (
           <div className="composer-attachments">
@@ -1096,125 +899,117 @@ export default function ChatPage() {
             rows={1}
           />
 
-        {/* Right: Context Selector & Send Button */}
-        <div className="composer-right-actions">
-          <div className="context-picker-wrapper" ref={contextPickerRef}>
-            <button
-              type="button"
-              className="context-pill"
-              onClick={() => {
-                setIsAppPickerOpen(!isAppPickerOpen);
-                setPickerHighlightedIdx(0);
-              }}
-              aria-expanded={isAppPickerOpen}
-              aria-label="Select application context"
-            >
-              <span className="context-pill-text">
-                {selectedApp ? `${selectedApp.companyName}` : 'All applications'}
-              </span>
-              {selectedApp ? (
-                <span
-                  className="context-pill-clear"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedAppId(null);
-                  }}
-                  title="Clear application context"
-                >
-                  ×
-                </span>
-              ) : (
-                <span className="context-pill-caret">▾</span>
-              )}
-            </button>
-
-            {/* Mobile Backdrop for Context Picker Sheet */}
-            {isAppPickerOpen && (
-              <div
-                className="context-picker-mobile-backdrop"
-                onClick={() => setIsAppPickerOpen(false)}
-              />
-            )}
-
-            {/* Searchable Context Dropdown Popover */}
-            {isAppPickerOpen && (
-              <div
-                className="context-dropdown"
-                onKeyDown={handlePickerKeyDown}
+          {/* Right: Context Selector & Send/Stop Button */}
+          <div className="composer-right-actions">
+            <div className="context-picker-wrapper" ref={contextPickerRef}>
+              <button
+                type="button"
+                className="context-pill"
+                onClick={() => {
+                  setIsAppPickerOpen(!isAppPickerOpen);
+                  setPickerHighlightedIdx(0);
+                }}
+                aria-expanded={isAppPickerOpen}
+                aria-label="Select application context"
               >
-                <div className="context-search-header">
-                  <input
-                    type="text"
-                    className="context-search-input"
-                    placeholder="Search applications..."
-                    value={appSearchQuery}
-                    onChange={(e) => {
-                      setAppSearchQuery(e.target.value);
-                      setPickerHighlightedIdx(0);
-                    }}
-                    autoFocus
-                  />
-                </div>
-                <div className="context-dropdown-list">
-                  <div
-                    className={`context-dropdown-item ${!selectedAppId ? 'selected' : ''} ${pickerHighlightedIdx === 0 ? 'highlighted' : ''}`}
-                    onClick={() => {
+                <span className="context-pill-text">
+                  {selectedApp ? `${selectedApp.companyName}` : 'All applications'}
+                </span>
+                {selectedApp ? (
+                  <span
+                    className="context-pill-clear"
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setSelectedAppId(null);
-                      setIsAppPickerOpen(false);
                     }}
-                    onMouseEnter={() => setPickerHighlightedIdx(0)}
+                    title="Clear application context"
                   >
-                    <strong>All applications</strong> (General context)
+                    ×
+                  </span>
+                ) : (
+                  <span className="context-pill-caret">▾</span>
+                )}
+              </button>
+
+              {/* Context Dropdown Popover */}
+              {isAppPickerOpen && (
+                <div
+                  className="context-dropdown"
+                  onKeyDown={handlePickerKeyDown}
+                >
+                  <div className="context-search-header">
+                    <input
+                      type="text"
+                      className="context-search-input"
+                      placeholder="Search applications..."
+                      value={appSearchQuery}
+                      onChange={(e) => {
+                        setAppSearchQuery(e.target.value);
+                        setPickerHighlightedIdx(0);
+                      }}
+                      autoFocus
+                    />
                   </div>
-                  {filteredApps.map((app, idx) => {
-                    const itemIdx = idx + 1;
-                    return (
-                      <div
-                        key={app.id}
-                        className={`context-dropdown-item ${selectedAppId === app.id ? 'selected' : ''} ${pickerHighlightedIdx === itemIdx ? 'highlighted' : ''}`}
-                        onClick={() => {
-                          setSelectedAppId(app.id);
-                          setIsAppPickerOpen(false);
-                        }}
-                        onMouseEnter={() => setPickerHighlightedIdx(itemIdx)}
-                      >
-                        <strong>{app.companyName}</strong> — {app.jobRole}
-                      </div>
-                    );
-                  })}
+                  <div className="context-dropdown-list">
+                    <div
+                      className={`context-dropdown-item ${!selectedAppId ? 'selected' : ''} ${pickerHighlightedIdx === 0 ? 'highlighted' : ''}`}
+                      onClick={() => {
+                        setSelectedAppId(null);
+                        setIsAppPickerOpen(false);
+                      }}
+                      onMouseEnter={() => setPickerHighlightedIdx(0)}
+                    >
+                      <strong>All applications</strong> (General context)
+                    </div>
+                    {filteredApps.map((app, idx) => {
+                      const itemIdx = idx + 1;
+                      return (
+                        <div
+                          key={app.id}
+                          className={`context-dropdown-item ${selectedAppId === app.id ? 'selected' : ''} ${pickerHighlightedIdx === itemIdx ? 'highlighted' : ''}`}
+                          onClick={() => {
+                            setSelectedAppId(app.id);
+                            setIsAppPickerOpen(false);
+                          }}
+                          onMouseEnter={() => setPickerHighlightedIdx(itemIdx)}
+                        >
+                          <strong>{app.companyName}</strong> — {app.jobRole}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
+            </div>
+
+            {/* Send or Stop Button */}
+            {isGenerating ? (
+              <button
+                type="button"
+                className="composer-send-btn composer-send-btn--stop"
+                onClick={handleStopGeneration}
+                title="Stop generating"
+              >
+                ■
+              </button>
+            ) : (
+              <button
+                type="button"
+                className={`composer-send-btn ${(inputText.trim() || attachments.length > 0) ? 'composer-send-btn--active' : ''}`}
+                onClick={() => handleSendMessage()}
+                disabled={!inputText.trim() && attachments.length === 0}
+                title="Send message"
+                aria-label="Send message"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="19" x2="12" y2="5"></line>
+                  <polyline points="5 12 12 5 19 12"></polyline>
+                </svg>
+              </button>
             )}
           </div>
-
-          {/* Send or Stop Button */}
-          {isGenerating ? (
-            <button
-              type="button"
-              className="composer-send-btn composer-send-btn--stop"
-              onClick={handleStopGeneration}
-              title="Stop generating"
-            >
-              ■
-            </button>
-          ) : (
-            <button
-              type="button"
-              className={`composer-send-btn ${(inputText.trim() || attachments.length > 0) ? 'composer-send-btn--active' : ''}`}
-              onClick={() => handleSendMessage()}
-              disabled={!inputText.trim() && attachments.length === 0}
-              title="Send message"
-              aria-label="Send message"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="19" x2="12" y2="5"></line>
-                <polyline points="5 12 12 5 19 12"></polyline>
-              </svg>
-            </button>
-          )}
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 }
