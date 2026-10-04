@@ -135,7 +135,7 @@ export default function RegisterPage() {
         <div className="auth-brand" aria-label="HireTrack">HireTrack</div>
         <p className="auth-tagline">Stay organized. Know what's next.</p>
 
-        <h1 className="auth-heading">Create account</h1>
+        <h1 className="auth-heading">Get started</h1>
 
         {/* Server error */}
         {serverError && (
@@ -148,12 +148,12 @@ export default function RegisterPage() {
           className="auth-form"
           onSubmit={handleSubmit}
           noValidate
-          aria-label="Create account form"
+          aria-label="Get started form"
         >
           {/* Account Role Buttons (No dropdowns) */}
           <div className="field">
             <label className="field-label">
-              Account Type <span className="required" aria-hidden="true">*</span>
+              Account type <span className="required" aria-hidden="true">*</span>
             </label>
             <div className="role-segmented-buttons">
               <button
@@ -162,7 +162,7 @@ export default function RegisterPage() {
                 onClick={() => setFields(prev => ({ ...prev, role: 'USER' }))}
                 disabled={isSubmitting}
               >
-                <span>🎓 Student</span>
+                <span>Student</span>
               </button>
               <button
                 type="button"
@@ -170,7 +170,7 @@ export default function RegisterPage() {
                 onClick={() => setFields(prev => ({ ...prev, role: 'ADMIN' }))}
                 disabled={isSubmitting}
               >
-                <span>🔒 Admin</span>
+                <span>Placement cell</span>
               </button>
             </div>
           </div>
@@ -278,10 +278,10 @@ export default function RegisterPage() {
             {isSubmitting ? (
               <>
                 <span className="spinner" aria-hidden="true" />
-                <span>Creating account…</span>
+                <span>Getting started…</span>
               </>
             ) : (
-              'Create account'
+              'Get started'
             )}
           </button>
         </form>

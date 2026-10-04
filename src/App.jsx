@@ -34,13 +34,17 @@ import ChatPage from './assistant/ChatPage';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './api/queries';
 
+import { MotionConfig, LazyMotion, domAnimation } from 'framer-motion';
+
 function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <BrowserRouter>
-          <Routes>
+          <MotionConfig reducedMotion="user">
+            <LazyMotion features={domAnimation} strict={false}>
+              <BrowserRouter>
+                <Routes>
             {/* Public Landing Page at / */}
             <Route path="/" element={<LandingPage />} />
 
@@ -76,9 +80,11 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
-      </AuthProvider>
-    </QueryClientProvider>
-  </ErrorBoundary>
+      </LazyMotion>
+    </MotionConfig>
+  </AuthProvider>
+</QueryClientProvider>
+</ErrorBoundary>
 );
 }
 

@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useApplicationsQuery, invalidateApplicationQueries, queryClient } from '../api/queries';
 import axiosInstance from '../api/axiosInstance';
+import { AnimatePresence, m } from 'framer-motion';
+import { toastVariants, listItemVariants } from '../lib/motion';
 import StatusControl from './StatusControl';
 import DeleteConfirmModal from './DeleteConfirmModal';
 import QueryStateNotice from '../components/QueryStateNotice';
@@ -27,10 +29,10 @@ function getFlightLegDates(appliedDate, followUpDate) {
   const appliedFormatted = formatDate(appliedDate);
   const followUpFormatted = formatDate(followUpDate);
   if (appliedFormatted && followUpFormatted) {
-    return `${appliedFormatted} → ${followUpFormatted}`;
+    return `Applied ${appliedFormatted} → ${followUpFormatted}`;
   }
-  if (appliedFormatted) return appliedFormatted;
-  if (followUpFormatted) return `→ ${followUpFormatted}`;
+  if (appliedFormatted) return `Applied ${appliedFormatted}`;
+  if (followUpFormatted) return `Follow-up ${followUpFormatted}`;
   return '';
 }
 
@@ -67,7 +69,13 @@ export default function ApplicationsList() {
     }
   }, [location.state]);
 
+  const isFromCache = !isQueryLoading && !!applicationsData;
+  const [highlightedId, setHighlightedId] = useState(null);
+
   const handleStatusChange = async (id, newStatus) => {
+    setHighlightedId(id);
+    setTimeout(() => setHighlightedId(null), 1000);
+
     const queryKey = ['applications', userId];
     const previousApps = queryClient.getQueryData(queryKey);
 
@@ -120,16 +128,26 @@ export default function ApplicationsList() {
         error={queryErr}
         refetch={refetch}
       />
-      {toastMessage && (
-        <div className="applications-toast" role="status">
-          ✓ {toastMessage}
-        </div>
-      )}
+      <AnimatePresence>
+        {toastMessage && (
+          <m.div
+            key="toast"
+            className="applications-toast"
+            role="status"
+            variants={toastVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+          >
+            ✓ {toastMessage}
+          </m.div>
+        )}
+      </AnimatePresence>
 
       <div className="applications-header">
         <div>
           <h1 className="page-title">Applications</h1>
-          <p className="applications-subtitle">Track and manage your active job applications</p>
+          <p className="applications-subtitle">Every application and its status in one list.</p>
         </div>
         {applications.length > 0 && (
           <button onClick={() => navigate('/applications/new')} className="btn-primary">
@@ -163,8 +181,6 @@ export default function ApplicationsList() {
         </select>
       </div>
 
-      {error && <div className="applications-error">{error}</div>}
-
       {isLoading ? (
         <div className="applications-loading-skeleton">
           <div className="skeleton-ticket" />
@@ -190,51 +206,60 @@ export default function ApplicationsList() {
         </div>
       ) : (
         <div className="ticket-list">
-          {filteredApps.map((app) => {
-            const dateLeg = getFlightLegDates(app.appliedDate, app.followUpDate);
-            const hasTags = app.tags && app.tags.length > 0;
+          <AnimatePresence>
+            {filteredApps.map((app) => {
+              const dateLeg = getFlightLegDates(app.appliedDate, app.followUpDate);
+              const hasTags = app.tags && app.tags.length > 0;
+              const isHighlighted = app.id === highlightedId;
 
-            return (
-              <div
-                key={app.id}
-                className="ticket-row"
-                onClick={() => navigate(`/applications/${app.id}`)}
-              >
-                <div className="ticket-top-line">
-                  <div className="ticket-info">
-                    <span className="ticket-company">{app.companyName}</span>
-                    <span className="ticket-role">{app.jobRole}</span>
+              return (
+                <m.div
+                  key={app.id}
+                  layout
+                  variants={listItemVariants}
+                  initial={isFromCache ? false : "hidden"}
+                  animate="visible"
+                  exit="exit"
+                  whileTap={{ scale: 0.98 }}
+                  className={`ticket-row ${isHighlighted ? 'ticket-row--highlighted' : ''}`}
+                  onClick={() => navigate(`/applications/${app.id}`)}
+                >
+                  <div className="ticket-top-line">
+                    <div className="ticket-info">
+                      <span className="ticket-company">{app.companyName}</span>
+                      <span className="ticket-role">{app.jobRole}</span>
+                    </div>
+
+                    {dateLeg && <div className="ticket-dates">{dateLeg}</div>}
+
+                    <div className="ticket-stub-divider" />
+
+                    <div className="ticket-right-group" onClick={(e) => e.stopPropagation()}>
+                      <StatusControl
+                        value={app.status}
+                        onChange={(newStatus) => handleStatusChange(app.id, newStatus)}
+                      />
+                      <button
+                        className="ticket-delete-btn"
+                        onClick={() => setDeleteTarget(app)}
+                        title="Delete application"
+                      >
+                        ✕
+                      </button>
+                    </div>
                   </div>
 
-                  {dateLeg && <div className="ticket-dates">{dateLeg}</div>}
-
-                  <div className="ticket-stub-divider" />
-
-                  <div className="ticket-right-group" onClick={(e) => e.stopPropagation()}>
-                    <StatusControl
-                      value={app.status}
-                      onChange={(newStatus) => handleStatusChange(app.id, newStatus)}
-                    />
-                    <button
-                      className="ticket-delete-btn"
-                      onClick={() => setDeleteTarget(app)}
-                      title="Delete application"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                </div>
-
-                {hasTags && (
-                  <div className="ticket-tags">
-                    {app.tags.map((t, idx) => (
-                      <span key={idx} className="ticket-tag">{t}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+                  {hasTags && (
+                    <div className="ticket-tags">
+                      {app.tags.map((t, idx) => (
+                        <span key={idx} className="ticket-tag">{t}</span>
+                      ))}
+                    </div>
+                  )}
+                </m.div>
+              );
+            })}
+          </AnimatePresence>
         </div>
       )}
 

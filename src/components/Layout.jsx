@@ -4,6 +4,8 @@ import { useAuth } from '../auth/AuthContext';
 import { useChatHistory } from '../assistant/useChatHistory';
 import ChatHistoryList from '../assistant/ChatHistoryList';
 import { prefetchUserData, prefetchRouteData } from '../api/queries';
+import { AnimatePresence, m } from 'framer-motion';
+import { pageVariants, modalBackdropVariants, drawerVariants } from '../lib/motion';
 import './Layout.css';
 
 const INITIAL_GREETING = "What can I help you with today?";
@@ -122,13 +124,19 @@ export default function Layout() {
       </header>
 
       {/* Backdrop for mobile drawer */}
-      {mobileMenuOpen && (
-        <div
-          className="mobile-drawer-backdrop"
-          onClick={closeMobileMenu}
-          aria-hidden="true"
-        />
-      )}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <m.div
+            variants={modalBackdropVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="mobile-drawer-backdrop"
+            onClick={closeMobileMenu}
+            aria-hidden="true"
+          />
+        )}
+      </AnimatePresence>
 
       {/* Sidebar / Slide-out Drawer */}
       <aside className={`app-sidebar ${isCollapsed ? 'app-sidebar--collapsed' : ''} ${mobileMenuOpen ? 'app-sidebar--mobile-open' : ''}`}>
@@ -360,16 +368,28 @@ export default function Layout() {
 
       {/* Main Content Area */}
       <main className="app-main">
-        <div className="app-main__container">
-          <Outlet context={{
-            ...chatHistory,
-            isSidebarCollapsed: isCollapsed,
-            toggleCollapsed,
-            mobileMenuOpen,
-            setMobileMenuOpen,
-            closeMobileMenu,
-          }} />
-        </div>
+        <AnimatePresence mode="wait" initial={false}>
+          <m.div
+            key={location.pathname}
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            onAnimationStart={() => {
+              window.scrollTo(0, 0);
+            }}
+            className="app-main__container"
+          >
+            <Outlet context={{
+              ...chatHistory,
+              isSidebarCollapsed: isCollapsed,
+              toggleCollapsed,
+              mobileMenuOpen,
+              setMobileMenuOpen,
+              closeMobileMenu,
+            }} />
+          </m.div>
+        </AnimatePresence>
       </main>
     </div>
   );

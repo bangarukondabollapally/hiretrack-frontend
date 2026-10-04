@@ -381,12 +381,12 @@ export default function ProfilePage() {
       >
         <div className="profile-avatar">{userInitial}</div>
         <div className="profile-user-info">
-          <span className="profile-user-name">{name || user?.email?.split('@')[0] || 'HireTrack User'}</span>
+          <span className="profile-user-name">{name.trim() || 'Add your name'}</span>
           <span className="profile-user-email">{user?.email}</span>
         </div>
         <div style={{ marginLeft: 'auto' }}>
           <span className="admin-role-badge">
-            {isAdmin ? '🔒 Administrator' : '🎓 Student Account'}
+            {isAdmin ? 'Administrator' : 'Student account'}
           </span>
         </div>
       </motion.div>
@@ -414,14 +414,14 @@ export default function ProfilePage() {
             <section className="settings-section" id="section-account">
               <div className="settings-section__header">
                 <h2 className="settings-section__title">Account</h2>
-                <p className="settings-section__desc">Your personal details and authentication credentials.</p>
+                <p className="settings-section__desc">Your name and sign-in details.</p>
               </div>
 
               <form onSubmit={handleSaveAccount} className="claude-rows-container">
                 <div className="claude-row">
                   <div className="claude-row__info">
-                    <label htmlFor="settings-name" className="claude-row__label">Full Name</label>
-                    <p className="claude-row__desc">Your display name for account communication.</p>
+                    <label htmlFor="settings-name" className="claude-row__label">Full name</label>
+                    <p className="claude-row__desc">Shown in the app and used by the assistant.</p>
                   </div>
                   <div className="claude-row__control">
                     <input
@@ -437,8 +437,8 @@ export default function ProfilePage() {
 
                 <div className="claude-row">
                   <div className="claude-row__info">
-                    <span className="claude-row__label">Email Address</span>
-                    <p className="claude-row__desc">Your login email address (read-only).</p>
+                    <span className="claude-row__label">Email address</span>
+                    <p className="claude-row__desc">The email you sign in with. It can't be changed.</p>
                   </div>
                   <div className="claude-row__control">
                     <span className="read-only-value">{user?.email || '—'}</span>
@@ -448,12 +448,12 @@ export default function ProfilePage() {
                 {isAdmin && (
                   <div className="claude-row">
                     <div className="claude-row__info">
-                      <span className="claude-row__label">Role & Permissions</span>
+                      <span className="claude-row__label">Role & permissions</span>
                       <p className="claude-row__desc">Your administrative authorization level in HireTrack.</p>
                     </div>
                     <div className="claude-row__control">
                       <span className="admin-role-badge">
-                        🔒 Administrator (Full Access)
+                        Administrator (Full access)
                       </span>
                     </div>
                   </div>
@@ -466,7 +466,7 @@ export default function ProfilePage() {
                   </div>
                   <div className="claude-row__control">
                     <button type="button" onClick={logout} className="btn-secondary btn-danger-outline">
-                      Log out
+                      Sign out
                     </button>
                   </div>
                 </div>
@@ -477,7 +477,7 @@ export default function ProfilePage() {
                     className="btn-primary"
                     disabled={!isAccountDirty || accountStatus.loading}
                   >
-                    {accountStatus.loading ? 'Saving...' : 'Save Account'}
+                    {accountStatus.loading ? 'Saving...' : 'Save changes'}
                   </button>
                   {accountStatus.success && <span className="status-badge status-badge--success">Saved ✓</span>}
                   {accountStatus.error && <span className="status-badge status-badge--error">{accountStatus.error}</span>}
@@ -490,14 +490,14 @@ export default function ProfilePage() {
           {isAdmin && activeTab === 'placement-office' && (
             <section className="settings-section" id="section-placement-office">
               <div className="settings-section__header">
-                <h2 className="settings-section__title">Placement Office</h2>
+                <h2 className="settings-section__title">Placement office</h2>
                 <p className="settings-section__desc">Configure institution details, contact information, and default opening preferences.</p>
               </div>
 
               <form onSubmit={handleSaveAdminSettings} className="claude-rows-container">
                 <div className="claude-row">
                   <div className="claude-row__info">
-                    <label htmlFor="settings-institution" className="claude-row__label">Institution / Office Name</label>
+                    <label htmlFor="settings-institution" className="claude-row__label">Institution / office name</label>
                     <p className="claude-row__desc">Name of your university placement cell or career services office.</p>
                   </div>
                   <div className="claude-row__control">
@@ -505,7 +505,7 @@ export default function ProfilePage() {
                       id="settings-institution"
                       type="text"
                       className="form-input"
-                      placeholder="e.g. University Career Placement Cell"
+                      placeholder="e.g. University Placement Cell"
                       value={institutionName}
                       onChange={(e) => setInstitutionName(e.target.value)}
                     />
@@ -514,7 +514,7 @@ export default function ProfilePage() {
 
                 <div className="claude-row">
                   <div className="claude-row__info">
-                    <label htmlFor="settings-admin-email" className="claude-row__label">Placement Contact Email</label>
+                    <label htmlFor="settings-admin-email" className="claude-row__label">Placement contact email</label>
                     <p className="claude-row__desc">Official contact email displayed to students on placement postings.</p>
                   </div>
                   <div className="claude-row__control">
@@ -531,7 +531,7 @@ export default function ProfilePage() {
 
                 <div className="claude-row">
                   <div className="claude-row__info">
-                    <label htmlFor="settings-default-currency" className="claude-row__label">Default Opening Currency</label>
+                    <label htmlFor="settings-default-currency" className="claude-row__label">Default opening currency</label>
                     <p className="claude-row__desc">Default currency pre-selected when creating new placement openings.</p>
                   </div>
                   <div className="claude-row__control">
@@ -551,32 +551,15 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <div className="claude-row">
-                  <div className="claude-row__info">
-                    <span className="claude-row__label">Opening Activity Notifications</span>
-                    <p className="claude-row__desc">Receive summary updates when students save or track openings.</p>
-                  </div>
-                  <div className="claude-row__control">
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px' }}>
-                      <input
-                        type="checkbox"
-                        checked={adminNotify}
-                        onChange={(e) => setAdminNotify(e.target.checked)}
-                      />
-                      <span>Enable email alerts</span>
-                    </label>
-                  </div>
-                </div>
-
                 <div className="settings-section__footer">
                   <button
                     type="submit"
                     className="btn-primary"
                     disabled={!isAdminDirty || adminStatus.loading}
                   >
-                    {adminStatus.loading ? 'Saving...' : 'Save Settings'}
+                    {adminStatus.loading ? 'Saving...' : 'Save changes'}
                   </button>
-                  {adminStatus.success && <span className="status-badge status-badge--success">Saved ✓</span>}
+                  {adminStatus.success && <span className="status-badge status-badge--success">Saved</span>}
                   {adminStatus.error && <span className="status-badge status-badge--error">{adminStatus.error}</span>}
                 </div>
               </form>
@@ -588,14 +571,14 @@ export default function ProfilePage() {
             <section className="settings-section" id="section-job-search">
               <div className="settings-section__header">
                 <h2 className="settings-section__title">Job search</h2>
-                <p className="settings-section__desc">Configure target role, experience, and resume settings to tailor AI fit evaluation.</p>
+                <p className="settings-section__desc">Tell HireTrack what you're aiming for so the assistant can judge your fit for a role.</p>
               </div>
 
               <form onSubmit={handleSaveJobSearch} className="claude-rows-container">
                 {/* Row 1: Target Role */}
                 <div className="claude-row">
                   <div className="claude-row__info">
-                    <label htmlFor="settings-target-role" className="claude-row__label">Target Role</label>
+                    <label htmlFor="settings-target-role" className="claude-row__label">Target role</label>
                     <p className="claude-row__desc">The primary job role or title you are applying for.</p>
                   </div>
                   <div className="claude-row__control">
@@ -603,7 +586,7 @@ export default function ProfilePage() {
                       id="settings-target-role"
                       type="text"
                       className="form-input"
-                      placeholder="e.g. Senior Frontend Engineer"
+                      placeholder="e.g. Frontend Engineer"
                       value={targetRole}
                       onChange={(e) => setTargetRole(e.target.value)}
                     />
@@ -615,33 +598,33 @@ export default function ProfilePage() {
                   <div className="claude-row__info">
                     <span className="claude-row__label">Experience</span>
                     <p className="claude-row__desc">
-                      Roles, key skills and achievements. The assistant compares this with a job description to evaluate your fit.
+                      Roles, key skills and achievements. Use 0 if you're a fresher.
                     </p>
                   </div>
 
                   <div className="experience-inputs-group">
                     <div className="years-input-wrapper">
-                      <label htmlFor="settings-years-exp" className="sub-label">Years of Experience (0–60)</label>
+                      <label htmlFor="settings-years-exp" className="sub-label">Years of experience (0–60)</label>
                       <input
                         id="settings-years-exp"
                         type="number"
                         min="0"
                         max="60"
                         className="form-input years-input"
-                        placeholder="e.g. 5"
+                        placeholder="e.g. 0"
                         value={yearsOfExperience}
                         onChange={(e) => setYearsOfExperience(e.target.value)}
                       />
                     </div>
 
                     <div className="summary-input-wrapper">
-                      <label htmlFor="settings-exp-summary" className="sub-label">Experience Summary (max 3000 chars)</label>
+                      <label htmlFor="settings-exp-summary" className="sub-label">Experience summary (max 3000 chars)</label>
                       <textarea
                         id="settings-exp-summary"
                         rows={4}
                         maxLength={3000}
                         className="form-textarea"
-                        placeholder="Summarize your career history, key skills, major projects, and achievements..."
+                        placeholder="Summarize your history, key skills, major projects, and achievements..."
                         value={experienceSummary}
                         onChange={(e) => setExperienceSummary(e.target.value)}
                       />
@@ -652,9 +635,9 @@ export default function ProfilePage() {
                 {/* Row 3: Resume Component (3 states) */}
                 <div className="claude-row claude-row--stacked">
                   <div className="claude-row__info">
-                    <span className="claude-row__label">Master Resume</span>
+                    <span className="claude-row__label">Master resume</span>
                     <p className="claude-row__desc">
-                      Your master resume text is analyzed alongside your experience summary for mock interviews and role-fit analysis.
+                      Used by the assistant for interview prep and role-fit checks. Files are read in your browser; only the text is saved.
                     </p>
                   </div>
 
@@ -784,7 +767,7 @@ export default function ProfilePage() {
                     className="btn-primary"
                     disabled={!isJobSearchDirty || jobSearchStatus.loading || isParsing}
                   >
-                    {jobSearchStatus.loading ? 'Saving...' : 'Save Job search'}
+                    {jobSearchStatus.loading ? 'Saving...' : 'Save changes'}
                   </button>
                   {jobSearchStatus.success && <span className="status-badge status-badge--success">Saved ✓</span>}
                   {jobSearchStatus.error && <span className="status-badge status-badge--error">{jobSearchStatus.error}</span>}

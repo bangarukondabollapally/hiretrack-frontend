@@ -57,6 +57,20 @@ export function clearChatHistory(userId) {
   }
 }
 
+function isPureGreeting(text) {
+  if (!text) return true;
+  const clean = text.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  const greetings = ['hi', 'hello', 'hey', 'greetings', 'yo', 'sup', 'hola', 'goodmorning', 'goodafternoon', 'goodevening'];
+  return greetings.includes(clean);
+}
+
+function deriveTitle(text) {
+  if (!text || isPureGreeting(text)) return 'New chat';
+  const cleanText = text.trim().replace(/\s+/g, ' ');
+  if (cleanText.length <= 40) return cleanText;
+  return cleanText.slice(0, 40) + '…';
+}
+
 /** React hook — returns state + actions for chat history management. */
 export function useChatHistory(userId, initialGreeting) {
   const effectiveUserId = userId ? String(userId) : 'guest';
@@ -108,7 +122,7 @@ export function useChatHistory(userId, initialGreeting) {
     };
     const conv = {
       id,
-      title: 'New conversation',
+      title: 'New chat',
       createdAt: new Date().toISOString(),
       messages: [greeting],
     };
@@ -138,9 +152,12 @@ export function useChatHistory(userId, initialGreeting) {
     setConversations(prev => prev.map(conv => {
       if (conv.id !== activeId) return conv;
       const updated = { ...conv, messages: [...conv.messages, msg] };
-      // Set the conversation title to the first user message (truncated)
-      if (msg.sender === 'user' && conv.title === 'New conversation') {
-        updated.title = msg.text.slice(0, 48) + (msg.text.length > 48 ? '…' : '');
+      // Set the conversation title to the first real user question (truncated ~40 chars)
+      if (msg.sender === 'user' && (conv.title === 'New chat' || conv.title === 'New conversation')) {
+        const generatedTitle = deriveTitle(msg.text);
+        if (generatedTitle !== 'New chat') {
+          updated.title = generatedTitle;
+        }
       }
       return updated;
     }));

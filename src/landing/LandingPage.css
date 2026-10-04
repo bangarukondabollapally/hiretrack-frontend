@@ -511,20 +511,93 @@
   color: var(--accent-hover, #1F473A);
 }
 
+.preview-caption {
+  font-size: 0.72rem;
+  color: var(--text-tertiary, #9C988F);
+  text-align: right;
+  padding: 0.4rem 1rem 0.6rem;
+  background-color: var(--surface, #FFFFFF);
+  border-top: 1px solid var(--border-subtle, #F0EEE8);
+  letter-spacing: 0.02em;
+}
+
 /* Footer */
 .landing-footer {
   width: 100%;
-  text-align: center;
-  padding: 2rem 1.5rem;
+  padding: 3rem 1.5rem 2rem;
   border-top: 1px solid var(--border, #DDD8CE);
-  font-size: 0.8rem;
-  color: var(--text-secondary, #4D4A43);
   background-color: var(--bg, #F8F7F4);
   box-sizing: border-box;
 }
 
-.landing-footer .landing-container {
+.landing-footer__container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.landing-footer__grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 2.5rem;
+  margin-bottom: 2.5rem;
+  text-align: left;
+}
+
+.footer-col--brand .footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.footer-tagline {
+  font-size: 0.9rem;
+  color: var(--text-secondary, #4D4A43);
+  margin: 0;
+}
+
+.footer-col__title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary, #1C1B19);
+  margin: 0 0 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.footer-col__links {
+  list-style: none;
   padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.footer-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary, #4D4A43);
+  text-decoration: none;
+  cursor: pointer;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.15s ease;
+}
+
+.footer-link:hover {
+  color: var(--accent, #2A5C4B);
+}
+
+.landing-footer__bottom {
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-subtle, #F0EEE8);
+  font-size: 0.8rem;
+  color: var(--text-tertiary, #9C988F);
+  text-align: left;
 }
 
 /* Mobile & Tablet Responsiveness */
@@ -598,5 +671,14 @@
     justify-content: center;
     border-radius: 10px;
     box-sizing: border-box;
+  }
+
+  .landing-footer__grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .landing-footer__bottom {
+    text-align: center;
   }
 }

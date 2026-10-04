@@ -158,15 +158,23 @@
   padding: 14px 18px;
   border-bottom: 1px solid var(--border-subtle);
   cursor: pointer;
-  transition: background-color var(--transition-fast);
+  transition: background-color 0.2s ease, transform 0.15s ease;
 }
 
 .ticket-row:last-child {
   border-bottom: none;
 }
 
-.ticket-row:hover {
-  background-color: var(--surface-sunken);
+@media (hover: hover) {
+  .ticket-row:hover {
+    background-color: var(--surface-sunken);
+    transform: translateY(-1px);
+  }
+}
+
+.ticket-row--highlighted {
+  background-color: rgba(42, 92, 75, 0.08) !important;
+  transition: background-color 0.8s ease;
 }
 
 .ticket-top-line {

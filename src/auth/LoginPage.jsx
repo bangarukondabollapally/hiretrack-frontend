@@ -123,11 +123,11 @@ export default function LoginPage() {
         <div className="auth-brand" aria-label="HireTrack">HireTrack</div>
         <p className="auth-tagline">Stay organized. Know what's next.</p>
 
-        <h1 className="auth-heading">{isAdminLoginIntent ? 'Admin Portal Sign In' : 'Sign in'}</h1>
+        <h1 className="auth-heading">{isAdminLoginIntent ? 'Placement cell sign in' : 'Sign in'}</h1>
 
         {isAdminLoginIntent && (
           <div className="auth-error" style={{ backgroundColor: '#EEF6F3', color: '#2A5C4B', borderColor: '#2A5C4B', marginBottom: '16px' }}>
-            🔒 Sign in with Administrator credentials to publish and manage campus placement openings.
+            Sign in to publish and manage campus placement openings for your placement cell.
           </div>
         )}
 
@@ -223,7 +223,7 @@ export default function LoginPage() {
         {/* Footer */}
         <p className="auth-footer">
           Don't have an account?{' '}
-          <Link to={ROUTES.REGISTER}>Create one</Link>
+          <Link to={ROUTES.REGISTER}>Get started</Link>
         </p>
       </div>
     </main>

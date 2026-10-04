@@ -7,6 +7,8 @@ import { useAuth } from '../auth/AuthContext';
 import { useApplicationsQuery } from '../api/queries';
 import { useChatHistory } from './useChatHistory';
 import ChatHistoryList from './ChatHistoryList';
+import { AnimatePresence, m } from 'framer-motion';
+import { popoverVariants, staggerContainerVariants, listItemVariants, toastVariants } from '../lib/motion';
 import { repairMarkdownTables, TABLE_BR_MARKER } from '../lib/repairMarkdownTables';
 import './ChatPage.css';
 
@@ -547,30 +549,38 @@ export default function ChatPage() {
                   <span>History</span>
                 </button>
 
-                {isHistoryPopoverOpen && (
-                  <div className="history-popover-dropdown">
-                    <ChatHistoryList
-                      conversations={history.conversations}
-                      activeId={history.activeId}
-                      onSelectConversation={(id) => {
-                        history.switchConversation(id);
-                        setIsHistoryPopoverOpen(false);
-                      }}
-                      onNewChat={() => {
-                        history.newConversation();
-                        setIsHistoryPopoverOpen(false);
-                      }}
-                      onRenameConversation={history.renameConversation}
-                      onDeleteConversation={history.deleteConversation}
-                      onTogglePinConversation={history.togglePinConversation}
-                    />
-                  </div>
-                )}
+                <AnimatePresence>
+                  {isHistoryPopoverOpen && (
+                    <m.div
+                      className="history-popover-dropdown"
+                      variants={popoverVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                    >
+                      <ChatHistoryList
+                        conversations={history.conversations}
+                        activeId={history.activeId}
+                        onSelectConversation={(id) => {
+                          history.switchConversation(id);
+                          setIsHistoryPopoverOpen(false);
+                        }}
+                        onNewChat={() => {
+                          history.newConversation();
+                          setIsHistoryPopoverOpen(false);
+                        }}
+                        onRenameConversation={history.renameConversation}
+                        onDeleteConversation={history.deleteConversation}
+                        onTogglePinConversation={history.togglePinConversation}
+                      />
+                    </m.div>
+                  )}
+                </AnimatePresence>
               </div>
             )}
           </div>
 
-          <span className="top-bar-title">HireTrack AI Assistant</span>
+          <span className="top-bar-title">Assistant</span>
 
           <div className="top-bar-right">
             {isMobile && (
@@ -610,19 +620,26 @@ export default function ChatPage() {
               </div>
 
               {/* Pill-shaped suggestion chips BELOW composer (documented exception) */}
-              <div className="suggestion-chips">
+              <m.div
+                className="suggestion-chips"
+                variants={staggerContainerVariants}
+                initial="hidden"
+                animate="visible"
+              >
                 {SUGGESTED_PROMPTS.map((item, idx) => (
-                  <button
+                  <m.button
                     key={idx}
                     type="button"
                     className="chip-btn"
+                    variants={listItemVariants}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => handleSendMessage(item.prompt)}
                   >
                     <span className="chip-icon">{renderPromptIcon(item.type)}</span>
                     <span className="chip-label">{item.label}</span>
-                  </button>
+                  </m.button>
                 ))}
-              </div>
+              </m.div>
             </div>
           ) : (
             /* DOCKED STATE: Transcript column + Docked Composer at bottom */
@@ -636,7 +653,14 @@ export default function ChatPage() {
                   {messages.map((msg, idx) => (
                     <div key={msg.id || idx} className={`transcript-turn transcript-turn--${msg.sender}`}>
                       {msg.sender === 'user' ? (
-                        <div className="user-bubble">{normalizeText(msg.text)}</div>
+                        <m.div
+                          className="user-bubble"
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                        >
+                          {normalizeText(msg.text)}
+                        </m.div>
                       ) : (
                         <div className="assistant-response">
                           <div className="assistant-response-header">
@@ -647,11 +671,20 @@ export default function ChatPage() {
 
                             {/* Stream Phase Status Line */}
                             {isGenerating && idx === messages.length - 1 && (
-                              <span className="stream-status-line">
-                                {streamPhase === 'retrieving' && 'Reviewing your applications…'}
-                                {streamPhase === 'thinking' && `${ROTATING_THINKING_WORDS[thinkingWordIdx]}… (Thought for ${reasoningTimeSeconds}s)`}
-                                {streamPhase === 'generating' && 'Generating response…'}
-                              </span>
+                              <AnimatePresence mode="wait">
+                                <m.span
+                                  key={thinkingWordIdx + (streamPhase || '')}
+                                  className="stream-status-line"
+                                  initial={{ opacity: 0, y: 2 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  exit={{ opacity: 0, y: -2 }}
+                                  transition={{ duration: 0.18 }}
+                                >
+                                  {streamPhase === 'retrieving' && 'Reviewing your applications…'}
+                                  {streamPhase === 'thinking' && `${ROTATING_THINKING_WORDS[thinkingWordIdx]}… (Thought for ${reasoningTimeSeconds}s)`}
+                                  {streamPhase === 'generating' && 'Generating response…'}
+                                </m.span>
+                              </AnimatePresence>
                             )}
                           </div>
 
@@ -800,15 +833,22 @@ export default function ChatPage() {
                 </div>
 
                 {/* Floating scroll to bottom button */}
-                {showScrollBottomBtn && (
-                  <button
-                    type="button"
-                    className="scroll-bottom-btn"
-                    onClick={() => scrollToBottom('smooth')}
-                  >
-                    ↓ Scroll to bottom
-                  </button>
-                )}
+                <AnimatePresence>
+                  {showScrollBottomBtn && (
+                    <m.button
+                      key="scroll-btn"
+                      type="button"
+                      className="scroll-bottom-btn"
+                      variants={toastVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      onClick={() => scrollToBottom('smooth')}
+                    >
+                      ↓ Scroll to bottom
+                    </m.button>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Docked composer near bottom */}
@@ -857,21 +897,29 @@ export default function ChatPage() {
             >
               +
             </button>
-            {isAttachMenuOpen && (
-              <>
-                <div className="attach-menu-backdrop" onClick={() => setIsAttachMenuOpen(false)} />
-                <div className="attach-popover-menu">
-                  <button type="button" onClick={() => { fileInputRef.current.accept = ".png,.jpeg,.jpg,.webp,.gif"; fileInputRef.current?.click(); setIsAttachMenuOpen(false); }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                    Upload image
-                  </button>
-                  <button type="button" onClick={() => { fileInputRef.current.accept = ".txt,.md,.pdf,.docx"; fileInputRef.current?.click(); setIsAttachMenuOpen(false); }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                    Upload text file
-                  </button>
-                </div>
-              </>
-            )}
+            <AnimatePresence>
+              {isAttachMenuOpen && (
+                <>
+                  <div className="attach-menu-backdrop" onClick={() => setIsAttachMenuOpen(false)} />
+                  <m.div
+                    className="attach-popover-menu"
+                    variants={popoverVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                  >
+                    <button type="button" onClick={() => { fileInputRef.current.accept = ".png,.jpeg,.jpg,.webp,.gif"; fileInputRef.current?.click(); setIsAttachMenuOpen(false); }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                      Upload image
+                    </button>
+                    <button type="button" onClick={() => { fileInputRef.current.accept = ".txt,.md,.pdf,.docx"; fileInputRef.current?.click(); setIsAttachMenuOpen(false); }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                      Upload text file
+                    </button>
+                  </m.div>
+                </>
+              )}
+            </AnimatePresence>
             <input
               ref={fileInputRef}
               type="file"
@@ -885,7 +933,7 @@ export default function ChatPage() {
           <textarea
             ref={textareaRef}
             className="composer-input"
-            placeholder="Write a message..."
+            placeholder="Ask about your applications, interviews or resume..."
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={handleKeyDown}
@@ -907,7 +955,7 @@ export default function ChatPage() {
                 aria-label="Select application context"
               >
                 <span className="context-pill-text">
-                  {selectedApp ? `${selectedApp.companyName}` : 'All applications'}
+                  {selectedApp ? `Context: ${selectedApp.companyName} — ${selectedApp.jobRole}` : 'Context: All applications'}
                 </span>
                 {selectedApp ? (
                   <span
@@ -926,81 +974,99 @@ export default function ChatPage() {
               </button>
 
               {/* Context Dropdown Popover */}
-              {isAppPickerOpen && (
-                <div
-                  className="context-dropdown"
-                  onKeyDown={handlePickerKeyDown}
-                >
-                  <div className="context-search-header">
-                    <input
-                      type="text"
-                      className="context-search-input"
-                      placeholder="Search applications..."
-                      value={appSearchQuery}
-                      onChange={(e) => {
-                        setAppSearchQuery(e.target.value);
-                        setPickerHighlightedIdx(0);
-                      }}
-                      autoFocus
-                    />
-                  </div>
-                  <div className="context-dropdown-list">
-                    <div
-                      className={`context-dropdown-item ${!selectedAppId ? 'selected' : ''} ${pickerHighlightedIdx === 0 ? 'highlighted' : ''}`}
-                      onClick={() => {
-                        setSelectedAppId(null);
-                        setIsAppPickerOpen(false);
-                      }}
-                      onMouseEnter={() => setPickerHighlightedIdx(0)}
-                    >
-                      <strong>All applications</strong> (General context)
+              <AnimatePresence>
+                {isAppPickerOpen && (
+                  <m.div
+                    className="context-dropdown"
+                    variants={popoverVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    onKeyDown={handlePickerKeyDown}
+                  >
+                    <div className="context-search-header">
+                      <input
+                        type="text"
+                        className="context-search-input"
+                        placeholder="Search applications..."
+                        value={appSearchQuery}
+                        onChange={(e) => {
+                          setAppSearchQuery(e.target.value);
+                          setPickerHighlightedIdx(0);
+                        }}
+                        autoFocus
+                      />
                     </div>
-                    {filteredApps.map((app, idx) => {
-                      const itemIdx = idx + 1;
-                      return (
-                        <div
-                          key={app.id}
-                          className={`context-dropdown-item ${selectedAppId === app.id ? 'selected' : ''} ${pickerHighlightedIdx === itemIdx ? 'highlighted' : ''}`}
-                          onClick={() => {
-                            setSelectedAppId(app.id);
-                            setIsAppPickerOpen(false);
-                          }}
-                          onMouseEnter={() => setPickerHighlightedIdx(itemIdx)}
-                        >
-                          <strong>{app.companyName}</strong> — {app.jobRole}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+                    <div className="context-dropdown-list">
+                      <div
+                        className={`context-dropdown-item ${!selectedAppId ? 'selected' : ''} ${pickerHighlightedIdx === 0 ? 'highlighted' : ''}`}
+                        onClick={() => {
+                          setSelectedAppId(null);
+                          setIsAppPickerOpen(false);
+                        }}
+                        onMouseEnter={() => setPickerHighlightedIdx(0)}
+                      >
+                        <strong>All applications</strong> (General context)
+                      </div>
+                      {filteredApps.map((app, idx) => {
+                        const itemIdx = idx + 1;
+                        return (
+                          <div
+                            key={app.id}
+                            className={`context-dropdown-item ${selectedAppId === app.id ? 'selected' : ''} ${pickerHighlightedIdx === itemIdx ? 'highlighted' : ''}`}
+                            onClick={() => {
+                              setSelectedAppId(app.id);
+                              setIsAppPickerOpen(false);
+                            }}
+                            onMouseEnter={() => setPickerHighlightedIdx(itemIdx)}
+                          >
+                            <strong>{app.companyName}</strong> — {app.jobRole}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </m.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            {/* Send or Stop Button */}
-            {isGenerating ? (
-              <button
-                type="button"
-                className="composer-send-btn composer-send-btn--stop"
-                onClick={handleStopGeneration}
-                title="Stop generating"
-              >
-                ■
-              </button>
-            ) : (
-              <button
-                type="button"
-                className={`composer-send-btn ${(inputText.trim() || attachments.length > 0) ? 'composer-send-btn--active' : ''}`}
-                onClick={() => handleSendMessage()}
-                disabled={!inputText.trim() && attachments.length === 0}
-                title="Send message"
-                aria-label="Send message"
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="19" x2="12" y2="5"></line>
-                  <polyline points="5 12 12 5 19 12"></polyline>
-                </svg>
-              </button>
-            )}
+            {/* Send or Stop Button with quick icon cross-fade */}
+            <AnimatePresence mode="wait">
+              {isGenerating ? (
+                <m.button
+                  key="stop"
+                  type="button"
+                  className="composer-send-btn composer-send-btn--stop"
+                  initial={{ scale: 0.85, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.85, opacity: 0 }}
+                  transition={{ duration: 0.12 }}
+                  onClick={handleStopGeneration}
+                  title="Stop generating"
+                >
+                  ■
+                </m.button>
+              ) : (
+                <m.button
+                  key="send"
+                  type="button"
+                  className={`composer-send-btn ${(inputText.trim() || attachments.length > 0) ? 'composer-send-btn--active' : ''}`}
+                  initial={{ scale: 0.85, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.85, opacity: 0 }}
+                  transition={{ duration: 0.12 }}
+                  onClick={() => handleSendMessage()}
+                  disabled={!inputText.trim() && attachments.length === 0}
+                  title="Send message"
+                  aria-label="Send message"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="19" x2="12" y2="5"></line>
+                    <polyline points="5 12 12 5 19 12"></polyline>
+                  </svg>
+                </m.button>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>

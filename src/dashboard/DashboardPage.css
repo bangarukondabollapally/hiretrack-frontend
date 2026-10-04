@@ -228,3 +228,68 @@
   align-items: center;
   gap: 10px;
 }
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.dash-pipeline-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 24px;
+}
+
+.dash-pipeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+}
+
+.dash-pipeline-bar {
+  display: flex;
+  height: 10px;
+  border-radius: 9999px;
+  overflow: hidden;
+  background-color: #e8e5dc;
+  width: 100%;
+}
+
+.dash-pipeline-segment {
+  height: 100%;
+}
+
+.dash-pipeline-segment--applied { background-color: #2563eb; }
+.dash-pipeline-segment--screening { background-color: #d97706; }
+.dash-pipeline-segment--interview { background-color: #7c3aed; }
+.dash-pipeline-segment--offer { background-color: #16a34a; }
+.dash-pipeline-segment--rejected { background-color: #dc2626; }
+.dash-pipeline-segment--withdrawn { background-color: #6b7280; }
+
+.dash-pipeline-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.dash-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dash-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}

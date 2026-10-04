@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { AnimatePresence, m } from 'framer-motion';
 import { useAuth } from '../auth/AuthContext';
 import { useApplicationsQuery, useInterviewsQuery, invalidateInterviewQueries } from '../api/queries';
 import axiosInstance from '../api/axiosInstance';
 import QueryStateNotice from '../components/QueryStateNotice';
+import { modalBackdropVariants, modalCardVariants, listItemVariants } from '../lib/motion';
 import './InterviewsPage.css';
 
 const OUTCOMES = ['PENDING', 'PASSED', 'FAILED', 'CANCELLED'];
@@ -17,6 +19,7 @@ export default function InterviewsPage() {
   const [selectedOutcome, setSelectedOutcome] = useState('');
   const [selectedAppIdFilter, setSelectedAppIdFilter] = useState('');
   const [isPastExpanded, setIsPastExpanded] = useState(true);
+  const [expandedNotes, setExpandedNotes] = useState({});
 
   // Queries
   const { data: applicationsData } = useApplicationsQuery(userId);
@@ -188,7 +191,7 @@ export default function InterviewsPage() {
         <div>
           <h1 className="page-title">Interviews</h1>
           <p className="interviews-subtitle">
-            Manage your upcoming and past interview schedules across all applications.
+            All your interview rounds, upcoming and past, in one place.
           </p>
         </div>
         {applications.length > 0 && (
@@ -198,8 +201,6 @@ export default function InterviewsPage() {
           </button>
         )}
       </div>
-
-      {error && <div className="interviews-error">{error}</div>}
 
       {/* Filter Toolbar */}
       <div className="interviews-toolbar">
@@ -253,13 +254,13 @@ export default function InterviewsPage() {
           </p>
           {applications.length > 0 ? (
             <button onClick={openCreateModal} className="btn-primary">
-              <span className="btn-text-desktop">+ Schedule an interview</span>
-              <span className="btn-text-mobile">+ Schedule interview</span>
+              <span className="btn-text-desktop">+ Add interview</span>
+              <span className="btn-text-mobile">+ Add interview</span>
             </button>
           ) : (
             <button onClick={() => navigate('/applications/new')} className="btn-primary">
-              <span className="btn-text-desktop">+ Add Application</span>
-              <span className="btn-text-mobile">+ Add Application</span>
+              <span className="btn-text-desktop">+ Add application</span>
+              <span className="btn-text-mobile">+ Add application</span>
             </button>
           )}
         </div>
@@ -272,7 +273,14 @@ export default function InterviewsPage() {
             </h2>
 
             {upcomingInterviews.length === 0 ? (
-              <p className="empty-group-text">No upcoming interviews scheduled.</p>
+              <div className="empty-group-box">
+                <p className="empty-group-text">No upcoming interviews scheduled.</p>
+                {applications.length > 0 && (
+                  <button onClick={openCreateModal} className="btn-secondary btn-sm">
+                    + Add interview
+                  </button>
+                )}
+              </div>
             ) : (
               renderInterviewList(upcomingInterviews)
             )}
@@ -296,129 +304,142 @@ export default function InterviewsPage() {
       )}
 
       {/* Add / Edit Interview Modal */}
-      {isModalOpen && (
-        <div className="modal-backdrop" onClick={() => setIsModalOpen(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2 className="modal-title">
-                {editingInterview ? 'Edit Interview Round' : 'Add Interview Round'}
-              </h2>
-              <button
-                type="button"
-                className="modal-close-btn"
-                onClick={() => setIsModalOpen(false)}
-              >
-                ×
-              </button>
-            </div>
+      <AnimatePresence>
+        {isModalOpen && (
+          <m.div
+            className="modal-backdrop"
+            variants={modalBackdropVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            onClick={() => setIsModalOpen(false)}
+          >
+            <m.div
+              className="modal-card"
+              variants={modalCardVariants}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="modal-header">
+                <h2 className="modal-title">
+                  {editingInterview ? 'Edit Interview Round' : 'Add Interview Round'}
+                </h2>
+                <button
+                  type="button"
+                  className="modal-close-btn"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  ×
+                </button>
+              </div>
 
-            {modalError && <div className="modal-error-alert">{modalError}</div>}
+              {modalError && <div className="modal-error-alert">{modalError}</div>}
 
-            <form onSubmit={handleModalSubmit} className="modal-form">
-              {!editingInterview && (
+              <form onSubmit={handleModalSubmit} className="modal-form">
+                {!editingInterview && (
+                  <div className="form-group">
+                    <label htmlFor="modal-app-select">Application *</label>
+                    <select
+                      id="modal-app-select"
+                      required
+                      className="form-input"
+                      value={modalFormData.applicationId}
+                      onChange={(e) => setModalFormData({ ...modalFormData, applicationId: e.target.value })}
+                    >
+                      {applications.map(app => (
+                        <option key={app.id} value={app.id}>
+                          {app.companyName} — {app.jobRole}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 <div className="form-group">
-                  <label htmlFor="modal-app-select">Application *</label>
-                  <select
-                    id="modal-app-select"
+                  <label htmlFor="modal-round">Round Name *</label>
+                  <input
+                    id="modal-round"
+                    type="text"
                     required
                     className="form-input"
-                    value={modalFormData.applicationId}
-                    onChange={(e) => setModalFormData({ ...modalFormData, applicationId: e.target.value })}
+                    placeholder="e.g. Technical Screen, System Design"
+                    value={modalFormData.round}
+                    onChange={(e) => setModalFormData({ ...modalFormData, round: e.target.value })}
+                  />
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="modal-date">Date & Time *</label>
+                    <input
+                      id="modal-date"
+                      type="datetime-local"
+                      required
+                      className="form-input"
+                      value={modalFormData.interviewDate}
+                      onChange={(e) => setModalFormData({ ...modalFormData, interviewDate: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor="modal-type">Type</label>
+                    <input
+                      id="modal-type"
+                      type="text"
+                      className="form-input"
+                      placeholder="Video, Phone, Onsite"
+                      value={modalFormData.interviewType}
+                      onChange={(e) => setModalFormData({ ...modalFormData, interviewType: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="modal-outcome">Outcome</label>
+                  <select
+                    id="modal-outcome"
+                    className="form-input"
+                    value={modalFormData.outcome}
+                    onChange={(e) => setModalFormData({ ...modalFormData, outcome: e.target.value })}
                   >
-                    {applications.map(app => (
-                      <option key={app.id} value={app.id}>
-                        {app.companyName} — {app.jobRole}
-                      </option>
+                    {OUTCOMES.map(o => (
+                      <option key={o} value={o}>{o}</option>
                     ))}
                   </select>
                 </div>
-              )}
 
-              <div className="form-group">
-                <label htmlFor="modal-round">Round Name *</label>
-                <input
-                  id="modal-round"
-                  type="text"
-                  required
-                  className="form-input"
-                  placeholder="e.g. Technical Screen, System Design"
-                  value={modalFormData.round}
-                  onChange={(e) => setModalFormData({ ...modalFormData, round: e.target.value })}
-                />
-              </div>
-
-              <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="modal-date">Date & Time *</label>
-                  <input
-                    id="modal-date"
-                    type="datetime-local"
-                    required
-                    className="form-input"
-                    value={modalFormData.interviewDate}
-                    onChange={(e) => setModalFormData({ ...modalFormData, interviewDate: e.target.value })}
+                  <label htmlFor="modal-notes">Notes</label>
+                  <textarea
+                    id="modal-notes"
+                    rows="3"
+                    className="form-input form-textarea"
+                    placeholder="Preparation notes or interview feedback..."
+                    value={modalFormData.notes}
+                    onChange={(e) => setModalFormData({ ...modalFormData, notes: e.target.value })}
                   />
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="modal-type">Type</label>
-                  <input
-                    id="modal-type"
-                    type="text"
-                    className="form-input"
-                    placeholder="Video, Phone, Onsite"
-                    value={modalFormData.interviewType}
-                    onChange={(e) => setModalFormData({ ...modalFormData, interviewType: e.target.value })}
-                  />
+                <div className="modal-actions">
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => setIsModalOpen(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-primary"
+                    disabled={isSaving}
+                  >
+                    {isSaving ? 'Saving...' : editingInterview ? 'Update Interview' : 'Create Interview'}
+                  </button>
                 </div>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="modal-outcome">Outcome</label>
-                <select
-                  id="modal-outcome"
-                  className="form-input"
-                  value={modalFormData.outcome}
-                  onChange={(e) => setModalFormData({ ...modalFormData, outcome: e.target.value })}
-                >
-                  {OUTCOMES.map(o => (
-                    <option key={o} value={o}>{o}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="modal-notes">Notes</label>
-                <textarea
-                  id="modal-notes"
-                  rows="3"
-                  className="form-input form-textarea"
-                  placeholder="Preparation notes or interview feedback..."
-                  value={modalFormData.notes}
-                  onChange={(e) => setModalFormData({ ...modalFormData, notes: e.target.value })}
-                />
-              </div>
-
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={() => setIsModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="btn-primary"
-                  disabled={isSaving}
-                >
-                  {isSaving ? 'Saving...' : editingInterview ? 'Update Interview' : 'Create Interview'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+              </form>
+            </m.div>
+          </m.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 
@@ -432,39 +453,171 @@ export default function InterviewsPage() {
             <thead>
               <tr>
                 <th style={{ width: '22%' }}>Date & Time</th>
-                <th style={{ width: '26%' }}>Company — Role</th>
-                <th style={{ width: '18%' }}>Round</th>
+                <th style={{ width: '24%' }}>Company — Role</th>
+                <th style={{ width: '22%' }}>Round & Notes</th>
                 <th style={{ width: '12%' }}>Type</th>
                 <th style={{ width: '12%' }}>Outcome</th>
                 <th style={{ width: '10%' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {items.map(item => (
-                <tr key={item.id} className="interview-table-row">
-                  <td className="cell-truncate">{formatDateTime(item.interviewDate)}</td>
-                  <td className="cell-truncate font-medium">
+              <AnimatePresence>
+                {items.map(item => {
+                  const isPastPending = new Date(item.interviewDate) < now && item.outcome === 'PENDING';
+                  const isNotesExpanded = expandedNotes[item.id];
+
+                  return (
+                    <m.tr
+                      key={item.id}
+                      layout
+                      variants={listItemVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit="exit"
+                      className="interview-table-row"
+                    >
+                      <td className="cell-truncate">{formatDateTime(item.interviewDate)}</td>
+                      <td className="cell-truncate font-medium">
+                        <Link
+                          to={`/applications/${item.applicationId}`}
+                          className="app-link"
+                          title={`${item.companyName} — ${item.jobRole}`}
+                        >
+                          {item.companyName || 'Application'} — {item.jobRole || 'Role'}
+                        </Link>
+                      </td>
+                      <td>
+                        <div className="round-cell">
+                          <span className="round-name">{item.round}</span>
+                          {item.notes && (
+                            <div className="notes-preview-box">
+                              <p className={`notes-text ${isNotesExpanded ? 'notes-text--expanded' : 'notes-text--preview'}`}>
+                                {item.notes}
+                              </p>
+                              <button
+                                type="button"
+                                className="notes-toggle-btn"
+                                onClick={() => setExpandedNotes(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                              >
+                                {isNotesExpanded ? 'Hide notes' : 'Show notes'}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="cell-truncate">{item.interviewType || 'N/A'}</td>
+                      <td>
+                        <div className="outcome-cell">
+                          <span className={`outcome-badge outcome-badge--${item.outcome?.toLowerCase()}`}>
+                            {item.outcome}
+                          </span>
+                          {isPastPending && (
+                            <button
+                              type="button"
+                              className="btn-add-outcome"
+                              onClick={() => openEditModal(item)}
+                              title="Set final outcome"
+                            >
+                              + Add outcome
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                      <td className="table-actions">
+                        <button
+                          type="button"
+                          className="action-btn action-btn--edit"
+                          onClick={() => openEditModal(item)}
+                          title="Edit interview"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="action-btn action-btn--delete"
+                          onClick={() => handleDelete(item)}
+                          title="Delete interview"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </m.tr>
+                  );
+                })}
+              </AnimatePresence>
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile Cards (<768px) */}
+        <div className="mobile-interview-cards">
+          <AnimatePresence>
+            {items.map(item => {
+              const isPastPending = new Date(item.interviewDate) < now && item.outcome === 'PENDING';
+              const isNotesExpanded = expandedNotes[item.id];
+
+              return (
+                <m.div
+                  key={item.id}
+                  layout
+                  variants={listItemVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  whileTap={{ scale: 0.98 }}
+                  className="interview-card"
+                >
+                  <div className="interview-card__header">
                     <Link
                       to={`/applications/${item.applicationId}`}
-                      className="app-link"
-                      title={`${item.companyName} — ${item.jobRole}`}
+                      className="interview-card__app-link"
                     >
-                      {item.companyName || 'Application'} — {item.jobRole || 'Role'}
+                      {item.companyName} — {item.jobRole}
                     </Link>
-                  </td>
-                  <td className="cell-truncate" title={item.round}>{item.round}</td>
-                  <td className="cell-truncate">{item.interviewType || 'N/A'}</td>
-                  <td>
                     <span className={`outcome-badge outcome-badge--${item.outcome?.toLowerCase()}`}>
                       {item.outcome}
                     </span>
-                  </td>
-                  <td className="table-actions">
+                  </div>
+
+                  <div className="interview-card__round">{item.round}</div>
+
+                  <div className="interview-card__meta">
+                    <span>{formatDateTime(item.interviewDate)}</span>
+                    {item.interviewType && <span>• {item.interviewType}</span>}
+                  </div>
+
+                  {isPastPending && (
+                    <div className="mobile-outcome-prompt">
+                      <button
+                        type="button"
+                        className="btn-add-outcome"
+                        onClick={() => openEditModal(item)}
+                      >
+                        + Add outcome
+                      </button>
+                    </div>
+                  )}
+
+                  {item.notes && (
+                    <div className="notes-preview-box">
+                      <p className={`notes-text ${isNotesExpanded ? 'notes-text--expanded' : 'notes-text--preview'}`}>
+                        {item.notes}
+                      </p>
+                      <button
+                        type="button"
+                        className="notes-toggle-btn"
+                        onClick={() => setExpandedNotes(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
+                      >
+                        {isNotesExpanded ? 'Hide notes' : 'Show notes'}
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="interview-card__actions">
                     <button
                       type="button"
                       className="action-btn action-btn--edit"
                       onClick={() => openEditModal(item)}
-                      title="Edit interview"
                     >
                       Edit
                     </button>
@@ -472,60 +625,14 @@ export default function InterviewsPage() {
                       type="button"
                       className="action-btn action-btn--delete"
                       onClick={() => handleDelete(item)}
-                      title="Delete interview"
                     >
                       Delete
                     </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Mobile Cards (<768px) */}
-        <div className="mobile-interview-cards">
-          {items.map(item => (
-            <div key={item.id} className="interview-card">
-              <div className="interview-card__header">
-                <Link
-                  to={`/applications/${item.applicationId}`}
-                  className="interview-card__app-link"
-                >
-                  {item.companyName} — {item.jobRole}
-                </Link>
-                <span className={`outcome-badge outcome-badge--${item.outcome?.toLowerCase()}`}>
-                  {item.outcome}
-                </span>
-              </div>
-
-              <div className="interview-card__round">{item.round}</div>
-
-              <div className="interview-card__meta">
-                <span>🗓 {formatDateTime(item.interviewDate)}</span>
-                {item.interviewType && <span>• {item.interviewType}</span>}
-              </div>
-
-              {item.notes && <p className="interview-card__notes">{item.notes}</p>}
-
-              <div className="interview-card__actions">
-                <button
-                  type="button"
-                  className="action-btn action-btn--edit"
-                  onClick={() => openEditModal(item)}
-                >
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  className="action-btn action-btn--delete"
-                  onClick={() => handleDelete(item)}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
+                  </div>
+                </m.div>
+              );
+            })}
+          </AnimatePresence>
         </div>
       </>
     );
