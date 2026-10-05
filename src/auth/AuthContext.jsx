@@ -36,12 +36,12 @@ export function parseJwt(token) {
 
 export function AuthProvider({ children }) {
   const [token, setTokenState] = useState(() => {
-    const stored = localStorage.getItem('ht_token') || localStorage.getItem('token');
+    const stored = sessionStorage.getItem('ht_token') || sessionStorage.getItem('token');
     const valid = parseJwt(stored);
     if (stored && !valid) {
-      localStorage.removeItem('ht_token');
-      localStorage.removeItem('token');
-      localStorage.removeItem('ht_user');
+      sessionStorage.removeItem('ht_token');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('ht_user');
       return null;
     }
     return stored || null;
@@ -60,11 +60,11 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     tokenRef.current = token;
     if (token) {
-      localStorage.setItem('ht_token', token);
+      sessionStorage.setItem('ht_token', token);
     } else {
-      localStorage.removeItem('ht_token');
-      localStorage.removeItem('token');
-      localStorage.removeItem('ht_user');
+      sessionStorage.removeItem('ht_token');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('ht_user');
     }
   }, [token]);
 
@@ -72,8 +72,9 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const interceptor = axiosInstance.interceptors.request.use(
       (config) => {
-        if (tokenRef.current) {
-          config.headers.Authorization = `Bearer ${tokenRef.current}`;
+        const activeToken = sessionStorage.getItem('ht_token') || tokenRef.current;
+        if (activeToken) {
+          config.headers.Authorization = `Bearer ${activeToken}`;
         }
         return config;
       },
@@ -91,39 +92,6 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  // Cross-tab synchronization via window 'storage' event
-  useEffect(() => {
-    function handleStorage(e) {
-      if (e.key === 'ht_token' || e.key === 'token') {
-        const newToken = e.newValue;
-        const newUserData = parseJwt(newToken);
-        const currentUserData = parseJwt(token);
-
-        if (!newToken || !newUserData) {
-          // Token was removed in another tab
-          clearAllQueryCache();
-          setTokenState(null);
-          setAuthNotice('Signed out from another tab.');
-          if (window.location.pathname !== '/login' && window.location.pathname !== '/register' && window.location.pathname !== '/') {
-            window.location.href = '/login';
-          }
-        } else if (currentUserData?.userId !== newUserData?.userId || newToken !== token) {
-          // Switched user account in another tab
-          clearAllQueryCache();
-          setTokenState(newToken);
-          setAuthNotice(`Switched account to ${newUserData.email} from another tab.`);
-          const targetPath = newUserData.role === 'ADMIN' ? '/admin/openings' : '/dashboard';
-          if (window.location.pathname !== targetPath) {
-            window.location.href = targetPath;
-          }
-        }
-      }
-    }
-
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, [token]);
-
   const login = (authData) => {
     clearAllQueryCache();
     setAuthNotice(null);
@@ -134,9 +102,9 @@ export function AuthProvider({ children }) {
     clearAllQueryCache();
     setAuthNotice(null);
     setTokenState(null);
-    localStorage.removeItem('ht_token');
-    localStorage.removeItem('token');
-    localStorage.removeItem('ht_user');
+    sessionStorage.removeItem('ht_token');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('ht_user');
   };
 
   return (

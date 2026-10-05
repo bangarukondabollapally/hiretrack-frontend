@@ -29,9 +29,9 @@ axiosInstance.interceptors.response.use(
     // Never clear token on network errors, CORS failures, 500 errors, or cold-start timeouts.
     if (error.response && error.response.status === 401) {
       clearAllQueryCache();
-      localStorage.removeItem('ht_token');
-      localStorage.removeItem('token');
-      localStorage.removeItem('ht_user');
+      sessionStorage.removeItem('ht_token');
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('ht_user');
       if (unauthenticatedCallback) {
         unauthenticatedCallback();
       }

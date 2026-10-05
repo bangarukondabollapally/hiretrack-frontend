@@ -150,25 +150,25 @@ export default function ProfilePage() {
   // Admin Placement Office settings
   const [institutionName, setInstitutionName] = useState(() => {
     try {
-      const saved = localStorage.getItem('ht_admin_settings');
+      const saved = sessionStorage.getItem('ht_admin_settings');
       return saved ? JSON.parse(saved).institutionName : 'Campus Placement Cell';
     } catch { return 'Campus Placement Cell'; }
   });
   const [adminContactEmail, setAdminContactEmail] = useState(() => {
     try {
-      const saved = localStorage.getItem('ht_admin_settings');
+      const saved = sessionStorage.getItem('ht_admin_settings');
       return saved ? JSON.parse(saved).contactEmail : user?.email || 'placements@univ.edu';
     } catch { return user?.email || 'placements@univ.edu'; }
   });
   const [defaultCurrency, setDefaultCurrency] = useState(() => {
     try {
-      const saved = localStorage.getItem('ht_admin_settings');
+      const saved = sessionStorage.getItem('ht_admin_settings');
       return saved ? JSON.parse(saved).defaultCurrency : 'INR (₹)';
     } catch { return 'INR (₹)'; }
   });
   const [adminNotify, setAdminNotify] = useState(() => {
     try {
-      const saved = localStorage.getItem('ht_admin_settings');
+      const saved = sessionStorage.getItem('ht_admin_settings');
       return saved ? JSON.parse(saved).emailNotify : true;
     } catch { return true; }
   });
@@ -271,7 +271,7 @@ export default function ProfilePage() {
     if (e) e.preventDefault();
     setAdminStatus({ loading: true, success: false, error: '' });
     try {
-      localStorage.setItem('ht_admin_settings', JSON.stringify({
+      sessionStorage.setItem('ht_admin_settings', JSON.stringify({
         institutionName,
         contactEmail: adminContactEmail,
         defaultCurrency,
