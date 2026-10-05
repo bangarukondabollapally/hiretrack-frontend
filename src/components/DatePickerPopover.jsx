@@ -18,24 +18,7 @@ export default function DatePickerPopover({
 }) {
   const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-  // If touch device, render native input directly
-  if (isTouchDevice) {
-    return (
-      <div className="date-picker-wrapper">
-        {label && <label className="date-picker-label">{label} {required && <span className="required">*</span>}</label>}
-        <input
-          type="date"
-          className="field-input date-picker-native"
-          value={value || ''}
-          onChange={(e) => onChange && onChange(e.target.value)}
-          disabled={disabled}
-          required={required}
-        />
-      </div>
-    );
-  }
-
-  // Desktop custom calendar popover
+  // Desktop custom calendar popover hooks (MUST be called unconditionally at top level)
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
 
@@ -64,6 +47,7 @@ export default function DatePickerPopover({
 
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
+        e.stopPropagation();
         setIsOpen(false);
       }
     };
@@ -81,6 +65,23 @@ export default function DatePickerPopover({
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen]);
+
+  // If touch device, render native input directly
+  if (isTouchDevice) {
+    return (
+      <div className="date-picker-wrapper">
+        {label && <label className="date-picker-label">{label} {required && <span className="required">*</span>}</label>}
+        <input
+          type="date"
+          className="field-input date-picker-native"
+          value={value || ''}
+          onChange={(e) => onChange && onChange(e.target.value)}
+          disabled={disabled}
+          required={required}
+        />
+      </div>
+    );
+  }
 
   const handlePrevMonth = (e) => {
     e.stopPropagation();

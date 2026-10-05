@@ -18,7 +18,8 @@ describe('getOpeningStatus', () => {
   });
 
   it('returns Closes today when deadline is today', () => {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const d = new Date();
+    const todayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const res = getOpeningStatus({ status: 'OPEN', deadline: todayStr });
     expect(res.status).toBe('CLOSING_SOON');
     expect(res.label).toBe('Closes today');
@@ -28,7 +29,7 @@ describe('getOpeningStatus', () => {
   it('returns Closing soon with danger warning level when 1 or 2 days left', () => {
     const d1 = new Date();
     d1.setDate(d1.getDate() + 2);
-    const dateStr = d1.toISOString().split('T')[0];
+    const dateStr = `${d1.getFullYear()}-${String(d1.getMonth() + 1).padStart(2, '0')}-${String(d1.getDate()).padStart(2, '0')}`;
 
     const res = getOpeningStatus({ status: 'OPEN', deadline: dateStr });
     expect(res.status).toBe('CLOSING_SOON');

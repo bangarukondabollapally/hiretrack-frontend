@@ -102,7 +102,11 @@ export default function InterviewsPage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      if (lastFocusedRef.current && typeof lastFocusedRef.current.focus === 'function') {
+      if (
+        lastFocusedRef.current &&
+        document.body.contains(lastFocusedRef.current) &&
+        typeof lastFocusedRef.current.focus === 'function'
+      ) {
         lastFocusedRef.current.focus();
       }
     };

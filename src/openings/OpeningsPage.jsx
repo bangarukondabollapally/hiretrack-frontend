@@ -117,7 +117,11 @@ export default function OpeningsPage() {
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
-      if (lastFocusedElementRef.current && typeof lastFocusedElementRef.current.focus === 'function') {
+      if (
+        lastFocusedElementRef.current &&
+        document.body.contains(lastFocusedElementRef.current) &&
+        typeof lastFocusedElementRef.current.focus === 'function'
+      ) {
         lastFocusedElementRef.current.focus();
       }
     };
