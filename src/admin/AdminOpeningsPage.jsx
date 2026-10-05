@@ -62,7 +62,12 @@ export default function AdminOpeningsPage() {
   const [gradYearEnd, setGradYearEnd] = useState('2027');
   const [eligibilityNote, setEligibilityNote] = useState('');
 
+  const lastFocusedRef = useRef(null);
+  const deleteLastFocusedRef = useRef(null);
+  const firstInputRef = useRef(null);
+
   const openCreateForm = () => {
+    lastFocusedRef.current = document.activeElement;
     setEditingOpening(null);
     setCurrency('₹');
     setPackageAmount('');
@@ -89,24 +94,52 @@ export default function AdminOpeningsPage() {
     setIsFormOpen(true);
   };
 
-  const lastFocusedRef = useRef(null);
-
   useEffect(() => {
     if (!isFormOpen) return;
-    lastFocusedRef.current = document.activeElement;
+    const timer = setTimeout(() => {
+      if (firstInputRef.current && typeof firstInputRef.current.focus === 'function') {
+        firstInputRef.current.focus();
+      }
+    }, 50);
+
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') setIsFormOpen(false);
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('keydown', handleKeyDown);
-      if (lastFocusedRef.current && typeof lastFocusedRef.current.focus === 'function') {
+      if (
+        lastFocusedRef.current &&
+        document.body.contains(lastFocusedRef.current) &&
+        typeof lastFocusedRef.current.focus === 'function'
+      ) {
         lastFocusedRef.current.focus();
       }
     };
   }, [isFormOpen]);
 
+  useEffect(() => {
+    if (!deletingOpening) return;
+    deleteLastFocusedRef.current = document.activeElement;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && !isDeleting) setDeletingOpening(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      if (
+        deleteLastFocusedRef.current &&
+        document.body.contains(deleteLastFocusedRef.current) &&
+        typeof deleteLastFocusedRef.current.focus === 'function'
+      ) {
+        deleteLastFocusedRef.current.focus();
+      }
+    };
+  }, [deletingOpening, isDeleting]);
+
   const openEditForm = (opening) => {
+    lastFocusedRef.current = document.activeElement;
     setEditingOpening(opening);
 
     // Extract currency if present
@@ -431,6 +464,7 @@ export default function AdminOpeningsPage() {
                     <div className="field">
                       <label className="field-label">Company Name <span className="required">*</span></label>
                       <input
+                        ref={firstInputRef}
                         type="text"
                         className={`field-input ${formErrors.companyName ? 'field-input--error' : ''}`}
                         value={formData.companyName}
