@@ -1,18 +1,26 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { AnimatePresence, m } from 'framer-motion';
 import { modalBackdropVariants, modalCardVariants } from '../lib/motion';
 import './DeleteConfirmModal.css';
 
 export default function DeleteConfirmModal({ isOpen, title, message, onConfirm, onCancel, isLoading }) {
+  const lastFocusedRef = useRef(null);
+
   useEffect(() => {
     if (!isOpen) return;
+    lastFocusedRef.current = document.activeElement;
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && !isLoading) {
         onCancel();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      if (lastFocusedRef.current && typeof lastFocusedRef.current.focus === 'function') {
+        lastFocusedRef.current.focus();
+      }
+    };
   }, [isOpen, isLoading, onCancel]);
 
   return (

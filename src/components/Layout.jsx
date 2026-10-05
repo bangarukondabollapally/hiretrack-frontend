@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
+import { useProfileQuery, prefetchUserData, prefetchRouteData } from '../api/queries';
 import { useChatHistory } from '../assistant/useChatHistory';
 import ChatHistoryList from '../assistant/ChatHistoryList';
-import { prefetchUserData, prefetchRouteData } from '../api/queries';
+import { renderAvatarSvg } from '../lib/avatarPresets';
 import { AnimatePresence, m } from 'framer-motion';
 import { pageVariants, modalBackdropVariants, drawerVariants } from '../lib/motion';
 import './Layout.css';
@@ -14,6 +15,9 @@ export default function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const userId = user?.userId || user?.id || user?.email;
+
+  const { data: profileData } = useProfileQuery(userId);
 
   const [isCollapsed, setIsCollapsed] = useState(() => {
     try {
@@ -93,15 +97,16 @@ export default function Layout() {
   };
 
   const userInitial = user?.email ? user.email.charAt(0).toUpperCase() : 'U';
+  const homePath = user?.role === 'ADMIN' ? '/admin/openings' : '/dashboard';
 
   return (
     <div className={`app-layout ${isCollapsed ? 'app-layout--sidebar-collapsed' : ''}`}>
       {/* Mobile Top Header (visible below 768px) */}
       <header className="mobile-header">
-        <div className="mobile-header__brand">
+        <Link to={homePath} className="mobile-header__brand-link" title="HireTrack Dashboard">
           <span className="app-sidebar__logo-mark">H</span>
           <span className="app-sidebar__logo-text">HireTrack</span>
-        </div>
+        </Link>
         <button
           type="button"
           className="mobile-header__menu-btn"
@@ -141,10 +146,10 @@ export default function Layout() {
       {/* Sidebar / Slide-out Drawer */}
       <aside className={`app-sidebar ${isCollapsed ? 'app-sidebar--collapsed' : ''} ${mobileMenuOpen ? 'app-sidebar--mobile-open' : ''}`}>
         <div className="app-sidebar__header">
-          <div className="app-sidebar__brand" title="HireTrack">
+          <Link to={homePath} className="app-sidebar__brand-link" title="HireTrack Dashboard">
             <span className="app-sidebar__logo-mark">H</span>
             {(!isCollapsed || mobileMenuOpen) && <span className="app-sidebar__logo-text">HireTrack</span>}
-          </div>
+          </Link>
           <button
             type="button"
             className="app-sidebar__toggle-btn"
@@ -204,7 +209,9 @@ export default function Layout() {
           >
             <span className="app-sidebar__link-icon" aria-hidden="true">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 13.255A23.931 23.931 0 0 1 12 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2m4 6h.01M5 20h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z" />
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                <path d="M11 7v8M7 11h8" />
               </svg>
             </span>
             <span className="app-sidebar__link-text">Openings</span>
@@ -327,8 +334,8 @@ export default function Layout() {
         <div className="app-sidebar__footer">
           {isCollapsed && !mobileMenuOpen ? (
             <div className="app-sidebar__footer-collapsed">
-              <div className="app-sidebar__avatar-circle" title={user?.email}>
-                {userInitial}
+              <div className="app-sidebar__avatar-wrapper" title={user?.email}>
+                {renderAvatarSvg(profileData?.avatarPreset, userInitial, 32)}
               </div>
               <button
                 type="button"
@@ -347,8 +354,8 @@ export default function Layout() {
           ) : (
             <div className="app-sidebar__footer-expanded">
               <div className="app-sidebar__user-row" title={user?.email}>
-                <div className="app-sidebar__avatar-circle">
-                  {userInitial}
+                <div className="app-sidebar__avatar-wrapper">
+                  {renderAvatarSvg(profileData?.avatarPreset, userInitial, 32)}
                 </div>
                 <span className="app-sidebar__user-email">{user?.email}</span>
               </div>

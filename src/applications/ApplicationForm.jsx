@@ -5,6 +5,7 @@ import { useApplicationQuery, invalidateApplicationQueries, queryClient } from '
 import axiosInstance from '../api/axiosInstance';
 import StatusControl from './StatusControl';
 import TagSelector from './TagSelector';
+import DatePickerPopover from '../components/DatePickerPopover';
 import InterviewTimeline from '../interviews/InterviewTimeline';
 import './ApplicationForm.css';
 
@@ -142,19 +143,19 @@ export default function ApplicationForm() {
 
           <div className="form-group">
             <label>Applied Date</label>
-            <input
-              type="date"
+            <DatePickerPopover
               value={formData.appliedDate}
-              onChange={(e) => setFormData({ ...formData, appliedDate: e.target.value })}
+              onChange={(val) => setFormData({ ...formData, appliedDate: val })}
+              placeholder="Select applied date"
             />
           </div>
 
           <div className="form-group">
             <label>Follow-Up Date</label>
-            <input
-              type="date"
+            <DatePickerPopover
               value={formData.followUpDate}
-              onChange={(e) => setFormData({ ...formData, followUpDate: e.target.value })}
+              onChange={(val) => setFormData({ ...formData, followUpDate: val })}
+              placeholder="Select follow-up date"
             />
           </div>
         </div>

@@ -517,6 +517,51 @@
   font-weight: var(--weight-semibold);
 }
 
+/* Avatar Preset Picker Grid */
+.avatar-picker-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.avatar-picker-item {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.avatar-picker-item:hover {
+  transform: scale(1.08);
+}
+
+.avatar-picker-item--active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--focus);
+}
+
+.avatar-preview-default {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--accent);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+}
+
 /* Mobile Responsive Segmented Controls (<768px) */
 @media (max-width: 768px) {
   .settings-layout {

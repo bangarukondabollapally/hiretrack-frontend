@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AnimatePresence, m } from 'framer-motion';
 import { useAuth } from '../auth/AuthContext';
@@ -90,6 +90,23 @@ export default function InterviewsPage() {
     });
     setIsModalOpen(true);
   };
+
+  const lastFocusedRef = useRef(null);
+
+  useEffect(() => {
+    if (!isModalOpen) return;
+    lastFocusedRef.current = document.activeElement;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setIsModalOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      if (lastFocusedRef.current && typeof lastFocusedRef.current.focus === 'function') {
+        lastFocusedRef.current.focus();
+      }
+    };
+  }, [isModalOpen]);
 
   const handleModalSubmit = async (e) => {
     e.preventDefault();

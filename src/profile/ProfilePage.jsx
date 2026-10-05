@@ -6,6 +6,7 @@ import { useProfileQuery, invalidateProfileQueries } from '../api/queries';
 import axiosInstance from '../api/axiosInstance';
 import { extractTextFromFile } from '../lib/fileParser';
 import QueryStateNotice from '../components/QueryStateNotice';
+import { AVATAR_PRESETS, renderAvatarSvg } from '../lib/avatarPresets';
 import './ProfilePage.css';
 
 const TABS_STUDENT = [
@@ -24,11 +25,10 @@ const TABS_STUDENT = [
     label: 'Job search',
     icon: (
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" />
-        <line x1="22" y1="12" x2="18" y2="12" />
-        <line x1="6" y1="12" x2="2" y2="12" />
-        <line x1="12" y1="6" x2="12" y2="2" />
-        <line x1="12" y1="22" x2="12" y2="18" />
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        <line x1="11" y1="8" x2="11" y2="14" />
+        <line x1="8" y1="11" x2="14" y2="11" />
       </svg>
     ),
   },
@@ -104,12 +104,14 @@ export default function ProfilePage() {
 
   // Profile data & initial state for change tracking (dirty check)
   const [name, setName] = useState('');
+  const [avatarPreset, setAvatarPreset] = useState(null);
   const [targetRole, setTargetRole] = useState('');
   const [yearsOfExperience, setYearsOfExperience] = useState('');
   const [experienceSummary, setExperienceSummary] = useState('');
   const [resumeText, setResumeText] = useState('');
 
   const [initialName, setInitialName] = useState('');
+  const [initialAvatarPreset, setInitialAvatarPreset] = useState(null);
   const [initialTargetRole, setInitialTargetRole] = useState('');
   const [initialYearsOfExperience, setInitialYearsOfExperience] = useState('');
   const [initialExperienceSummary, setInitialExperienceSummary] = useState('');
@@ -119,6 +121,7 @@ export default function ProfilePage() {
     if (profileData) {
       const data = profileData || {};
       const fetchedName = data.name || '';
+      const fetchedAvatar = data.avatarPreset || null;
       const fetchedRole = data.targetRole || '';
       const fetchedYears = data.yearsOfExperience !== null && data.yearsOfExperience !== undefined ? String(data.yearsOfExperience) : '';
       const fetchedSummary = data.experienceSummary || '';
@@ -126,6 +129,9 @@ export default function ProfilePage() {
 
       setName(fetchedName);
       setInitialName(fetchedName);
+
+      setAvatarPreset(fetchedAvatar);
+      setInitialAvatarPreset(fetchedAvatar);
 
       setTargetRole(fetchedRole);
       setInitialTargetRole(fetchedRole);
@@ -194,10 +200,13 @@ export default function ProfilePage() {
     e.preventDefault();
     setAccountStatus({ loading: true, success: false, error: '' });
     try {
-      const res = await axiosInstance.put('/api/profile', { name });
+      const res = await axiosInstance.put('/api/profile', { name, avatarPreset });
       const updatedName = res.data?.name || name;
+      const updatedAvatar = res.data?.avatarPreset !== undefined ? res.data?.avatarPreset : avatarPreset;
       setName(updatedName);
       setInitialName(updatedName);
+      setAvatarPreset(updatedAvatar);
+      setInitialAvatarPreset(updatedAvatar);
       invalidateProfileQueries(userId);
       setAccountStatus({ loading: false, success: true, error: '' });
       setTimeout(() => setAccountStatus(prev => ({ ...prev, success: false })), 3000);
@@ -335,7 +344,7 @@ export default function ProfilePage() {
     currentResumeState = 'paste';
   }
 
-  const isAccountDirty = name !== initialName;
+  const isAccountDirty = name !== initialName || avatarPreset !== initialAvatarPreset;
   const isJobSearchDirty =
     targetRole !== initialTargetRole ||
     yearsOfExperience !== initialYearsOfExperience ||
@@ -367,7 +376,7 @@ export default function ProfilePage() {
         <h1 className="settings-title">Settings</h1>
         <p className="settings-subtitle">
           {isAdmin
-            ? 'Manage administrator account preferences, placement office details, and system defaults.'
+            ? 'Manage administrator account preferences and placement office details.'
             : 'Manage your account profile, job search experience, and master resume.'}
         </p>
       </header>
@@ -379,16 +388,18 @@ export default function ProfilePage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
       >
-        <div className="profile-avatar">{userInitial}</div>
+        <div className="profile-avatar">
+          {renderAvatarSvg(avatarPreset, userInitial, 44)}
+        </div>
         <div className="profile-user-info">
           <span className="profile-user-name">{name.trim() || 'Add your name'}</span>
           <span className="profile-user-email">{user?.email}</span>
         </div>
-        <div style={{ marginLeft: 'auto' }}>
-          <span className="admin-role-badge">
-            {isAdmin ? 'Administrator' : 'Student account'}
-          </span>
-        </div>
+        {isAdmin && (
+          <div style={{ marginLeft: 'auto' }}>
+            <span className="admin-role-badge">Admin</span>
+          </div>
+        )}
       </motion.div>
 
       <div className="settings-layout">
@@ -414,14 +425,43 @@ export default function ProfilePage() {
             <section className="settings-section" id="section-account">
               <div className="settings-section__header">
                 <h2 className="settings-section__title">Account</h2>
-                <p className="settings-section__desc">Your name and sign-in details.</p>
+                <p className="settings-section__desc">Your avatar, name and sign-in details.</p>
               </div>
 
               <form onSubmit={handleSaveAccount} className="claude-rows-container">
+                <div className="claude-row claude-row--stacked">
+                  <div className="claude-row__info">
+                    <label className="claude-row__label">Profile Picture Avatar</label>
+                    <p className="claude-row__desc">Select a preset avatar for your profile.</p>
+                  </div>
+                  <div className="avatar-picker-grid">
+                    <button
+                      type="button"
+                      className={`avatar-picker-item ${avatarPreset === null ? 'avatar-picker-item--active' : ''}`}
+                      onClick={() => setAvatarPreset(null)}
+                      title="Default initial avatar"
+                      aria-label="Default initial avatar"
+                    >
+                      <div className="avatar-preview-default">{userInitial}</div>
+                    </button>
+                    {AVATAR_PRESETS.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        className={`avatar-picker-item ${avatarPreset === p.id ? 'avatar-picker-item--active' : ''}`}
+                        onClick={() => setAvatarPreset(p.id)}
+                        title={p.label}
+                        aria-label={p.label}
+                      >
+                        {renderAvatarSvg(p.id, userInitial, 36)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="claude-row">
                   <div className="claude-row__info">
                     <label htmlFor="settings-name" className="claude-row__label">{isAdmin ? 'Institute / placement cell name' : 'Full name'}</label>
-                    <p className="claude-row__desc">{isAdmin ? 'Official name of your institute or placement cell displayed on published openings.' : 'Shown in the app and used by the assistant.'}</p>
                   </div>
                   <div className="claude-row__control">
                     <input
@@ -438,31 +478,15 @@ export default function ProfilePage() {
                 <div className="claude-row">
                   <div className="claude-row__info">
                     <span className="claude-row__label">Email address</span>
-                    <p className="claude-row__desc">The email you sign in with. It can't be changed.</p>
                   </div>
                   <div className="claude-row__control">
                     <span className="read-only-value">{user?.email || '—'}</span>
                   </div>
                 </div>
 
-                {isAdmin && (
-                  <div className="claude-row">
-                    <div className="claude-row__info">
-                      <span className="claude-row__label">Role & permissions</span>
-                      <p className="claude-row__desc">Your administrative authorization level in HireTrack.</p>
-                    </div>
-                    <div className="claude-row__control">
-                      <span className="admin-role-badge">
-                        Administrator (Full access)
-                      </span>
-                    </div>
-                  </div>
-                )}
-
                 <div className="claude-row">
                   <div className="claude-row__info">
                     <span className="claude-row__label">Session</span>
-                    <p className="claude-row__desc">Sign out of your active HireTrack session on this browser.</p>
                   </div>
                   <div className="claude-row__control">
                     <button type="button" onClick={logout} className="btn-secondary btn-danger-outline">

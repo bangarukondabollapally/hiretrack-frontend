@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, m } from 'framer-motion';
 import { useAuth } from '../auth/AuthContext';
 import { useAdminOpeningsQuery, invalidateOpeningQueries } from '../api/queries';
 import axiosInstance from '../api/axiosInstance';
 import QueryStateNotice from '../components/QueryStateNotice';
+import DatePickerPopover from '../components/DatePickerPopover';
 import { modalBackdropVariants, modalCardVariants, listItemVariants } from '../lib/motion';
 import './AdminOpeningsPage.css';
 
@@ -87,6 +88,23 @@ export default function AdminOpeningsPage() {
     setFormErrors({});
     setIsFormOpen(true);
   };
+
+  const lastFocusedRef = useRef(null);
+
+  useEffect(() => {
+    if (!isFormOpen) return;
+    lastFocusedRef.current = document.activeElement;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setIsFormOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      if (lastFocusedRef.current && typeof lastFocusedRef.current.focus === 'function') {
+        lastFocusedRef.current.focus();
+      }
+    };
+  }, [isFormOpen]);
 
   const openEditForm = (opening) => {
     setEditingOpening(opening);
@@ -517,11 +535,10 @@ export default function AdminOpeningsPage() {
 
                     <div className="field">
                       <label className="field-label">Application Deadline</label>
-                      <input
-                        type="date"
-                        className="field-input"
+                      <DatePickerPopover
                         value={formData.deadline}
-                        onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
+                        onChange={(val) => setFormData({ ...formData, deadline: val })}
+                        placeholder="Select deadline date"
                       />
                     </div>
                   </div>

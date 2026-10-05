@@ -106,6 +106,23 @@ export default function OpeningsPage() {
     }, 400);
   };
 
+  const lastFocusedElementRef = useRef(null);
+
+  useEffect(() => {
+    if (!selectedOpening) return;
+    lastFocusedElementRef.current = document.activeElement;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') setSelectedOpening(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      if (lastFocusedElementRef.current && typeof lastFocusedElementRef.current.focus === 'function') {
+        lastFocusedElementRef.current.focus();
+      }
+    };
+  }, [selectedOpening]);
+
   return (
     <div className="openings-page">
       <QueryStateNotice
@@ -366,14 +383,6 @@ export default function OpeningsPage() {
                 </div>
 
                 <div className="modal-footer">
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    onClick={() => setSelectedOpening(null)}
-                  >
-                    Close
-                  </button>
-
                   <a
                     href={selectedOpening.applicationLink}
                     target="_blank"
