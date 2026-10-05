@@ -1,73 +1,159 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
-import axiosInstance from '../api/axiosInstance';
-import { clearChatHistory } from '../assistant/useChatHistory';
+import axiosInstance, { setUnauthenticatedCallback } from '../api/axiosInstance';
 import { clearAllQueryCache } from '../api/queries';
 
 const AuthContext = createContext(null);
 
-export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem('ht_token') || null);
-  const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('ht_user');
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
-  // Keep a ref to the current user id so logout() can clear the right key
-  const userRef = useRef(user);
-  useEffect(() => { userRef.current = user; }, [user]);
+export function parseJwt(token) {
+  if (!token || typeof token !== 'string') return null;
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const atobFn = typeof atob === 'function' ? atob : (str) => Buffer.from(str, 'base64').toString('binary');
+    const jsonPayload = decodeURIComponent(
+      atobFn(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const parsed = JSON.parse(jsonPayload);
+    // Check expiration
+    if (parsed.exp && parsed.exp * 1000 < Date.now()) {
+      return null;
+    }
+    return {
+      userId: parsed.userId || parsed.id || parsed.sub,
+      email: parsed.sub || parsed.email,
+      role: parsed.role || 'USER',
+      exp: parsed.exp,
+    };
+  } catch (e) {
+    return null;
+  }
+}
 
+export function AuthProvider({ children }) {
+  const [token, setTokenState] = useState(() => {
+    const stored = localStorage.getItem('ht_token') || localStorage.getItem('token');
+    const valid = parseJwt(stored);
+    if (stored && !valid) {
+      localStorage.removeItem('ht_token');
+      localStorage.removeItem('token');
+      localStorage.removeItem('ht_user');
+      return null;
+    }
+    return stored || null;
+  });
+
+  const [authNotice, setAuthNotice] = useState(null);
+
+  // Derive user identity synchronously from token — SINGLE SOURCE OF TRUTH
+  const user = parseJwt(token);
+  const isAuthenticated = !!user;
+  const isAdmin = user?.role === 'ADMIN';
+  const role = user?.role || 'USER';
+
+  // Keep a ref to token for cleanup handlers
+  const tokenRef = useRef(token);
   useEffect(() => {
+    tokenRef.current = token;
     if (token) {
       localStorage.setItem('ht_token', token);
     } else {
       localStorage.removeItem('ht_token');
+      localStorage.removeItem('token');
+      localStorage.removeItem('ht_user');
     }
   }, [token]);
 
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem('ht_user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('ht_user');
-    }
-  }, [user]);
-
-  // Set up request interceptor for Axios
+  // Set up request interceptor & 401 callback for Axios
   useEffect(() => {
     const interceptor = axiosInstance.interceptors.request.use(
       (config) => {
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+        if (tokenRef.current) {
+          config.headers.Authorization = `Bearer ${tokenRef.current}`;
         }
         return config;
       },
       (error) => Promise.reject(error)
     );
 
+    setUnauthenticatedCallback(() => {
+      clearAllQueryCache();
+      setTokenState(null);
+      setAuthNotice('Session expired. Please sign in again.');
+    });
+
     return () => {
       axiosInstance.interceptors.request.eject(interceptor);
     };
+  }, []);
+
+  // Cross-tab synchronization via window 'storage' event
+  useEffect(() => {
+    function handleStorage(e) {
+      if (e.key === 'ht_token' || e.key === 'token') {
+        const newToken = e.newValue;
+        const newUserData = parseJwt(newToken);
+        const currentUserData = parseJwt(token);
+
+        if (!newToken || !newUserData) {
+          // Token was removed in another tab
+          clearAllQueryCache();
+          setTokenState(null);
+          setAuthNotice('Signed out from another tab.');
+          if (window.location.pathname !== '/login' && window.location.pathname !== '/register' && window.location.pathname !== '/') {
+            window.location.href = '/login';
+          }
+        } else if (currentUserData?.userId !== newUserData?.userId || newToken !== token) {
+          // Switched user account in another tab
+          clearAllQueryCache();
+          setTokenState(newToken);
+          setAuthNotice(`Switched account to ${newUserData.email} from another tab.`);
+          const targetPath = newUserData.role === 'ADMIN' ? '/admin/openings' : '/dashboard';
+          if (window.location.pathname !== targetPath) {
+            window.location.href = targetPath;
+          }
+        }
+      }
+    }
+
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
   }, [token]);
 
   const login = (authData) => {
     clearAllQueryCache();
-    setToken(authData.token);
-    setUser({ userId: authData.userId, email: authData.email, role: authData.role || 'USER' });
+    setAuthNotice(null);
+    setTokenState(authData.token);
   };
 
   const logout = () => {
-    // Clear query cache and user's chat history before wiping user reference
     clearAllQueryCache();
-    clearChatHistory(userRef.current?.userId);
-    setToken(null);
-    setUser(null);
+    setAuthNotice(null);
+    setTokenState(null);
     localStorage.removeItem('ht_token');
+    localStorage.removeItem('token');
     localStorage.removeItem('ht_user');
   };
 
-  const isAdmin = user?.role === 'ADMIN';
-
   return (
-    <AuthContext.Provider value={{ token, user, login, logout, isAuthenticated: !!token, isAdmin, role: user?.role || 'USER' }}>
+    <AuthContext.Provider
+      value={{
+        token,
+        user,
+        login,
+        logout,
+        isAuthenticated,
+        isAdmin,
+        role,
+        authNotice,
+        clearAuthNotice: () => setAuthNotice(null),
+        authReady: true, // Hydration is 100% synchronous
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

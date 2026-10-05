@@ -249,9 +249,14 @@ export default function ApplicationsList() {
                     </div>
                   </div>
 
-                  {hasTags && (
+                  {(hasTags || app.placementOpeningId) && (
                     <div className="ticket-tags">
-                      {app.tags.map((t, idx) => (
+                      {app.placementOpeningId && (
+                        <span className="ticket-tag" style={{ background: '#EEF6F3', color: '#2A5C4B', borderColor: '#2A5C4B' }}>
+                          Placement opening
+                        </span>
+                      )}
+                      {hasTags && app.tags.map((t, idx) => (
                         <span key={idx} className="ticket-tag">{t}</span>
                       ))}
                     </div>

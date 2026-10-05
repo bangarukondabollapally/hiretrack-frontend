@@ -4,6 +4,7 @@ import { AnimatePresence, m } from 'framer-motion';
 import { useAuth } from '../auth/AuthContext';
 import { useOpeningsQuery } from '../api/queries';
 import QueryStateNotice from '../components/QueryStateNotice';
+import { getOpeningStatus } from './openingStatusHelper';
 import { modalBackdropVariants, modalCardVariants, listItemVariants } from '../lib/motion';
 import './OpeningsPage.css';
 
@@ -16,7 +17,7 @@ function formatDisplayPackage(pkg) {
 
 function formatDeadlineWithCountdown(deadline) {
   if (!deadline) return null;
-  const parts = deadline.split('-');
+  const parts = deadline.split('T')[0].split('-');
   let d;
   if (parts.length === 3) {
     d = new Date(parts[0], parts[1] - 1, parts[2]);
@@ -53,6 +54,12 @@ export default function OpeningsPage() {
   const { user } = useAuth();
   const userId = user?.userId || user?.id || user?.email;
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [includeClosed, setIncludeClosed] = useState(false);
+  const [selectedOpening, setSelectedOpening] = useState(null);
+  const [trackingId, setTrackingId] = useState(null);
+
+  // Pass includeClosed toggle to query hook so query key ['openings', userId, includeClosed] refetches & caches correctly
   const {
     data: openingsData,
     isLoading: isOpLoading,
@@ -60,19 +67,15 @@ export default function OpeningsPage() {
     isError,
     error: opErr,
     refetch,
-  } = useOpeningsQuery(userId);
+  } = useOpeningsQuery(userId, includeClosed);
 
   const openings = openingsData || [];
   const isLoading = isOpLoading && !openingsData;
   const isFromCache = !isOpLoading && !!openingsData;
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [includeClosed, setIncludeClosed] = useState(false);
-  const [selectedOpening, setSelectedOpening] = useState(null);
-  const [trackingId, setTrackingId] = useState(null);
-
   const filteredOpenings = openings.filter(op => {
-    if (!includeClosed && op.status === 'CLOSED') return false;
+    const statusInfo = getOpeningStatus(op);
+    if (!includeClosed && statusInfo.isClosedOrExpired) return false;
     const q = searchQuery.toLowerCase();
     return (
       op.companyName?.toLowerCase().includes(q) ||
@@ -83,6 +86,9 @@ export default function OpeningsPage() {
   });
 
   const handleTrackInHireTrack = (opening) => {
+    const statusInfo = getOpeningStatus(opening);
+    if (statusInfo.isClosedOrExpired) return;
+
     setTrackingId(opening.id);
     setTimeout(() => {
       navigate('/applications/new', {
@@ -183,28 +189,29 @@ export default function OpeningsPage() {
       {!isLoading && filteredOpenings.length > 0 && (
         <div className="openings-grid">
           <AnimatePresence>
-            {filteredOpenings.map((op, idx) => {
-              const isClosed = op.status === 'CLOSED';
-              const isExpired = op.deadline && new Date(op.deadline) < new Date();
+            {filteredOpenings.map((op) => {
+              const statusInfo = getOpeningStatus(op);
+              const isClosedOrExpired = statusInfo.isClosedOrExpired;
 
               return (
                 <m.div
                   key={op.id}
                   layout
-                  className={`opening-card ${isClosed ? 'opening-card--closed' : ''}`}
+                  className={`opening-card ${isClosedOrExpired ? 'opening-card--muted' : ''}`}
+                  style={{ opacity: isClosedOrExpired ? 0.7 : 1 }}
                   variants={listItemVariants}
                   initial={isFromCache ? false : "hidden"}
                   animate="visible"
                   exit="exit"
-                  whileTap={{ scale: 0.98 }}
+                  whileTap={isClosedOrExpired ? {} : { scale: 0.98 }}
                 >
                   <div className="opening-card__header">
                     <div>
                       <h3 className="opening-card__company">{op.companyName}</h3>
                       <div className="opening-card__role">{op.jobRole}</div>
                     </div>
-                    <span className={`status-badge ${isClosed ? 'status-badge--closed' : 'status-badge--open'}`}>
-                      {isClosed ? 'CLOSED' : 'OPEN'}
+                    <span className={`status-badge ${isClosedOrExpired ? 'status-badge--closed' : 'status-badge--open'}`}>
+                      {statusInfo.label.toUpperCase()}
                     </span>
                   </div>
 
@@ -235,9 +242,8 @@ export default function OpeningsPage() {
 
                   {op.deadline && (() => {
                     const deadlineInfo = formatDeadlineWithCountdown(op.deadline);
-                    const isExp = deadlineInfo?.isExpired || isExpired;
                     return (
-                      <div className={`opening-card__deadline ${isExp ? 'deadline--expired' : ''}`}>
+                      <div className={`opening-card__deadline ${deadlineInfo?.isExpired ? 'deadline--expired' : ''}`}>
                         {deadlineInfo?.text || `Deadline: ${op.deadline}`}
                       </div>
                     );
@@ -249,7 +255,7 @@ export default function OpeningsPage() {
                       className="btn-secondary btn-sm"
                       onClick={() => setSelectedOpening(op)}
                     >
-                      View Details
+                      View details
                     </button>
 
                     <a
@@ -264,9 +270,13 @@ export default function OpeningsPage() {
                     <button
                       type="button"
                       className="btn-primary btn-sm"
+                      disabled={isClosedOrExpired}
+                      title={statusInfo.reason || ''}
                       onClick={() => handleTrackInHireTrack(op)}
                     >
-                      {trackingId === op.id ? (
+                      {isClosedOrExpired ? (
+                        statusInfo.reason
+                      ) : trackingId === op.id ? (
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                           <m.svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                             <m.polyline points="20 6 9 17 4 12" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.3 }} />
@@ -287,97 +297,102 @@ export default function OpeningsPage() {
 
       {/* Opening Details Modal */}
       <AnimatePresence>
-        {selectedOpening && (
-          <m.div
-            className="modal-backdrop"
-            variants={modalBackdropVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            onClick={() => setSelectedOpening(null)}
-          >
+        {selectedOpening && (() => {
+          const modalStatus = getOpeningStatus(selectedOpening);
+          return (
             <m.div
-              className="modal-card modal-card--lg"
-              variants={modalCardVariants}
-              onClick={(e) => e.stopPropagation()}
+              className="modal-backdrop"
+              variants={modalBackdropVariants}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              onClick={() => setSelectedOpening(null)}
             >
-              <div className="modal-header">
-                <div>
-                  <h2>{selectedOpening.companyName}</h2>
-                  <p className="modal-subtitle">{selectedOpening.jobRole}</p>
-                </div>
-                <button
-                  type="button"
-                  className="modal-close"
-                  onClick={() => setSelectedOpening(null)}
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="modal-body">
-                <div className="opening-detail-meta">
-                  <div><strong>Job Type:</strong> {selectedOpening.jobType || 'N/A'}</div>
-                  <div><strong>Work Mode:</strong> {selectedOpening.workMode || 'N/A'}</div>
-                  <div><strong>Location:</strong> {selectedOpening.location || 'N/A'}</div>
-                  <div><strong>Package/Stipend:</strong> {formatDisplayPackage(selectedOpening.packageDetails) || 'N/A'}</div>
-                  <div><strong>Deadline:</strong> {selectedOpening.deadline || 'Rolling'}</div>
+              <m.div
+                className="modal-card modal-card--lg"
+                variants={modalCardVariants}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="modal-header">
                   <div>
-                    <strong>Status: </strong>
-                    <span className={`status-badge ${selectedOpening.status === 'CLOSED' ? 'status-badge--closed' : 'status-badge--open'}`}>
-                      {selectedOpening.status}
-                    </span>
+                    <h2>{selectedOpening.companyName}</h2>
+                    <p className="modal-subtitle">{selectedOpening.jobRole}</p>
                   </div>
+                  <button
+                    type="button"
+                    className="modal-close"
+                    onClick={() => setSelectedOpening(null)}
+                  >
+                    ✕
+                  </button>
                 </div>
 
-                {selectedOpening.eligibility && (
-                  <div className="opening-detail-section">
-                    <h4>Eligibility Criteria</h4>
-                    <p>{selectedOpening.eligibility}</p>
+                <div className="modal-body">
+                  <div className="opening-detail-meta">
+                    <div><strong>Job Type:</strong> {selectedOpening.jobType || 'N/A'}</div>
+                    <div><strong>Work Mode:</strong> {selectedOpening.workMode || 'N/A'}</div>
+                    <div><strong>Location:</strong> {selectedOpening.location || 'N/A'}</div>
+                    <div><strong>Package/Stipend:</strong> {formatDisplayPackage(selectedOpening.packageDetails) || 'N/A'}</div>
+                    <div><strong>Deadline:</strong> {selectedOpening.deadline || 'Rolling'}</div>
+                    <div>
+                      <strong>Status: </strong>
+                      <span className={`status-badge ${modalStatus.isClosedOrExpired ? 'status-badge--closed' : 'status-badge--open'}`}>
+                        {modalStatus.label.toUpperCase()}
+                      </span>
+                    </div>
                   </div>
-                )}
 
-                {selectedOpening.description && (
-                  <div className="opening-detail-section">
-                    <h4>Job Description / Details</h4>
-                    <div className="opening-description-text">{selectedOpening.description}</div>
-                  </div>
-                )}
-              </div>
+                  {selectedOpening.eligibility && (
+                    <div className="opening-detail-section">
+                      <h4>Eligibility criteria</h4>
+                      <p>{selectedOpening.eligibility}</p>
+                    </div>
+                  )}
 
-              <div className="modal-footer">
-                <button
-                  type="button"
-                  className="btn-secondary"
-                  onClick={() => setSelectedOpening(null)}
-                >
-                  Close
-                </button>
+                  {selectedOpening.description && (
+                    <div className="opening-detail-section">
+                      <h4>Job description</h4>
+                      <div className="opening-description-text">{selectedOpening.description}</div>
+                    </div>
+                  )}
+                </div>
 
-                <a
-                  href={selectedOpening.applicationLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-secondary"
-                >
-                  Apply on External Portal ↗
-                </a>
+                <div className="modal-footer">
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => setSelectedOpening(null)}
+                  >
+                    Close
+                  </button>
 
-                <button
-                  type="button"
-                  className="btn-primary"
-                  onClick={() => {
-                    const op = selectedOpening;
-                    setSelectedOpening(null);
-                    handleTrackInHireTrack(op);
-                  }}
-                >
-                  Track in HireTrack
-                </button>
-              </div>
+                  <a
+                    href={selectedOpening.applicationLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-secondary"
+                  >
+                    Apply on portal ↗
+                  </a>
+
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    disabled={modalStatus.isClosedOrExpired}
+                    title={modalStatus.reason || ''}
+                    onClick={() => {
+                      const op = selectedOpening;
+                      setSelectedOpening(null);
+                      handleTrackInHireTrack(op);
+                    }}
+                  >
+                    {modalStatus.isClosedOrExpired ? modalStatus.reason : 'Track in HireTrack'}
+                  </button>
+                </div>
+              </m.div>
             </m.div>
-          </m.div>
-        )}
+          );
+        })()}
       </AnimatePresence>
     </div>
   );

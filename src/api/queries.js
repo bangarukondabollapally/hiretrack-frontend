@@ -14,7 +14,7 @@ export const queryClient = new QueryClient({
   },
 });
 
-// Clear cache helper (called on logout, login, 401)
+// Clear cache helper (called on logout, login, 401, cross-tab switch)
 export function clearAllQueryCache() {
   queryClient.clear();
 }
@@ -35,9 +35,18 @@ export const fetchInterviews = (params) => {
 };
 export const fetchApplicationInterviews = (appId) => axiosInstance.get(`/api/applications/${appId}/interviews`).then(r => r.data);
 export const fetchTags = () => axiosInstance.get('/api/tags').then(r => r.data);
-export const fetchOpenings = () => axiosInstance.get('/api/openings').then(r => r.data);
+export const fetchOpenings = (includeClosed = false) =>
+  axiosInstance.get(`/api/openings${includeClosed ? '?includeClosed=true' : ''}`).then(r => r.data);
 export const fetchAdminOpenings = () => axiosInstance.get('/api/admin/openings').then(r => r.data);
 export const fetchProfile = () => axiosInstance.get('/api/profile').then(r => r.data);
+
+// Assistant Server-side History Fetchers
+export const fetchConversations = () => axiosInstance.get('/api/assistant/conversations').then(r => r.data);
+export const fetchMessages = (conversationId) =>
+  axiosInstance.get(`/api/assistant/conversations/${conversationId}/messages`).then(r => r.data);
+export const postConversation = (title) => axiosInstance.post('/api/assistant/conversations', { title }).then(r => r.data);
+export const putConversation = ({ id, title }) => axiosInstance.put(`/api/assistant/conversations/${id}`, { title }).then(r => r.data);
+export const deleteConversationApi = (id) => axiosInstance.delete(`/api/assistant/conversations/${id}`).then(r => r.data);
 
 // ----------------------------------------------------
 // Custom Query Hooks
@@ -46,7 +55,7 @@ export function useDashboardQuery(userId, options = {}) {
   return useQuery({
     queryKey: ['dashboard', userId],
     queryFn: fetchDashboard,
-    staleTime: 30 * 1000, // 30s stale time for dashboard
+    staleTime: 30 * 1000,
     enabled: !!userId,
     ...options,
   });
@@ -102,10 +111,10 @@ export function useTagsQuery(userId, options = {}) {
   });
 }
 
-export function useOpeningsQuery(userId, options = {}) {
+export function useOpeningsQuery(userId, includeClosed = false, options = {}) {
   return useQuery({
-    queryKey: ['openings', userId],
-    queryFn: fetchOpenings,
+    queryKey: ['openings', userId, Boolean(includeClosed)],
+    queryFn: () => fetchOpenings(includeClosed),
     staleTime: 60 * 1000,
     enabled: !!userId,
     ...options,
@@ -129,6 +138,58 @@ export function useProfileQuery(userId, options = {}) {
     staleTime: 60 * 1000,
     enabled: !!userId,
     ...options,
+  });
+}
+
+// Assistant Queries & Mutations
+export function useConversationsQuery(userId, options = {}) {
+  return useQuery({
+    queryKey: ['conversations', userId],
+    queryFn: fetchConversations,
+    staleTime: 10 * 1000,
+    enabled: !!userId,
+    ...options,
+  });
+}
+
+export function useMessagesQuery(conversationId, userId, options = {}) {
+  return useQuery({
+    queryKey: ['messages', userId, conversationId],
+    queryFn: () => fetchMessages(conversationId),
+    staleTime: 10 * 1000,
+    enabled: !!userId && !!conversationId,
+    ...options,
+  });
+}
+
+export function useConversationMessagesQuery(userId, conversationId, options = {}) {
+  return useMessagesQuery(conversationId, userId, options);
+}
+
+export function useCreateConversationMutation(userId) {
+  return useMutation({
+    mutationFn: (title) => postConversation(title),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations', userId] });
+    },
+  });
+}
+
+export function useRenameConversationMutation(userId) {
+  return useMutation({
+    mutationFn: ({ id, title }) => putConversation({ id, title }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations', userId] });
+    },
+  });
+}
+
+export function useDeleteConversationMutation(userId) {
+  return useMutation({
+    mutationFn: (id) => deleteConversationApi(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations', userId] });
+    },
   });
 }
 
@@ -170,7 +231,7 @@ export function invalidateProfileQueries(userId) {
 export function prefetchUserData(userId, role = 'USER') {
   if (!userId) return Promise.resolve();
   const prefetches = [
-    queryClient.prefetchQuery({ queryKey: ['openings', userId], queryFn: fetchOpenings, staleTime: 60000 }),
+    queryClient.prefetchQuery({ queryKey: ['openings', userId, false], queryFn: () => fetchOpenings(false), staleTime: 60000 }),
     queryClient.prefetchQuery({ queryKey: ['profile', userId], queryFn: fetchProfile, staleTime: 60000 }),
   ];
 
@@ -179,6 +240,7 @@ export function prefetchUserData(userId, role = 'USER') {
       queryClient.prefetchQuery({ queryKey: ['dashboard', userId], queryFn: fetchDashboard, staleTime: 30000 }),
       queryClient.prefetchQuery({ queryKey: ['applications', userId], queryFn: fetchApplications, staleTime: 60000 }),
       queryClient.prefetchQuery({ queryKey: ['interviews', userId, { scope: 'all' }], queryFn: () => fetchInterviews({ scope: 'all' }), staleTime: 60000 }),
+      queryClient.prefetchQuery({ queryKey: ['conversations', userId], queryFn: fetchConversations, staleTime: 10000 }),
     );
   } else {
     prefetches.push(
@@ -198,10 +260,12 @@ export function prefetchRouteData(userId, path) {
   } else if (path === '/interviews') {
     queryClient.prefetchQuery({ queryKey: ['interviews', userId, { scope: 'all' }], queryFn: () => fetchInterviews({ scope: 'all' }), staleTime: 60000 });
   } else if (path === '/openings') {
-    queryClient.prefetchQuery({ queryKey: ['openings', userId], queryFn: fetchOpenings, staleTime: 60000 });
+    queryClient.prefetchQuery({ queryKey: ['openings', userId, false], queryFn: () => fetchOpenings(false), staleTime: 60000 });
   } else if (path === '/admin/openings') {
     queryClient.prefetchQuery({ queryKey: ['adminOpenings', userId], queryFn: fetchAdminOpenings, staleTime: 60000 });
   } else if (path === '/profile') {
     queryClient.prefetchQuery({ queryKey: ['profile', userId], queryFn: fetchProfile, staleTime: 60000 });
+  } else if (path.startsWith('/assistant')) {
+    queryClient.prefetchQuery({ queryKey: ['conversations', userId], queryFn: fetchConversations, staleTime: 10000 });
   }
 }

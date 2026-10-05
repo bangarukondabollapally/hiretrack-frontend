@@ -281,6 +281,7 @@ export default function ChatPage() {
       const payload = {
         message: messageText,
         applicationId: selectedAppId ? Number(selectedAppId) : null,
+        conversationId: activeId ? Number(activeId) : null,
         attachments: currentAttachments
       };
 
@@ -347,6 +348,11 @@ export default function ChatPage() {
             updateMessageText(assistantMsgId, prev => (prev || '') + (data.text || ''));
           } else if (eventType === 'reasoning') {
             updateReasoningText(assistantMsgId, data.text || '');
+          } else if (eventType === 'done') {
+            if (data.conversationId) {
+              history.setActiveId?.(data.conversationId);
+              window.history.replaceState(null, '', `/assistant/${data.conversationId}`);
+            }
           } else if (eventType === 'error') {
             updateMessageText(assistantMsgId, `\n\n[Error: ${data.message || 'Stream connection failed'}]`);
           }
@@ -365,9 +371,14 @@ export default function ChatPage() {
           const fallbackRes = await axiosInstance.post('/api/assistant/chat', {
             message: messageText,
             applicationId: selectedAppId ? Number(selectedAppId) : null,
+            conversationId: activeId ? Number(activeId) : null,
             attachments: currentAttachments
           });
           updateMessageText(assistantMsgId, fallbackRes.data.reply);
+          if (fallbackRes.data.conversationId) {
+            history.setActiveId?.(fallbackRes.data.conversationId);
+            window.history.replaceState(null, '', `/assistant/${fallbackRes.data.conversationId}`);
+          }
         } catch (fallbackErr) {
           const errMsg = fallbackErr.response?.data?.message || "Couldn't reach AI assistant. Please try again.";
           updateMessageText(assistantMsgId, errMsg);
@@ -378,6 +389,9 @@ export default function ChatPage() {
       setIsGenerating(false);
       setStreamPhase(null);
       abortControllerRef.current = null;
+      if (userId) {
+        history.refetchConversations?.();
+      }
     }
   }, [inputText, attachments, isGenerating, activeId, selectedAppId, token, appendMessage, newConversation, updateMessageText, updateReasoningText]);
 

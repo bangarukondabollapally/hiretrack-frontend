@@ -2,15 +2,7 @@
  * Axios instance — the single HTTP client for all API calls in HireTrack.
  *
  * Base URL is read from VITE_API_BASE_URL (set in .env, defaulting to
- * http://localhost:8080 per docs/ARCHITECTURE.md "Local Development Configuration").
- *
- * The JWT Authorization interceptor is added in TASK-010 (AuthContext).
- * Do NOT add auth logic here directly — keep this file concerned only with
- * base configuration and leave interceptor wiring to the auth module.
- *
- * Usage:
- *   import axiosInstance from '../api/axiosInstance';
- *   const response = await axiosInstance.get('/api/applications');
+ * http://localhost:8080 per docs/ARCHITECTURE.md).
  */
 
 import axios from 'axios';
@@ -24,13 +16,25 @@ const axiosInstance = axios.create({
   },
 });
 
+let unauthenticatedCallback = null;
+
+export function setUnauthenticatedCallback(cb) {
+  unauthenticatedCallback = cb;
+}
+
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Clear auth ONLY on a true 401 HTTP response from the API server.
+    // Never clear token on network errors, CORS failures, 500 errors, or cold-start timeouts.
     if (error.response && error.response.status === 401) {
       clearAllQueryCache();
       localStorage.removeItem('ht_token');
+      localStorage.removeItem('token');
       localStorage.removeItem('ht_user');
+      if (unauthenticatedCallback) {
+        unauthenticatedCallback();
+      }
     }
     return Promise.reject(error);
   }

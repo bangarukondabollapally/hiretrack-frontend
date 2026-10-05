@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthContext';
 import { useApplicationsQuery, useInterviewsQuery, invalidateInterviewQueries } from '../api/queries';
 import axiosInstance from '../api/axiosInstance';
 import QueryStateNotice from '../components/QueryStateNotice';
+import DeleteConfirmModal from '../applications/DeleteConfirmModal';
 import { modalBackdropVariants, modalCardVariants, listItemVariants } from '../lib/motion';
 import './InterviewsPage.css';
 
@@ -140,15 +141,20 @@ export default function InterviewsPage() {
     }
   };
 
-  const handleDelete = async (interview) => {
-    if (!window.confirm(`Delete "${interview.round}" for ${interview.companyName}?`)) {
-      return;
-    }
+  const [deleteTargetInterview, setDeleteTargetInterview] = useState(null);
+  const [isDeletingInterview, setIsDeletingInterview] = useState(false);
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTargetInterview) return;
+    setIsDeletingInterview(true);
     try {
-      await axiosInstance.delete(`/api/applications/${interview.applicationId}/interviews/${interview.id}`);
-      invalidateInterviewQueries(userId, interview.applicationId);
+      await axiosInstance.delete(`/api/applications/${deleteTargetInterview.applicationId}/interviews/${deleteTargetInterview.id}`);
+      invalidateInterviewQueries(userId, deleteTargetInterview.applicationId);
+      setDeleteTargetInterview(null);
     } catch (err) {
-      alert('Failed to delete interview.');
+      console.error('Failed to delete interview:', err);
+    } finally {
+      setIsDeletingInterview(false);
     }
   };
 
@@ -535,7 +541,7 @@ export default function InterviewsPage() {
                         <button
                           type="button"
                           className="action-btn action-btn--delete"
-                          onClick={() => handleDelete(item)}
+                          onClick={() => setDeleteTargetInterview(item)}
                           title="Delete interview"
                         >
                           Delete
@@ -624,7 +630,7 @@ export default function InterviewsPage() {
                     <button
                       type="button"
                       className="action-btn action-btn--delete"
-                      onClick={() => handleDelete(item)}
+                      onClick={() => setDeleteTargetInterview(item)}
                     >
                       Delete
                     </button>
@@ -634,6 +640,15 @@ export default function InterviewsPage() {
             })}
           </AnimatePresence>
         </div>
+
+        <DeleteConfirmModal
+          isOpen={Boolean(deleteTargetInterview)}
+          title="Delete Interview Round"
+          message={`Are you sure you want to delete "${deleteTargetInterview?.round}" for ${deleteTargetInterview?.companyName}?`}
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setDeleteTargetInterview(null)}
+          isLoading={isDeletingInterview}
+        />
       </>
     );
   }

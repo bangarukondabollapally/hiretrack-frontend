@@ -67,6 +67,7 @@ function App() {
                   <Route path="/applications/:id" element={<ApplicationForm />} />
                   <Route path="/interviews" element={<InterviewsPage />} />
                   <Route path="/assistant" element={<ChatPage />} />
+                  <Route path="/assistant/:conversationId" element={<ChatPage />} />
                 </Route>
 
                 {/* Admin-only routes */}
