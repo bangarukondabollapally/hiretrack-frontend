@@ -232,6 +232,11 @@ export default function OpeningsPage() {
                         {formatDisplayPackage(op.packageDetails)}
                       </span>
                     )}
+                    {op.publishedBy && (
+                      <span className="meta-tag meta-tag--published">
+                        Published by {op.publishedBy}
+                      </span>
+                    )}
                   </div>
 
                   {op.eligibility && (
@@ -334,6 +339,9 @@ export default function OpeningsPage() {
                     <div><strong>Location:</strong> {selectedOpening.location || 'N/A'}</div>
                     <div><strong>Package/Stipend:</strong> {formatDisplayPackage(selectedOpening.packageDetails) || 'N/A'}</div>
                     <div><strong>Deadline:</strong> {selectedOpening.deadline || 'Rolling'}</div>
+                    {selectedOpening.publishedBy && (
+                      <div><strong>Published by:</strong> {selectedOpening.publishedBy}</div>
+                    )}
                     <div>
                       <strong>Status: </strong>
                       <span className={`status-badge ${modalStatus.isClosedOrExpired ? 'status-badge--closed' : 'status-badge--open'}`}>

@@ -918,7 +918,36 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  width: 160px;
+  width: 210px;
+}
+
+.context-selected-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--asst-user-bubble-bg);
+  border: 1px solid #E4E1D8;
+  border-radius: 12px;
+  padding: 3px 8px 3px 10px;
+  font-size: 12px;
+  font-family: var(--asst-font-sans);
+  color: var(--asst-text-primary);
+  max-width: 280px;
+}
+
+.context-selected-chip-remove {
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--asst-text-secondary);
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.context-selected-chip-remove:hover {
+  color: var(--asst-text-primary);
 }
 
 .attach-popover-menu button {

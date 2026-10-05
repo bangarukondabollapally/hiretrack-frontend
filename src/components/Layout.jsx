@@ -308,8 +308,8 @@ export default function Layout() {
             <span className="app-sidebar__link-text">Settings</span>
           </NavLink>
 
-          {/* Render Chat History inside Sidebar when expanded or inside mobile drawer */}
-          {(!isCollapsed || mobileMenuOpen) && (
+          {/* Render Chat History inside Sidebar when expanded or inside mobile drawer for non-admin users */}
+          {user?.role !== 'ADMIN' && (!isCollapsed || mobileMenuOpen) && (
             <div className="app-sidebar__history-slot">
               <ChatHistoryList
                 conversations={chatHistory.conversations}

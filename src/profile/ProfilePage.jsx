@@ -420,8 +420,8 @@ export default function ProfilePage() {
               <form onSubmit={handleSaveAccount} className="claude-rows-container">
                 <div className="claude-row">
                   <div className="claude-row__info">
-                    <label htmlFor="settings-name" className="claude-row__label">Full name</label>
-                    <p className="claude-row__desc">Shown in the app and used by the assistant.</p>
+                    <label htmlFor="settings-name" className="claude-row__label">{isAdmin ? 'Institute / placement cell name' : 'Full name'}</label>
+                    <p className="claude-row__desc">{isAdmin ? 'Official name of your institute or placement cell displayed on published openings.' : 'Shown in the app and used by the assistant.'}</p>
                   </div>
                   <div className="claude-row__control">
                     <input

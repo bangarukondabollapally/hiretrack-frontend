@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { groupConversationsByDate } from './chatHistoryUtils';
 import './ChatHistoryList.css';
@@ -21,6 +21,37 @@ export default function ChatHistoryList({
   const grouped = groupConversationsByDate(conversations, searchQuery);
   const groupKeys = ['Today', 'Yesterday', 'Previous 7 days', 'Older'];
   const hasAnyConversations = conversations.length > 0;
+
+  // Auto-close 3-dots menu on Esc key, outside click, or scroll
+  useEffect(() => {
+    if (!menuOpenConvId) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setMenuOpenConvId(null);
+      }
+    };
+
+    const handleOutsideClick = (e) => {
+      if (!e.target.closest('.conv-popover-menu-portal') && !e.target.closest('.conv-menu-trigger')) {
+        setMenuOpenConvId(null);
+      }
+    };
+
+    const handleScroll = () => {
+      setMenuOpenConvId(null);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleOutsideClick);
+    window.addEventListener('scroll', handleScroll, true);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleOutsideClick);
+      window.removeEventListener('scroll', handleScroll, true);
+    };
+  }, [menuOpenConvId]);
 
   const handleOpenMenu = (e, convId) => {
     e.stopPropagation();

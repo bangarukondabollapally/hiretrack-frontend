@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, Navigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import axiosInstance from '../api/axiosInstance';
@@ -102,6 +102,10 @@ const renderCellContent = (children) => {
 export default function ChatPage() {
   const { user, token } = useAuth();
   const userId = user?.userId;
+
+  if (user?.role === 'ADMIN') {
+    return <Navigate to="/admin/openings" replace />;
+  }
 
   // Read layout context if provided, or fallback to local hook for standalone testability
   const outletContext = useOutletContext() || {};
@@ -879,10 +883,23 @@ export default function ChatPage() {
   // Helper render method for Composer
   function renderComposer() {
     return (
-      <div className={`composer-card ${attachments.length > 0 ? 'composer-card--has-attachments' : ''}`}>
-        {/* Attachment Chips */}
-        {attachments.length > 0 && (
+      <div className={`composer-card ${(attachments.length > 0 || selectedApp) ? 'composer-card--has-attachments' : ''}`}>
+        {/* Selected Context Chip & File Attachments */}
+        {(selectedApp || attachments.length > 0) && (
           <div className="composer-attachments">
+            {selectedApp && (
+              <div className="context-selected-chip">
+                <span>Context: <strong>{selectedApp.companyName}</strong> — {selectedApp.jobRole}</span>
+                <button
+                  type="button"
+                  className="context-selected-chip-remove"
+                  onClick={() => setSelectedAppId(null)}
+                  title="Clear application context"
+                >
+                  ×
+                </button>
+              </div>
+            )}
             {attachments.map((att, idx) => (
               <div key={idx} className="attachment-chip">
                 <span className="attachment-chip-icon">
@@ -898,15 +915,15 @@ export default function ChatPage() {
             ))}
           </div>
         )}
-        
+
         <div className="composer-input-row">
-          {/* Left: Attach File Menu */}
+          {/* Left: Attach File & Context Menu */}
           <div className="composer-attach-wrapper">
             <button
               type="button"
               className="composer-attach-btn"
               onClick={() => setIsAttachMenuOpen(!isAttachMenuOpen)}
-              title="Attach files"
+              title="Attach files or application context"
               aria-expanded={isAttachMenuOpen}
             >
               +
@@ -922,11 +939,39 @@ export default function ChatPage() {
                     animate="visible"
                     exit="exit"
                   >
-                    <button type="button" onClick={() => { fileInputRef.current.accept = ".png,.jpeg,.jpg,.webp,.gif"; fileInputRef.current?.click(); setIsAttachMenuOpen(false); }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAttachMenuOpen(false);
+                        setIsAppPickerOpen(true);
+                        setPickerHighlightedIdx(0);
+                      }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                      </svg>
+                      Add application context
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        fileInputRef.current.accept = ".png,.jpeg,.jpg,.webp,.gif";
+                        fileInputRef.current?.click();
+                        setIsAttachMenuOpen(false);
+                      }}
+                    >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                       Upload image
                     </button>
-                    <button type="button" onClick={() => { fileInputRef.current.accept = ".txt,.md,.pdf,.docx"; fileInputRef.current?.click(); setIsAttachMenuOpen(false); }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        fileInputRef.current.accept = ".txt,.md,.pdf,.docx";
+                        fileInputRef.current?.click();
+                        setIsAttachMenuOpen(false);
+                      }}
+                    >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
                       Upload text file
                     </button>
@@ -934,62 +979,12 @@ export default function ChatPage() {
                 </>
               )}
             </AnimatePresence>
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              style={{ display: 'none' }}
-              onChange={handleFileAttach}
-            />
-          </div>
 
-          {/* Center: Textarea input */}
-          <textarea
-            ref={textareaRef}
-            className="composer-input"
-            placeholder="Ask about your applications, interviews or resume..."
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onPaste={handlePaste}
-            rows={1}
-          />
-
-          {/* Right: Context Selector & Send/Stop Button */}
-          <div className="composer-right-actions">
-            <div className="context-picker-wrapper" ref={contextPickerRef}>
-              <button
-                type="button"
-                className="context-pill"
-                onClick={() => {
-                  setIsAppPickerOpen(!isAppPickerOpen);
-                  setPickerHighlightedIdx(0);
-                }}
-                aria-expanded={isAppPickerOpen}
-                aria-label="Select application context"
-              >
-                <span className="context-pill-text">
-                  {selectedApp ? `Context: ${selectedApp.companyName} — ${selectedApp.jobRole}` : 'Context: All applications'}
-                </span>
-                {selectedApp ? (
-                  <span
-                    className="context-pill-clear"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedAppId(null);
-                    }}
-                    title="Clear application context"
-                  >
-                    ×
-                  </span>
-                ) : (
-                  <span className="context-pill-caret">▾</span>
-                )}
-              </button>
-
-              {/* Context Dropdown Popover */}
-              <AnimatePresence>
-                {isAppPickerOpen && (
+            {/* Context Dropdown Modal/Sheet */}
+            <AnimatePresence>
+              {isAppPickerOpen && (
+                <>
+                  <div className="attach-menu-backdrop" onClick={() => setIsAppPickerOpen(false)} />
                   <m.div
                     className="context-dropdown"
                     variants={popoverVariants}
@@ -1040,11 +1035,33 @@ export default function ChatPage() {
                       })}
                     </div>
                   </m.div>
-                )}
-              </AnimatePresence>
-            </div>
+                </>
+              )}
+            </AnimatePresence>
 
-            {/* Send or Stop Button with quick icon cross-fade */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              style={{ display: 'none' }}
+              onChange={handleFileAttach}
+            />
+          </div>
+
+          {/* Center: Textarea input */}
+          <textarea
+            ref={textareaRef}
+            className="composer-input"
+            placeholder="Ask about your applications, interviews or resume..."
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
+            rows={1}
+          />
+
+          {/* Right: Send/Stop Button */}
+          <div className="composer-right-actions">
             <AnimatePresence mode="wait">
               {isGenerating ? (
                 <m.button

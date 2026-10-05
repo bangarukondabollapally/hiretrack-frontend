@@ -52,20 +52,25 @@ export default function AdminOpeningsPage() {
   const [currency, setCurrency] = useState('₹');
   const [packageAmount, setPackageAmount] = useState('');
 
-  // Enhanced eligibility fields
-  const [targetBatch, setTargetBatch] = useState('2026 Batch');
-  const [minCgpa, setMinCgpa] = useState('CGPA ≥ 7.0');
-  const [eligibleBranches, setEligibleBranches] = useState('B.Tech CSE, IT, ECE');
-  const [customCriteria, setCustomCriteria] = useState('');
+  // Structured eligibility fields
+  const COMMON_BRANCHES = ['CSE', 'IT', 'ECE', 'EEE', 'ME', 'CE', 'AI/ML', 'Data Science', 'Software Engineering'];
+  const [degree, setDegree] = useState('B.Tech');
+  const [selectedBranches, setSelectedBranches] = useState(['CSE', 'IT', 'ECE']);
+  const [customBranchInput, setCustomBranchInput] = useState('');
+  const [gradYearStart, setGradYearStart] = useState('2026');
+  const [gradYearEnd, setGradYearEnd] = useState('2027');
+  const [eligibilityNote, setEligibilityNote] = useState('');
 
   const openCreateForm = () => {
     setEditingOpening(null);
     setCurrency('₹');
     setPackageAmount('');
-    setTargetBatch('2026 Batch');
-    setMinCgpa('CGPA ≥ 7.0');
-    setEligibleBranches('B.Tech CSE, IT, ECE');
-    setCustomCriteria('');
+    setDegree('B.Tech');
+    setSelectedBranches(['CSE', 'IT', 'ECE']);
+    setCustomBranchInput('');
+    setGradYearStart('2026');
+    setGradYearEnd('2027');
+    setEligibilityNote('');
     setFormData({
       companyName: '',
       jobRole: '',
@@ -99,6 +104,16 @@ export default function AdminOpeningsPage() {
     setCurrency(foundCurr);
     setPackageAmount(rawPkg);
 
+    setDegree(opening.degree || 'B.Tech');
+    const branches = opening.eligibleBranches
+      ? opening.eligibleBranches.split(',').map(b => b.trim()).filter(Boolean)
+      : ['CSE', 'IT', 'ECE'];
+    setSelectedBranches(branches);
+    setCustomBranchInput('');
+    setGradYearStart(opening.graduationYearStart ? String(opening.graduationYearStart) : '2026');
+    setGradYearEnd(opening.graduationYearEnd ? String(opening.graduationYearEnd) : '2027');
+    setEligibilityNote(opening.eligibilityNote || '');
+
     setFormData({
       companyName: opening.companyName || '',
       jobRole: opening.jobRole || '',
@@ -112,9 +127,31 @@ export default function AdminOpeningsPage() {
       applicationLink: opening.applicationLink || '',
       status: opening.status || 'OPEN'
     });
-    setCustomCriteria(opening.eligibility || '');
     setFormErrors({});
     setIsFormOpen(true);
+  };
+
+  const toggleBranchChip = (branch) => {
+    if (selectedBranches.includes(branch)) {
+      setSelectedBranches(selectedBranches.filter(b => b !== branch));
+    } else {
+      setSelectedBranches([...selectedBranches, branch]);
+    }
+  };
+
+  const handleAddCustomBranch = (e) => {
+    if ((e.key === 'Enter' || e.type === 'click') && customBranchInput.trim()) {
+      e.preventDefault();
+      const val = customBranchInput.trim();
+      if (!selectedBranches.includes(val)) {
+        setSelectedBranches([...selectedBranches, val]);
+      }
+      setCustomBranchInput('');
+    }
+  };
+
+  const removeBranchChip = (branch) => {
+    setSelectedBranches(selectedBranches.filter(b => b !== branch));
   };
 
   const validateForm = () => {
@@ -126,6 +163,15 @@ export default function AdminOpeningsPage() {
     } else if (!/^https?:\/\/.+/i.test(formData.applicationLink.trim())) {
       errs.applicationLink = 'Application link must start with http:// or https://';
     }
+
+    if (gradYearStart && gradYearEnd) {
+      const s = parseInt(gradYearStart, 10);
+      const e = parseInt(gradYearEnd, 10);
+      if (isNaN(s) || isNaN(e) || s > e) {
+        errs.gradYears = 'Start graduation year must be less than or equal to end year';
+      }
+    }
+
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -145,17 +191,18 @@ export default function AdminOpeningsPage() {
       formattedPackage = `${currency} ${packageAmount}`;
     }
 
-    // Compile eligibility criteria
-    let compiledEligibility = customCriteria.trim();
-    if (!compiledEligibility) {
-      const parts = [eligibleBranches, targetBatch, minCgpa].filter(Boolean);
-      compiledEligibility = parts.join(' | ');
-    }
+    const branchesStr = selectedBranches.join(', ');
+    const startYearNum = gradYearStart ? parseInt(gradYearStart, 10) : null;
+    const endYearNum = gradYearEnd ? parseInt(gradYearEnd, 10) : null;
 
     const payload = {
       ...formData,
       packageDetails: formattedPackage || formData.packageDetails,
-      eligibility: compiledEligibility || formData.eligibility
+      degree,
+      eligibleBranches: branchesStr,
+      graduationYearStart: startYearNum,
+      graduationYearEnd: endYearNum,
+      eligibilityNote,
     };
 
     try {
@@ -289,6 +336,11 @@ export default function AdminOpeningsPage() {
                       </span>
                     )}
                     {op.deadline && <span className="meta-tag">Deadline: {op.deadline}</span>}
+                    {op.publishedBy && (
+                      <span className="meta-tag meta-tag--published">
+                        Published by {op.publishedBy}
+                      </span>
+                    )}
                   </div>
 
                   {op.eligibility && (
@@ -486,39 +538,120 @@ export default function AdminOpeningsPage() {
                     {formErrors.applicationLink && <span className="field-error">{formErrors.applicationLink}</span>}
                   </div>
 
-                  {/* Enhanced Eligibility Criteria Section */}
-                  <div className="eligibility-builder-section">
-                    <label className="field-label">Eligibility Criteria Builder</label>
-                    <div className="form-row" style={{ marginBottom: '8px' }}>
+                  {/* Structured Eligibility Section */}
+                  <div className="structured-eligibility-group" style={{ background: 'var(--surface-sunken, #F3F1EC)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border, #DDD8CE)' }}>
+                    <h3 style={{ fontSize: '0.9rem', fontWeight: '700', marginBottom: '0.75rem', color: 'var(--text-primary)' }}>Structured Eligibility</h3>
+                    
+                    <div className="form-row" style={{ marginBottom: '0.75rem' }}>
+                      <div className="field">
+                        <label className="field-label">Degree <span className="required">*</span></label>
+                        <select
+                          className="field-input field-select"
+                          value={degree}
+                          onChange={(e) => setDegree(e.target.value)}
+                        >
+                          <option value="B.Tech">B.Tech</option>
+                          <option value="M.Tech">M.Tech</option>
+                          <option value="MBA">MBA</option>
+                          <option value="BCA">BCA</option>
+                          <option value="MCA">MCA</option>
+                          <option value="B.Sc">B.Sc</option>
+                          <option value="M.Sc">M.Sc</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+
+                      <div className="field">
+                        <label className="field-label">Graduation Year Range</label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <input
+                            type="number"
+                            className="field-input"
+                            placeholder="From (2026)"
+                            value={gradYearStart}
+                            onChange={(e) => setGradYearStart(e.target.value)}
+                            min="2000"
+                            max="2100"
+                          />
+                          <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>to</span>
+                          <input
+                            type="number"
+                            className="field-input"
+                            placeholder="To (2027)"
+                            value={gradYearEnd}
+                            onChange={(e) => setGradYearEnd(e.target.value)}
+                            min="2000"
+                            max="2100"
+                          />
+                        </div>
+                        {formErrors.gradYears && <span className="field-error">{formErrors.gradYears}</span>}
+                      </div>
+                    </div>
+
+                    <div className="field" style={{ marginBottom: '0.75rem' }}>
+                      <label className="field-label">Courses / Branches</label>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                        {COMMON_BRANCHES.map(branch => {
+                          const isSelected = selectedBranches.includes(branch);
+                          return (
+                            <button
+                              type="button"
+                              key={branch}
+                              style={{
+                                padding: '4px 10px',
+                                borderRadius: '16px',
+                                border: '1px solid ' + (isSelected ? 'var(--accent, #2563EB)' : 'var(--border, #DDD8CE)'),
+                                background: isSelected ? 'var(--accent-light, #EFF6FF)' : 'var(--surface, #FFFFFF)',
+                                color: isSelected ? 'var(--accent, #2563EB)' : 'var(--text-secondary, #4D4A43)',
+                                fontSize: '0.8rem',
+                                fontWeight: isSelected ? '600' : '400',
+                                cursor: 'pointer',
+                              }}
+                              onClick={() => toggleBranchChip(branch)}
+                            >
+                              {isSelected ? '✓ ' : '+ '}{branch}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          className="field-input"
+                          style={{ flex: 1 }}
+                          placeholder="Add custom branch and press Enter..."
+                          value={customBranchInput}
+                          onChange={(e) => setCustomBranchInput(e.target.value)}
+                          onKeyDown={handleAddCustomBranch}
+                        />
+                        <button type="button" className="btn-secondary btn-sm" onClick={handleAddCustomBranch}>
+                          Add
+                        </button>
+                      </div>
+
+                      {selectedBranches.length > 0 && (
+                        <div style={{ marginTop: '6px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                          Selected: {selectedBranches.map(b => (
+                            <span key={b} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'var(--surface)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--border)', marginRight: '4px', marginTop: '4px' }}>
+                              {b}
+                              <button type="button" style={{ border: 'none', background: 'none', cursor: 'pointer', padding: 0, marginLeft: '2px', color: '#999' }} onClick={() => removeBranchChip(b)}>×</button>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="field">
+                      <label className="field-label">Optional Extra Note</label>
                       <input
                         type="text"
                         className="field-input"
-                        value={eligibleBranches}
-                        onChange={(e) => setEligibleBranches(e.target.value)}
-                        placeholder="Branches e.g. B.Tech CSE, IT, ECE"
-                      />
-                      <input
-                        type="text"
-                        className="field-input"
-                        value={targetBatch}
-                        onChange={(e) => setTargetBatch(e.target.value)}
-                        placeholder="Batch e.g. 2026 Batch"
-                      />
-                      <input
-                        type="text"
-                        className="field-input"
-                        value={minCgpa}
-                        onChange={(e) => setMinCgpa(e.target.value)}
-                        placeholder="Min Criteria e.g. CGPA ≥ 7.5"
+                        placeholder="e.g. Min 60% aggregate in X, XII & B.Tech"
+                        value={eligibilityNote}
+                        onChange={(e) => setEligibilityNote(e.target.value)}
                       />
                     </div>
-                    <input
-                      type="text"
-                      className="field-input"
-                      value={customCriteria}
-                      onChange={(e) => setCustomCriteria(e.target.value)}
-                      placeholder="Custom Eligibility Summary (overrides builder if filled)"
-                    />
                   </div>
 
                   <div className="field" style={{ marginTop: '12px' }}>

@@ -252,9 +252,9 @@
   background: var(--surface, #FFFFFF);
   border: 1px solid var(--border, #DDD8CE);
   border-radius: 8px;
-  width: 100%;
-  max-width: 500px;
-  max-height: 90vh;
+  width: min(92vw, 640px);
+  max-width: 640px;
+  max-height: 85dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -262,7 +262,9 @@
 }
 
 .modal-card--lg {
-  max-width: 650px;
+  width: min(92vw, 640px);
+  max-width: 640px;
+  max-height: 85dvh;
 }
 
 .modal-header {
@@ -329,4 +331,22 @@
   justify-content: flex-end;
   gap: 0.75rem;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+.modal-footer .btn-secondary,
+.modal-footer .btn-primary,
+.modal-footer a.btn-secondary {
+  height: 36px !important;
+  padding: 6px 16px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  text-decoration: none !important;
+  line-height: 1 !important;
+  margin: 0 !important;
 }
