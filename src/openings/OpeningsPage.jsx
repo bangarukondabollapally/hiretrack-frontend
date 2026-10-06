@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { AnimatePresence, m } from 'framer-motion';
 import { useAuth } from '../auth/AuthContext';
-import { useOpeningsQuery } from '../api/queries';
+import { useOpeningsQuery, trackOpeningApi, untrackOpeningApi, invalidateOpeningQueries } from '../api/queries';
 import QueryStateNotice from '../components/QueryStateNotice';
 import { getOpeningStatus } from './openingStatusHelper';
 import { modalBackdropVariants, modalCardVariants, listItemVariants } from '../lib/motion';
@@ -39,27 +39,36 @@ function formatDeadlineWithCountdown(deadline) {
   const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffDays < 0) {
-    return { text: `Deadline: ${formattedDate} (Expired)`, isExpired: true };
+    return { text: `Deadline: ${formattedDate} (Expired)`, isExpired: true, isClosingSoon: false };
   } else if (diffDays === 0) {
-    return { text: `Deadline: ${formattedDate} • Due today`, isExpired: false };
+    return { text: `Deadline: ${formattedDate} • Due today`, isExpired: false, isClosingSoon: true };
   } else if (diffDays === 1) {
-    return { text: `Deadline: ${formattedDate} • 1 day left`, isExpired: false };
+    return { text: `Deadline: ${formattedDate} • 1 day left`, isExpired: false, isClosingSoon: true };
+  } else if (diffDays <= 3) {
+    return { text: `Deadline: ${formattedDate} • ${diffDays} days left`, isExpired: false, isClosingSoon: true };
   } else {
-    return { text: `Deadline: ${formattedDate} • ${diffDays} days left`, isExpired: false };
+    return { text: `Deadline: ${formattedDate} • ${diffDays} days left`, isExpired: false, isClosingSoon: false };
   }
 }
 
+function formatPublishedBy(name) {
+  if (!name) return 'Published by: Placement Cell';
+  if (name.toLowerCase().includes('placement cell')) {
+    return `Published by: ${name}`;
+  }
+  return `Published by: ${name} Placement Cell`;
+}
+
 export default function OpeningsPage() {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const userId = user?.userId || user?.id || user?.email;
 
   const [searchQuery, setSearchQuery] = useState('');
   const [includeClosed, setIncludeClosed] = useState(false);
   const [selectedOpening, setSelectedOpening] = useState(null);
-  const [trackingId, setTrackingId] = useState(null);
+  const [trackingLoadingId, setTrackingLoadingId] = useState(null);
+  const [trackError, setTrackError] = useState('');
 
-  // Pass includeClosed toggle to query hook so query key ['openings', userId, includeClosed] refetches & caches correctly
   const {
     data: openingsData,
     isLoading: isOpLoading,
@@ -68,43 +77,6 @@ export default function OpeningsPage() {
     error: opErr,
     refetch,
   } = useOpeningsQuery(userId, includeClosed);
-
-  const openings = openingsData || [];
-  const isLoading = isOpLoading && !openingsData;
-  const isFromCache = !isOpLoading && !!openingsData;
-
-  const filteredOpenings = openings.filter(op => {
-    const statusInfo = getOpeningStatus(op);
-    if (!includeClosed && statusInfo.isClosedOrExpired) return false;
-    const q = searchQuery.toLowerCase();
-    return (
-      op.companyName?.toLowerCase().includes(q) ||
-      op.jobRole?.toLowerCase().includes(q) ||
-      op.location?.toLowerCase().includes(q) ||
-      op.jobType?.toLowerCase().includes(q)
-    );
-  });
-
-  const handleTrackInHireTrack = (opening) => {
-    const statusInfo = getOpeningStatus(opening);
-    if (statusInfo.isClosedOrExpired) return;
-
-    setTrackingId(opening.id);
-    setTimeout(() => {
-      navigate('/applications/new', {
-        state: {
-          opening: {
-            id: opening.id,
-            companyName: opening.companyName,
-            jobRole: opening.jobRole,
-            jobType: opening.jobType || 'Full-time',
-            applicationLink: opening.applicationLink,
-            description: opening.description || opening.eligibility || ''
-          }
-        }
-      });
-    }, 400);
-  };
 
   const lastFocusedElementRef = useRef(null);
 
@@ -127,6 +99,50 @@ export default function OpeningsPage() {
     };
   }, [selectedOpening]);
 
+  // Item 6: ADMIN visiting /openings redirects to /admin/openings
+  if (user?.role === 'ADMIN') {
+    return <Navigate to="/admin/openings" replace />;
+  }
+
+  const openings = openingsData || [];
+  const isLoading = isOpLoading && !openingsData;
+  const isFromCache = !isOpLoading && !!openingsData;
+
+  const filteredOpenings = openings.filter(op => {
+    const statusInfo = getOpeningStatus(op);
+    if (!includeClosed && statusInfo.isClosedOrExpired) return false;
+    const q = searchQuery.toLowerCase();
+    return (
+      op.companyName?.toLowerCase().includes(q) ||
+      op.jobRole?.toLowerCase().includes(q) ||
+      op.location?.toLowerCase().includes(q) ||
+      op.jobType?.toLowerCase().includes(q)
+    );
+  });
+
+  const handleToggleTrack = async (opening, e) => {
+    e?.stopPropagation();
+    const statusInfo = getOpeningStatus(opening);
+    if (statusInfo.isClosedOrExpired) return;
+
+    setTrackingLoadingId(opening.id);
+    setTrackError('');
+
+    try {
+      if (opening.isTracked) {
+        await untrackOpeningApi(opening.id);
+      } else {
+        await trackOpeningApi(opening.id);
+      }
+      invalidateOpeningQueries(userId);
+    } catch (_err) {
+      setTrackError('Failed to update tracking state. Please try again.');
+      setTimeout(() => setTrackError(''), 4000);
+    } finally {
+      setTrackingLoadingId(null);
+    }
+  };
+
   return (
     <div className="openings-page">
       <QueryStateNotice
@@ -141,16 +157,13 @@ export default function OpeningsPage() {
           <h1 className="openings-title">Placement openings</h1>
           <p className="openings-subtitle">Campus openings posted by your placement cell.</p>
         </div>
-        {user?.role === 'ADMIN' && (
-          <button
-            type="button"
-            className="btn-primary"
-            onClick={() => navigate('/admin/openings')}
-          >
-            + Publish & manage openings
-          </button>
-        )}
       </div>
+
+      {trackError && (
+        <div className="openings-error" role="alert" style={{ marginBottom: '1rem' }}>
+          {trackError}
+        </div>
+      )}
 
       {/* Filter & Search Bar */}
       <div className="openings-toolbar">
@@ -213,6 +226,8 @@ export default function OpeningsPage() {
             {filteredOpenings.map((op) => {
               const statusInfo = getOpeningStatus(op);
               const isClosedOrExpired = statusInfo.isClosedOrExpired;
+              const deadlineInfo = formatDeadlineWithCountdown(op.deadline);
+              const isClosingSoon = statusInfo.isClosingSoon || deadlineInfo?.isClosingSoon;
 
               return (
                 <m.div
@@ -231,8 +246,8 @@ export default function OpeningsPage() {
                       <h3 className="opening-card__company">{op.companyName}</h3>
                       <div className="opening-card__role">{op.jobRole}</div>
                     </div>
-                    <span className={`status-badge ${isClosedOrExpired ? 'status-badge--closed' : 'status-badge--open'}`}>
-                      {statusInfo.label.toUpperCase()}
+                    <span className={`status-badge ${isClosedOrExpired ? 'status-badge--closed' : isClosingSoon ? 'status-badge--closing-soon' : 'status-badge--open'}`}>
+                      {isClosingSoon && !isClosedOrExpired ? 'CLOSING SOON' : statusInfo.label.toUpperCase()}
                     </span>
                   </div>
 
@@ -253,27 +268,33 @@ export default function OpeningsPage() {
                         {formatDisplayPackage(op.packageDetails)}
                       </span>
                     )}
-                    {op.publishedBy && (
-                      <span className="meta-tag meta-tag--published">
-                        Published by {op.publishedBy}
+                    {op.seats != null && op.seats > 0 && (
+                      <span className="meta-tag meta-tag--seats">
+                        Seats: {op.seats}
                       </span>
                     )}
+                    {op.yearOfStudy && (
+                      <span className="meta-tag">
+                        Year: {op.yearOfStudy}
+                      </span>
+                    )}
+                    <span className="meta-tag meta-tag--published">
+                      {formatPublishedBy(op.publishedBy)}
+                    </span>
                   </div>
 
-                  {op.eligibility && (
+                  {op.eligibleBranches && (
                     <p className="opening-card__eligibility">
-                      <strong>Eligibility:</strong> {op.eligibility}
+                      <strong>Eligibility:</strong> {op.eligibleBranches === 'ALL' ? 'All Branches' : op.eligibleBranches}
+                      {op.degree ? ` (${op.degree})` : ''}
                     </p>
                   )}
 
-                  {op.deadline && (() => {
-                    const deadlineInfo = formatDeadlineWithCountdown(op.deadline);
-                    return (
-                      <div className={`opening-card__deadline ${deadlineInfo?.isExpired ? 'deadline--expired' : ''}`}>
-                        {deadlineInfo?.text || `Deadline: ${op.deadline}`}
-                      </div>
-                    );
-                  })()}
+                  {op.deadline && (
+                    <div className={`opening-card__deadline ${deadlineInfo?.isExpired ? 'deadline--expired' : isClosingSoon ? 'deadline--closing-soon' : ''}`}>
+                      {deadlineInfo?.text || `Deadline: ${op.deadline}`}
+                    </div>
+                  )}
 
                   <div className="opening-card__actions">
                     <button
@@ -284,35 +305,39 @@ export default function OpeningsPage() {
                       View details
                     </button>
 
-                    <a
-                      href={op.applicationLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-secondary btn-sm"
-                    >
-                      Apply on Portal ↗
-                    </a>
+                    {op.applicationLink && (
+                      <a
+                        href={op.applicationLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-secondary btn-sm"
+                      >
+                        Apply on Portal ↗
+                      </a>
+                    )}
 
-                    <button
-                      type="button"
-                      className="btn-primary btn-sm"
-                      disabled={isClosedOrExpired}
-                      title={statusInfo.reason || ''}
-                      onClick={() => handleTrackInHireTrack(op)}
-                    >
-                      {isClosedOrExpired ? (
-                        statusInfo.reason
-                      ) : trackingId === op.id ? (
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                          <m.svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                            <m.polyline points="20 6 9 17 4 12" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.3 }} />
-                          </m.svg>
-                          Tracked
-                        </span>
-                      ) : (
-                        'Track in HireTrack'
-                      )}
-                    </button>
+                    {user?.role !== 'ADMIN' && (
+                      <button
+                        type="button"
+                        className={`btn-sm ${op.isTracked ? 'btn-secondary btn-tracked' : 'btn-primary'}`}
+                        disabled={isClosedOrExpired || trackingLoadingId === op.id}
+                        title={statusInfo.reason || ''}
+                        onClick={(e) => handleToggleTrack(op, e)}
+                      >
+                        {trackingLoadingId === op.id ? (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <span className="spinner spinner-sm" style={{ width: '12px', height: '12px' }} />
+                            Updating...
+                          </span>
+                        ) : op.isTracked ? (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            ✓ Tracked
+                          </span>
+                        ) : (
+                          'Track'
+                        )}
+                      </button>
+                    )}
                   </div>
                 </m.div>
               );
@@ -359,10 +384,10 @@ export default function OpeningsPage() {
                     <div><strong>Work Mode:</strong> {selectedOpening.workMode || 'N/A'}</div>
                     <div><strong>Location:</strong> {selectedOpening.location || 'N/A'}</div>
                     <div><strong>Package/Stipend:</strong> {formatDisplayPackage(selectedOpening.packageDetails) || 'N/A'}</div>
+                    <div><strong>Seats:</strong> {selectedOpening.seats != null ? selectedOpening.seats : 'Unlimited'}</div>
+                    <div><strong>Year of Study:</strong> {selectedOpening.yearOfStudy || 'All Years'}</div>
                     <div><strong>Deadline:</strong> {selectedOpening.deadline || 'Rolling'}</div>
-                    {selectedOpening.publishedBy && (
-                      <div><strong>Published by:</strong> {selectedOpening.publishedBy}</div>
-                    )}
+                    <div><strong>Published by:</strong> {formatPublishedBy(selectedOpening.publishedBy)}</div>
                     <div>
                       <strong>Status: </strong>
                       <span className={`status-badge ${modalStatus.isClosedOrExpired ? 'status-badge--closed' : 'status-badge--open'}`}>
@@ -371,44 +396,44 @@ export default function OpeningsPage() {
                     </div>
                   </div>
 
-                  {selectedOpening.eligibility && (
+                  {selectedOpening.eligibleBranches && (
                     <div className="opening-detail-section">
                       <h4>Eligibility criteria</h4>
-                      <p>{selectedOpening.eligibility}</p>
+                      <p><strong>Branches:</strong> {selectedOpening.eligibleBranches === 'ALL' ? 'All Branches' : selectedOpening.eligibleBranches}</p>
+                      {selectedOpening.eligibilityNote && <p><strong>Note:</strong> {selectedOpening.eligibilityNote}</p>}
                     </div>
                   )}
 
                   {selectedOpening.description && (
                     <div className="opening-detail-section">
-                      <h4>Job description</h4>
+                      <h4>Mini JD</h4>
                       <div className="opening-description-text">{selectedOpening.description}</div>
                     </div>
                   )}
                 </div>
 
                 <div className="modal-footer">
-                  <a
-                    href={selectedOpening.applicationLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-secondary"
-                  >
-                    Apply on portal ↗
-                  </a>
+                  {selectedOpening.applicationLink && (
+                    <a
+                      href={selectedOpening.applicationLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-secondary"
+                    >
+                      Apply on portal ↗
+                    </a>
+                  )}
 
-                  <button
-                    type="button"
-                    className="btn-primary"
-                    disabled={modalStatus.isClosedOrExpired}
-                    title={modalStatus.reason || ''}
-                    onClick={() => {
-                      const op = selectedOpening;
-                      setSelectedOpening(null);
-                      handleTrackInHireTrack(op);
-                    }}
-                  >
-                    {modalStatus.isClosedOrExpired ? modalStatus.reason : 'Track in HireTrack'}
-                  </button>
+                  {user?.role !== 'ADMIN' && (
+                    <button
+                      type="button"
+                      className={`btn-sm ${selectedOpening.isTracked ? 'btn-secondary btn-tracked' : 'btn-primary'}`}
+                      disabled={modalStatus.isClosedOrExpired || trackingLoadingId === selectedOpening.id}
+                      onClick={(e) => handleToggleTrack(selectedOpening, e)}
+                    >
+                      {selectedOpening.isTracked ? '✓ Tracked' : 'Track'}
+                    </button>
+                  )}
                 </div>
               </m.div>
             </m.div>

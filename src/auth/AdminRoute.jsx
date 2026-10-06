@@ -9,7 +9,7 @@ export default function AdminRoute() {
   }
 
   if (user?.role !== 'ADMIN') {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/openings" replace />;
   }
 
   return <Outlet />;

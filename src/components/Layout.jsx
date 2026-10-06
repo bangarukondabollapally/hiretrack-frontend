@@ -299,11 +299,11 @@ export default function Layout() {
           )}
 
           <NavLink
-            to="/profile"
+            to="/settings"
             onClick={closeMobileMenu}
-            onMouseEnter={() => handleLinkPrefetch('/profile')}
-            onFocus={() => handleLinkPrefetch('/profile')}
-            onTouchStart={() => handleLinkPrefetch('/profile')}
+            onMouseEnter={() => handleLinkPrefetch('/settings')}
+            onFocus={() => handleLinkPrefetch('/settings')}
+            onTouchStart={() => handleLinkPrefetch('/settings')}
             className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
             title="Settings"
             aria-label="Settings"
@@ -337,7 +337,11 @@ export default function Layout() {
           {isCollapsed && !mobileMenuOpen ? (
             <div className="app-sidebar__footer-collapsed">
               <div className="app-sidebar__avatar-wrapper" title={user?.email}>
-                {renderAvatarSvg(profileData?.avatarPreset, userInitial, 32)}
+                {profileData?.avatarDataUrl ? (
+                  <img src={profileData.avatarDataUrl} alt="Avatar" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
+                ) : (
+                  renderAvatarSvg(profileData?.avatarPreset, userInitial, 32)
+                )}
               </div>
               <button
                 type="button"
@@ -357,7 +361,11 @@ export default function Layout() {
             <div className="app-sidebar__footer-expanded">
               <div className="app-sidebar__user-row" title={user?.email}>
                 <div className="app-sidebar__avatar-wrapper">
-                  {renderAvatarSvg(profileData?.avatarPreset, userInitial, 32)}
+                  {profileData?.avatarDataUrl ? (
+                    <img src={profileData.avatarDataUrl} alt="Avatar" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
+                  ) : (
+                    renderAvatarSvg(profileData?.avatarPreset, userInitial, 32)
+                  )}
                 </div>
                 <span className="app-sidebar__user-email">{user?.email}</span>
               </div>

@@ -105,6 +105,7 @@ export default function ProfilePage() {
   // Profile data & initial state for change tracking (dirty check)
   const [name, setName] = useState('');
   const [avatarPreset, setAvatarPreset] = useState(null);
+  const [avatarDataUrl, setAvatarDataUrl] = useState(null);
   const [targetRole, setTargetRole] = useState('');
   const [yearsOfExperience, setYearsOfExperience] = useState('');
   const [experienceSummary, setExperienceSummary] = useState('');
@@ -112,40 +113,14 @@ export default function ProfilePage() {
 
   const [initialName, setInitialName] = useState('');
   const [initialAvatarPreset, setInitialAvatarPreset] = useState(null);
+  const [initialAvatarDataUrl, setInitialAvatarDataUrl] = useState(null);
   const [initialTargetRole, setInitialTargetRole] = useState('');
   const [initialYearsOfExperience, setInitialYearsOfExperience] = useState('');
   const [initialExperienceSummary, setInitialExperienceSummary] = useState('');
   const [initialResumeText, setInitialResumeText] = useState('');
-
-  useEffect(() => {
-    if (profileData) {
-      const data = profileData || {};
-      const fetchedName = data.name || '';
-      const fetchedAvatar = data.avatarPreset || null;
-      const fetchedRole = data.targetRole || '';
-      const fetchedYears = data.yearsOfExperience !== null && data.yearsOfExperience !== undefined ? String(data.yearsOfExperience) : '';
-      const fetchedSummary = data.experienceSummary || '';
-      const fetchedResume = data.resumeText || '';
-
-      setName(fetchedName);
-      setInitialName(fetchedName);
-
-      setAvatarPreset(fetchedAvatar);
-      setInitialAvatarPreset(fetchedAvatar);
-
-      setTargetRole(fetchedRole);
-      setInitialTargetRole(fetchedRole);
-
-      setYearsOfExperience(fetchedYears);
-      setInitialYearsOfExperience(fetchedYears);
-
-      setExperienceSummary(fetchedSummary);
-      setInitialExperienceSummary(fetchedSummary);
-
-      setResumeText(fetchedResume);
-      setInitialResumeText(fetchedResume);
-    }
-  }, [profileData]);
+  const [isProcessingAvatar, setIsProcessingAvatar] = useState(false);
+  const avatarFileInputRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   // Admin Placement Office settings
   const [institutionName, setInstitutionName] = useState(() => {
@@ -193,20 +168,122 @@ export default function ProfilePage() {
   const [accountStatus, setAccountStatus] = useState({ loading: false, success: false, error: '' });
   const [jobSearchStatus, setJobSearchStatus] = useState({ loading: false, success: false, error: '' });
 
-  const fileInputRef = useRef(null);
+  useEffect(() => {
+    if (profileData) {
+      const data = profileData || {};
+      const fetchedName = data.name || '';
+      const fetchedAvatar = data.avatarPreset || null;
+      const fetchedDataUrl = data.avatarDataUrl || null;
+      const fetchedRole = data.targetRole || '';
+      const fetchedYears = data.yearsOfExperience !== null && data.yearsOfExperience !== undefined ? String(data.yearsOfExperience) : '';
+      const fetchedSummary = data.experienceSummary || '';
+      const fetchedResume = data.resumeText || '';
+
+      setName(fetchedName);
+      setInitialName(fetchedName);
+
+      setAvatarPreset(fetchedAvatar);
+      setInitialAvatarPreset(fetchedAvatar);
+
+      setAvatarDataUrl(fetchedDataUrl);
+      setInitialAvatarDataUrl(fetchedDataUrl);
+
+      setTargetRole(fetchedRole);
+      setInitialTargetRole(fetchedRole);
+
+      setYearsOfExperience(fetchedYears);
+      setInitialYearsOfExperience(fetchedYears);
+
+      setExperienceSummary(fetchedSummary);
+      setInitialExperienceSummary(fetchedSummary);
+
+      setResumeText(fetchedResume);
+      setInitialResumeText(fetchedResume);
+    }
+  }, [profileData]);
+
+  const processAvatarImage = (file) => {
+    return new Promise((resolve, reject) => {
+      if (!file) return reject(new Error('No file provided.'));
+      const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        return reject(new Error('Invalid image format. Allowed formats: JPEG, PNG, WebP.'));
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        return reject(new Error('Image size must be ≤ 2 MB.'));
+      }
+
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Failed to read image file.'));
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Failed to load image.'));
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_SIZE = 256;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height = Math.round((height * MAX_SIZE) / width);
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width = Math.round((width * MAX_SIZE) / height);
+              height = MAX_SIZE;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          resolve(dataUrl);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleAvatarFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsProcessingAvatar(true);
+    setAccountStatus({ loading: false, success: false, error: '' });
+
+    try {
+      const resizedDataUrl = await processAvatarImage(file);
+      setAvatarDataUrl(resizedDataUrl);
+    } catch (err) {
+      setAccountStatus({ loading: false, success: false, error: err.message || 'Failed to process profile image.' });
+    } finally {
+      setIsProcessingAvatar(false);
+      e.target.value = '';
+    }
+  };
 
   // Save Account tab
   const handleSaveAccount = async (e) => {
     e.preventDefault();
     setAccountStatus({ loading: true, success: false, error: '' });
     try {
-      const res = await axiosInstance.put('/api/profile', { name, avatarPreset });
+      const res = await axiosInstance.put('/api/profile', { name, avatarPreset, avatarDataUrl });
       const updatedName = res.data?.name || name;
       const updatedAvatar = res.data?.avatarPreset !== undefined ? res.data?.avatarPreset : avatarPreset;
+      const updatedDataUrl = res.data?.avatarDataUrl !== undefined ? res.data?.avatarDataUrl : avatarDataUrl;
+
       setName(updatedName);
       setInitialName(updatedName);
       setAvatarPreset(updatedAvatar);
       setInitialAvatarPreset(updatedAvatar);
+      setAvatarDataUrl(updatedDataUrl);
+      setInitialAvatarDataUrl(updatedDataUrl);
+
       invalidateProfileQueries(userId);
       setAccountStatus({ loading: false, success: true, error: '' });
       setTimeout(() => setAccountStatus(prev => ({ ...prev, success: false })), 3000);
@@ -344,7 +421,7 @@ export default function ProfilePage() {
     currentResumeState = 'paste';
   }
 
-  const isAccountDirty = name !== initialName || avatarPreset !== initialAvatarPreset;
+  const isAccountDirty = name !== initialName || avatarPreset !== initialAvatarPreset || avatarDataUrl !== initialAvatarDataUrl;
   const isJobSearchDirty =
     targetRole !== initialTargetRole ||
     yearsOfExperience !== initialYearsOfExperience ||
@@ -389,7 +466,11 @@ export default function ProfilePage() {
         transition={{ duration: 0.25 }}
       >
         <div className="profile-avatar">
-          {renderAvatarSvg(avatarPreset, userInitial, 44)}
+          {avatarDataUrl ? (
+            <img src={avatarDataUrl} alt="Profile" style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover' }} />
+          ) : (
+            renderAvatarSvg(avatarPreset, userInitial, 44)
+          )}
         </div>
         <div className="profile-user-info">
           <span className="profile-user-name">{name.trim() || 'Add your name'}</span>
@@ -432,30 +513,65 @@ export default function ProfilePage() {
                 <div className="claude-row claude-row--stacked">
                   <div className="claude-row__info">
                     <label className="claude-row__label">Profile Picture Avatar</label>
-                    <p className="claude-row__desc">Select a preset avatar for your profile.</p>
+                    <p className="claude-row__desc">Upload a photo (JPEG/PNG/WebP ≤2MB) or pick a preset avatar.</p>
                   </div>
-                  <div className="avatar-picker-grid">
-                    <button
-                      type="button"
-                      className={`avatar-picker-item ${avatarPreset === null ? 'avatar-picker-item--active' : ''}`}
-                      onClick={() => setAvatarPreset(null)}
-                      title="Default initial avatar"
-                      aria-label="Default initial avatar"
-                    >
-                      <div className="avatar-preview-default">{userInitial}</div>
-                    </button>
-                    {AVATAR_PRESETS.map((p) => (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                       <button
-                        key={p.id}
                         type="button"
-                        className={`avatar-picker-item ${avatarPreset === p.id ? 'avatar-picker-item--active' : ''}`}
-                        onClick={() => setAvatarPreset(p.id)}
-                        title={p.label}
-                        aria-label={p.label}
+                        className="btn-secondary btn-sm"
+                        disabled={isProcessingAvatar}
+                        onClick={() => avatarFileInputRef.current?.click()}
                       >
-                        {renderAvatarSvg(p.id, userInitial, 36)}
+                        {isProcessingAvatar ? 'Processing...' : 'Upload photo'}
                       </button>
-                    ))}
+                      {avatarDataUrl && (
+                        <button
+                          type="button"
+                          className="btn-danger-link btn-sm"
+                          onClick={() => {
+                            setAvatarDataUrl(null);
+                          }}
+                        >
+                          Remove photo
+                        </button>
+                      )}
+                      <input
+                        ref={avatarFileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        style={{ display: 'none' }}
+                        onChange={handleAvatarFileChange}
+                      />
+                    </div>
+
+                    <div className="avatar-picker-grid">
+                      <button
+                        type="button"
+                        className={`avatar-picker-item ${avatarPreset === null && !avatarDataUrl ? 'avatar-picker-item--active' : ''}`}
+                        onClick={() => {
+                          setAvatarPreset(null);
+                        }}
+                        title="Default initial avatar"
+                        aria-label="Default initial avatar"
+                      >
+                        <div className="avatar-preview-default">{userInitial}</div>
+                      </button>
+                      {AVATAR_PRESETS.map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          className={`avatar-picker-item ${avatarPreset === p.id && !avatarDataUrl ? 'avatar-picker-item--active' : ''}`}
+                          onClick={() => {
+                            setAvatarPreset(p.id);
+                          }}
+                          title={p.label}
+                          aria-label={p.label}
+                        >
+                          {renderAvatarSvg(p.id, userInitial, 36)}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 

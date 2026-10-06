@@ -31,6 +31,7 @@ const ApplicationForm = lazy(() => import('./applications/ApplicationForm'));
 const InterviewsPage = lazy(() => import('./interviews/InterviewsPage'));
 const OpeningsPage = lazy(() => import('./openings/OpeningsPage'));
 const AdminOpeningsPage = lazy(() => import('./admin/AdminOpeningsPage'));
+const AdminManageOpeningsPage = lazy(() => import('./admin/AdminManageOpeningsPage'));
 const ProfilePage = lazy(() => import('./profile/ProfilePage'));
 const ChatPage = lazy(() => import('./assistant/ChatPage'));
 
@@ -61,7 +62,8 @@ function App() {
                       <Route element={<Layout />}>
                         {/* Shared routes for both Student and Admin */}
                         <Route path="/openings" element={<OpeningsPage />} />
-                        <Route path="/profile" element={<ProfilePage />} />
+                        <Route path="/settings" element={<ProfilePage />} />
+                        <Route path="/profile" element={<Navigate to="/settings" replace />} />
 
                         {/* Student-only routes (Admins cannot view student data) */}
                         <Route element={<StudentRoute />}>
@@ -77,6 +79,7 @@ function App() {
                         {/* Admin-only routes */}
                         <Route element={<AdminRoute />}>
                           <Route path="/admin/openings" element={<AdminOpeningsPage />} />
+                          <Route path="/admin/manageopenings" element={<AdminManageOpeningsPage />} />
                         </Route>
                       </Route>
                     </Route>

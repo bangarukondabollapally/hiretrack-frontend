@@ -60,5 +60,7 @@ export const ROUTES = {
   APPLICATION_DETAIL: '/applications/:id',
   INTERVIEWS: '/interviews',
   ASSISTANT: '/assistant',
-  PROFILE: '/profile',
+  SETTINGS: '/settings',
+  PROFILE: '/settings', // Backward compatibility alias
 };
+

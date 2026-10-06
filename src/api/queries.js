@@ -39,6 +39,8 @@ export const fetchOpenings = (includeClosed = false) =>
   axiosInstance.get(`/api/openings${includeClosed ? '?includeClosed=true' : ''}`).then(r => r.data);
 export const fetchAdminOpenings = () => axiosInstance.get('/api/admin/openings').then(r => r.data);
 export const fetchProfile = () => axiosInstance.get('/api/profile').then(r => r.data);
+export const trackOpeningApi = (id) => axiosInstance.post(`/api/openings/${id}/track`).then(r => r.data);
+export const untrackOpeningApi = (id) => axiosInstance.delete(`/api/openings/${id}/track`).then(r => r.data);
 
 // Assistant Server-side History Fetchers
 export const fetchConversations = () => axiosInstance.get('/api/assistant/conversations').then(r => r.data);
@@ -263,7 +265,7 @@ export function prefetchRouteData(userId, path) {
     queryClient.prefetchQuery({ queryKey: ['openings', userId, false], queryFn: () => fetchOpenings(false), staleTime: 60000 });
   } else if (path === '/admin/openings') {
     queryClient.prefetchQuery({ queryKey: ['adminOpenings', userId], queryFn: fetchAdminOpenings, staleTime: 60000 });
-  } else if (path === '/profile') {
+  } else if (path === '/settings' || path === '/profile') {
     queryClient.prefetchQuery({ queryKey: ['profile', userId], queryFn: fetchProfile, staleTime: 60000 });
   } else if (path.startsWith('/assistant')) {
     queryClient.prefetchQuery({ queryKey: ['conversations', userId], queryFn: fetchConversations, staleTime: 10000 });

@@ -134,6 +134,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 7px 10px;
+  min-height: 44px;
+  box-sizing: border-box;
   border-radius: 8px;
   cursor: pointer;
   color: var(--asst-text-primary, #1C1B19);

@@ -146,6 +146,7 @@ export default function ChatPage() {
   const [pickerHighlightedIdx, setPickerHighlightedIdx] = useState(0);
   // Attachments state
   const [attachments, setAttachments] = useState([]);
+  const [fileError, setFileError] = useState('');
   const [isAttachMenuOpen, setIsAttachMenuOpen] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -240,14 +241,23 @@ export default function ChatPage() {
 
   // SSE Stream Handler
   const handleSendMessage = useCallback(async (overrideText) => {
-    const messageText = (overrideText || inputText).trim();
+    let messageText = (overrideText || inputText).trim();
     if ((!messageText && attachments.length === 0) || isGenerating) return;
+
+    if (attachments.length > 0) {
+      const formattedAttachments = attachments.map(att =>
+        `[Attached File: ${att.name}]\n${att.content}\n[/Attached File]`
+      ).join('\n\n');
+
+      if (messageText) {
+        messageText = `${messageText}\n\n${formattedAttachments}`;
+      } else {
+        messageText = formattedAttachments;
+      }
+    }
 
     if (!overrideText) {
       setInputText('');
-    }
-    const currentAttachments = [...attachments];
-    if (!overrideText) {
       setAttachments([]);
     }
 
@@ -256,9 +266,6 @@ export default function ChatPage() {
     }
 
     const userMsg = { id: `msg_${Date.now()}`, sender: 'user', text: messageText };
-    if (currentAttachments.length > 0) {
-      userMsg.attachments = currentAttachments;
-    }
     appendMessage(userMsg);
 
     setIsGenerating(true);
@@ -282,7 +289,6 @@ export default function ChatPage() {
         message: messageText,
         applicationId: selectedAppId ? Number(selectedAppId) : null,
         conversationId: activeId ? Number(activeId) : null,
-        attachments: currentAttachments
       };
 
       const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
@@ -372,7 +378,6 @@ export default function ChatPage() {
             message: messageText,
             applicationId: selectedAppId ? Number(selectedAppId) : null,
             conversationId: activeId ? Number(activeId) : null,
-            attachments: currentAttachments
           });
           updateMessageText(assistantMsgId, fallbackRes.data.reply);
           if (fallbackRes.data.conversationId) {
@@ -402,30 +407,48 @@ export default function ChatPage() {
     }
   };
 
-  const processFiles = (files) => {
-    let count = attachments.length;
+  const processFiles = async (files) => {
+    setFileError('');
+    const MAX_FILE_SIZE = 100 * 1024; // 100 KB limit
+    const MAX_TEXT_CHARS = 12000;
+
+    const allowedExtensions = ['txt', 'md', 'csv', 'json', 'pdf'];
+
     for (const file of files) {
-      if (count >= 5) break;
-      const isImage = file.type.startsWith('image/');
-      const isText = file.name.endsWith('.txt') || file.name.endsWith('.md') || file.name.endsWith('.pdf') || file.name.endsWith('.docx') || file.type === 'text/plain';
-      
-      if (isImage) {
-        if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) continue;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const base64Data = e.target.result.split(',')[1];
-          setAttachments(prev => [...prev, { type: 'image', name: file.name, mimeType: file.type, data: base64Data }].slice(0, 5));
-        };
-        reader.readAsDataURL(file);
-        count++;
-      } else if (isText) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const text = e.target.result || '';
-          setAttachments(prev => [...prev, { type: 'text', name: file.name, content: text.substring(0, 20000) }].slice(0, 5));
-        };
-        reader.readAsText(file);
-        count++;
+      if (attachments.length >= 3) {
+        setFileError('Maximum 3 reference files can be attached.');
+        break;
+      }
+
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (!allowedExtensions.includes(ext)) {
+        setFileError(`Unsupported file "${file.name}". Only text files (.txt, .md, .csv, .json, .pdf) are accepted.`);
+        continue;
+      }
+
+      if (file.size > MAX_FILE_SIZE) {
+        setFileError(`File "${file.name}" (${(file.size / 1024).toFixed(1)} KB) exceeds maximum size limit of 100 KB.`);
+        continue;
+      }
+
+      try {
+        const { extractTextFromFile } = await import('../lib/fileParser');
+        const extractedText = await extractTextFromFile(file);
+
+        if (!extractedText || !extractedText.trim()) {
+          setFileError(`File "${file.name}" is empty or no readable text could be extracted.`);
+          continue;
+        }
+
+        if (extractedText.length > MAX_TEXT_CHARS) {
+          setFileError(`Extracted text from "${file.name}" (${extractedText.length} chars) exceeds maximum character limit of 12,000.`);
+          continue;
+        }
+
+        const sizeFormatted = file.size >= 1024 ? `${(file.size / 1024).toFixed(1)} KB` : `${file.size} B`;
+        setAttachments(prev => [...prev, { name: file.name, size: sizeFormatted, content: extractedText.trim() }]);
+      } catch (err) {
+        setFileError(`Failed to read file "${file.name}": ${err.message || 'Unknown error'}`);
       }
     }
     setIsAttachMenuOpen(false);
@@ -883,7 +906,12 @@ export default function ChatPage() {
   // Helper render method for Composer
   function renderComposer() {
     return (
-      <div className={`composer-card ${(attachments.length > 0 || selectedApp) ? 'composer-card--has-attachments' : ''}`}>
+      <div className={`composer-card ${(attachments.length > 0 || selectedApp || fileError) ? 'composer-card--has-attachments' : ''}`}>
+        {fileError && (
+          <div style={{ color: '#991B1B', fontSize: '0.8rem', padding: '6px 12px', background: '#FEE2E2', border: '1px solid #FCA5A5', borderRadius: '6px', width: '100%', boxSizing: 'border-box' }}>
+            {fileError}
+          </div>
+        )}
         {/* Selected Context Chip & File Attachments */}
         {(selectedApp || attachments.length > 0) && (
           <div className="composer-attachments">
@@ -956,24 +984,13 @@ export default function ChatPage() {
                     <button
                       type="button"
                       onClick={() => {
-                        fileInputRef.current.accept = ".png,.jpeg,.jpg,.webp,.gif";
-                        fileInputRef.current?.click();
-                        setIsAttachMenuOpen(false);
-                      }}
-                    >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                      Upload image
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        fileInputRef.current.accept = ".txt,.md,.pdf,.docx";
+                        fileInputRef.current.accept = ".txt,.md,.csv,.json,.pdf";
                         fileInputRef.current?.click();
                         setIsAttachMenuOpen(false);
                       }}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                      Upload text file
+                      Attach text file
                     </button>
                   </m.div>
                 </>
