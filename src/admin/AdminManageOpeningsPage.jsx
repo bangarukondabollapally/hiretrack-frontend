@@ -7,7 +7,7 @@ import DatePickerPopover from '../components/DatePickerPopover';
 import './AdminOpeningsPage.css';
 
 const COMMON_BRANCHES = ['CSE', 'IT', 'ECE', 'EEE', 'ME', 'CE', 'AI/ML', 'Data Science', 'Software Engineering'];
-const YEAR_OF_STUDY_OPTIONS = ['1st Year', '2nd Year', '3rd Year', '4th Year', 'All Years'];
+const STUDY_YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
 
 function normalizeUrlInput(rawUrl) {
   if (!rawUrl) return '';
@@ -51,8 +51,10 @@ export default function AdminManageOpeningsPage() {
     applicationLink: '',
     status: 'OPEN',
     seats: '',
-    yearOfStudy: 'All Years',
   });
+
+  const [yearStart, setYearStart] = useState('1st Year');
+  const [yearEnd, setYearEnd] = useState('4th Year');
 
   const [isAllBranches, setIsAllBranches] = useState(false);
   const [selectedBranches, setSelectedBranches] = useState(['CSE', 'IT', 'ECE']);
@@ -108,6 +110,28 @@ export default function AdminManageOpeningsPage() {
       setSelectedBranches(branches);
     }
 
+    // Populate Year of Study Range
+    const yRaw = opening.yearOfStudy || 'All Years';
+    if (!yRaw || yRaw === 'All Years' || yRaw === '1st Year - 4th Year' || yRaw === '1st Year to 4th Year') {
+      setYearStart('1st Year');
+      setYearEnd('4th Year');
+    } else if (yRaw.includes('-') || yRaw.includes('to') || yRaw.includes('→')) {
+      const parts = yRaw.split(/[-→]|to/).map(s => s.trim());
+      if (parts.length === 2 && STUDY_YEARS.includes(parts[0]) && STUDY_YEARS.includes(parts[1])) {
+        setYearStart(parts[0]);
+        setYearEnd(parts[1]);
+      } else {
+        setYearStart('1st Year');
+        setYearEnd('4th Year');
+      }
+    } else if (STUDY_YEARS.includes(yRaw.trim())) {
+      setYearStart(yRaw.trim());
+      setYearEnd(yRaw.trim());
+    } else {
+      setYearStart('1st Year');
+      setYearEnd('4th Year');
+    }
+
     setEligibilityNote(opening.eligibilityNote || '');
 
     setFormData({
@@ -122,7 +146,6 @@ export default function AdminManageOpeningsPage() {
       applicationLink: opening.applicationLink || '',
       status: opening.status || 'OPEN',
       seats: opening.seats != null ? String(opening.seats) : '',
-      yearOfStudy: opening.yearOfStudy || 'All Years',
     });
   };
 
@@ -173,11 +196,17 @@ export default function AdminManageOpeningsPage() {
     if (!formData.applicationLink.trim()) {
       errs.applicationLink = 'Application link is required';
     } else if (!validateUrl(normalizedUrl)) {
-      errs.applicationLink = 'Valid application URL (e.g. company.com/careers) is required';
+      errs.applicationLink = 'Valid application URL (e.g. https://company.com/careers) is required';
     }
 
     if (!isAllBranches && selectedBranches.length === 0) {
       errs.branches = 'Select at least one branch or choose "All branches"';
+    }
+
+    const startIdx = STUDY_YEARS.indexOf(yearStart);
+    const endIdx = STUDY_YEARS.indexOf(yearEnd);
+    if (startIdx > endIdx) {
+      errs.yearOfStudy = 'Start year cannot be after end year';
     }
 
     if (formData.seats) {
@@ -188,7 +217,7 @@ export default function AdminManageOpeningsPage() {
     }
 
     if (formData.description && formData.description.length > 2000) {
-      errs.description = 'Mini JD description cannot exceed 2000 characters';
+      errs.description = 'Short JD description cannot exceed 2000 characters';
     }
 
     setFormErrors(errs);
@@ -211,6 +240,15 @@ export default function AdminManageOpeningsPage() {
     const normalizedUrl = normalizeUrlInput(formData.applicationLink);
     const seatsVal = formData.seats ? parseInt(formData.seats, 10) : null;
 
+    let yearFormatted = 'All Years';
+    if (yearStart === yearEnd) {
+      yearFormatted = yearStart;
+    } else if (yearStart === '1st Year' && yearEnd === '4th Year') {
+      yearFormatted = 'All Years';
+    } else {
+      yearFormatted = `${yearStart} - ${yearEnd}`;
+    }
+
     const payload = {
       ...formData,
       applicationLink: normalizedUrl,
@@ -219,7 +257,7 @@ export default function AdminManageOpeningsPage() {
       eligibleBranches: branchesStr,
       eligibilityNote,
       seats: seatsVal,
-      yearOfStudy: formData.yearOfStudy,
+      yearOfStudy: yearFormatted,
     };
 
     try {
@@ -261,8 +299,10 @@ export default function AdminManageOpeningsPage() {
       {successMsg && <div className="admin-alert admin-alert--success">{successMsg}</div>}
       {error && <div className="admin-alert admin-alert--error">{error}</div>}
 
-      <div className="admin-form-card" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg, 12px)', padding: '1.5rem', maxWidth: '800px', margin: '0 auto' }}>
-        <form onSubmit={handleFormSubmit} noValidate>
+      <div className="admin-form-card" style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg, 12px)', padding: '1.5rem', maxWidth: '820px', margin: '0 auto' }}>
+        <form onSubmit={handleFormSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          
+          {/* Row 1: Company & Role */}
           <div className="form-row">
             <div className="field">
               <label className="field-label">Company Name <span className="required">*</span></label>
@@ -290,6 +330,7 @@ export default function AdminManageOpeningsPage() {
             </div>
           </div>
 
+          {/* Row 2: Job Type, Work Mode, Status */}
           <div className="form-row">
             <div className="field">
               <label className="field-label">Job Type</label>
@@ -330,6 +371,7 @@ export default function AdminManageOpeningsPage() {
             </div>
           </div>
 
+          {/* Row 3: Location, Package, Seats */}
           <div className="form-row">
             <div className="field">
               <label className="field-label">Location</label>
@@ -381,6 +423,7 @@ export default function AdminManageOpeningsPage() {
             </div>
           </div>
 
+          {/* Row 4: Application Link & Deadline */}
           <div className="form-row">
             <div className="field" style={{ flex: 2 }}>
               <label className="field-label">Application Link <span className="required">*</span></label>
@@ -389,11 +432,8 @@ export default function AdminManageOpeningsPage() {
                 className={`field-input ${formErrors.applicationLink ? 'field-input--error' : ''}`}
                 value={formData.applicationLink}
                 onChange={(e) => setFormData({ ...formData, applicationLink: e.target.value })}
-                placeholder="company.com/careers/apply"
+                placeholder="https://company.com/careers"
               />
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px', display: 'block' }}>
-                Prefix with http:// or https:// is optional; will automatically default to https://
-              </span>
               {formErrors.applicationLink && <span className="field-error">{formErrors.applicationLink}</span>}
             </div>
 
@@ -407,12 +447,12 @@ export default function AdminManageOpeningsPage() {
             </div>
           </div>
 
-          {/* Eligibility Section */}
-          <div className="structured-eligibility-group" style={{ background: 'var(--surface-sunken, #F8F6F0)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)', marginTop: '1rem', marginBottom: '1rem' }}>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: '700', marginBottom: '0.75rem', color: 'var(--text-primary)' }}>Eligibility & Audience</h3>
+          {/* Eligibility Section Group */}
+          <div className="structured-eligibility-group" style={{ background: 'var(--surface-sunken, #F8F6F0)', padding: '1.25rem', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>Eligibility & Audience</h3>
 
-            <div className="form-row" style={{ marginBottom: '0.75rem' }}>
-              <div className="field">
+            <div className="form-row">
+              <div className="field" style={{ flex: 1 }}>
                 <label className="field-label">Degree</label>
                 <select
                   className="field-input field-select"
@@ -430,22 +470,61 @@ export default function AdminManageOpeningsPage() {
                 </select>
               </div>
 
-              <div className="field">
-                <label className="field-label">Year of Study</label>
-                <select
-                  className="field-input field-select"
-                  value={formData.yearOfStudy}
-                  onChange={(e) => setFormData({ ...formData, yearOfStudy: e.target.value })}
-                >
-                  {YEAR_OF_STUDY_OPTIONS.map(yr => (
-                    <option key={yr} value={yr}>{yr}</option>
-                  ))}
-                </select>
+              {/* Year of Study Range Selector */}
+              <div className="field" style={{ flex: 2 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                  <label className="field-label" style={{ marginBottom: 0 }}>Year of Study Range</label>
+                  <button
+                    type="button"
+                    style={{ background: 'none', border: 'none', color: 'var(--accent)', fontSize: '0.8rem', fontWeight: '600', cursor: 'pointer', padding: 0 }}
+                    onClick={() => {
+                      setYearStart('1st Year');
+                      setYearEnd('4th Year');
+                    }}
+                  >
+                    Select All Years
+                  </button>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>From:</span>
+                    <select
+                      className="field-input field-select"
+                      style={{ flex: 1 }}
+                      value={yearStart}
+                      onChange={(e) => setYearStart(e.target.value)}
+                    >
+                      {STUDY_YEARS.map(yr => (
+                        <option key={yr} value={yr}>{yr}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: '600' }}>→</span>
+
+                  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>To:</span>
+                    <select
+                      className="field-input field-select"
+                      style={{ flex: 1 }}
+                      value={yearEnd}
+                      onChange={(e) => setYearEnd(e.target.value)}
+                    >
+                      {STUDY_YEARS.map(yr => (
+                        <option key={yr} value={yr}>{yr}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {formErrors.yearOfStudy && <span className="field-error" style={{ marginTop: '4px', display: 'block' }}>{formErrors.yearOfStudy}</span>}
               </div>
             </div>
 
-            <div className="field" style={{ marginBottom: '0.75rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+            {/* Branches Selection */}
+            <div className="field">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                 <label className="field-label" style={{ marginBottom: 0 }}>Eligible Branches</label>
                 <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', cursor: 'pointer', color: 'var(--accent)' }}>
                   <input
@@ -500,7 +579,7 @@ export default function AdminManageOpeningsPage() {
                   </div>
 
                   {selectedBranches.length > 0 && (
-                    <div style={{ marginTop: '6px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                    <div style={{ marginTop: '8px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
                       Selected ({selectedBranches.length}): {selectedBranches.map(b => (
                         <span key={b} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', background: 'var(--surface)', padding: '2px 8px', borderRadius: '4px', border: '1px solid var(--border)', marginRight: '4px', marginTop: '4px' }}>
                           {b}
@@ -527,11 +606,12 @@ export default function AdminManageOpeningsPage() {
             </div>
           </div>
 
-          <div className="field" style={{ marginTop: '1rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-              <label className="field-label" style={{ marginBottom: 0 }}>Mini JD (Job Description)</label>
+          {/* Short JD Section (Renamed from Mini JD) */}
+          <div className="field">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <label className="field-label" style={{ marginBottom: 0 }}>Short JD</label>
               <span style={{ fontSize: '0.75rem', color: formData.description.length > 2000 ? 'var(--danger)' : 'var(--text-secondary)' }}>
-                {formData.description.length}/2000 characters
+                {formData.description.length}/2000
               </span>
             </div>
             <textarea
@@ -540,12 +620,13 @@ export default function AdminManageOpeningsPage() {
               className={`field-input field-textarea ${formErrors.description ? 'field-input--error' : ''}`}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Concise Job Description: key responsibilities, required skills, selection process..."
+              placeholder="Concise job description: role, key responsibilities, required skills, technical requirements..."
             />
             {formErrors.description && <span className="field-error">{formErrors.description}</span>}
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '1.5rem' }}>
+          {/* Form Actions */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '0.5rem' }}>
             <button type="button" className="btn-secondary" onClick={() => navigate('/admin/openings')}>
               Cancel
             </button>
