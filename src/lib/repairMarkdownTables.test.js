@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { repairMarkdownTables, TABLE_BR_MARKER } from './repairMarkdownTables';
+import { repairMarkdownTables } from './repairMarkdownTables';
 
 describe('repairMarkdownTables', () => {
   it('repairs Fixture A (header 2 cells, separator 3 cells)', () => {
@@ -26,8 +26,7 @@ describe('repairMarkdownTables', () => {
     const lines = repaired.split('\n').filter(l => l.trim().length > 0);
 
     expect(lines[1]).toBe('| ------- | ---------------- | -------------- |');
-    expect(lines[2]).toContain(TABLE_BR_MARKER);
-    expect(lines[2]).not.toContain('<br>');
+    expect(lines[2]).toContain('<br />');
   });
 
   it('leaves a valid table unchanged except formatting alignment', () => {

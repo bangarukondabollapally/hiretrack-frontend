@@ -4,7 +4,7 @@ import { AnimatePresence, m } from 'framer-motion';
 import { useAuth } from '../auth/AuthContext';
 import { useTrackedOpeningsQuery, trackOpeningApi, untrackOpeningApi, invalidateOpeningQueries } from '../api/queries';
 import QueryStateNotice from '../components/QueryStateNotice';
-import { getOpeningStatus } from './openingStatusHelper';
+import { getOpeningStatus, formatYearOfStudy, formatPublishedBy } from './openingStatusHelper';
 import { modalBackdropVariants, modalCardVariants, listItemVariants } from '../lib/motion';
 import './OpeningsPage.css';
 
@@ -49,14 +49,6 @@ function formatDeadlineWithCountdown(deadline) {
   } else {
     return { text: `Deadline: ${formattedDate} • ${diffDays} days left`, isExpired: false, isClosingSoon: false };
   }
-}
-
-function formatPublishedBy(name) {
-  if (!name) return 'Published by: Placement Cell';
-  if (name.toLowerCase().includes('placement cell')) {
-    return `Published by: ${name}`;
-  }
-  return `Published by: ${name} Placement Cell`;
 }
 
 export default function TrackedOpeningsPage() {
@@ -267,70 +259,60 @@ export default function TrackedOpeningsPage() {
                     </span>
                   </div>
 
-                  <div className="opening-card__details">
-                    {op.jobType && (
-                      <span className="opening-card__detail-item">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-                          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-                        </svg>
-                        {op.jobType}
-                      </span>
-                    )}
-
-                    {op.workMode && (
-                      <span className="opening-card__detail-item">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                        </svg>
-                        {op.workMode}
-                      </span>
-                    )}
-
-                    {op.packageDetails && (
-                      <span className="opening-card__detail-item opening-card__detail-item--highlight">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <line x1="12" y1="1" x2="12" y2="23" />
-                          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                        </svg>
-                        {formatDisplayPackage(op.packageDetails)}
-                      </span>
-                    )}
-
+                  <div className="opening-card__meta">
+                    {op.jobType && <span className="meta-tag">{op.jobType}</span>}
+                    {op.workMode && <span className="meta-tag">{op.workMode}</span>}
                     {op.location && (
-                      <span className="opening-card__detail-item">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                          <circle cx="12" cy="10" r="3" />
+                      <span className="meta-tag">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '3px' }}>
+                          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
+                          <circle cx="12" cy="10" r="3"/>
                         </svg>
                         {op.location}
                       </span>
                     )}
-
-                    {op.yearOfStudy && op.yearOfStudy !== 'All Years' && (
-                      <span className="opening-card__detail-item">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                          <path d="M6 12v5c3 3 9 3 12 0v-5" />
-                        </svg>
-                        {op.yearOfStudy}
+                    {op.packageDetails && (
+                      <span className="meta-tag meta-tag--package">
+                        {formatDisplayPackage(op.packageDetails)}
                       </span>
                     )}
+                    {op.seats != null && op.seats > 0 && (
+                      <span className="meta-tag meta-tag--seats">
+                        Seats: {op.seats}
+                      </span>
+                    )}
+                    {op.yearOfStudy && (
+                      <span className="meta-tag">
+                        {formatYearOfStudy(op.yearOfStudy)}
+                      </span>
+                    )}
+                    {op.minCgpa != null && (
+                      <span className="meta-tag">
+                        Min CGPA: {op.minCgpa}
+                      </span>
+                    )}
+                    {op.maxBacklogs != null && (
+                      <span className="meta-tag">
+                        Max Backlogs: {op.maxBacklogs}
+                      </span>
+                    )}
+                    <span className="meta-tag meta-tag--published">
+                      {formatPublishedBy(op.publishedBy)}
+                    </span>
                   </div>
 
-                  {op.eligibility && (
-                    <div className="opening-card__eligibility">
-                      <strong>Eligibility:</strong> {op.eligibility}
-                    </div>
+                  {(op.eligibleBranches || op.eligibility || op.minCgpa != null || op.maxBacklogs != null) && (
+                    <p className="opening-card__eligibility">
+                      <strong>Eligibility:</strong> {op.eligibleBranches ? (op.eligibleBranches === 'ALL' ? 'All Branches' : op.eligibleBranches) : (op.eligibility || 'All Branches')}
+                      {op.degree ? ` (${op.degree})` : ''}
+                      {op.minCgpa != null && ` • Min CGPA: ${op.minCgpa}`}
+                      {op.maxBacklogs != null && ` • Max Backlogs: ${op.maxBacklogs}`}
+                    </p>
                   )}
 
-                  {deadlineInfo && (
-                    <div className={`opening-card__deadline ${deadlineInfo.isExpired ? 'deadline--expired' : deadlineInfo.isClosingSoon ? 'deadline--urgent' : ''}`}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="12" r="10" />
-                        <polyline points="12 6 12 12 16 14" />
-                      </svg>
-                      {deadlineInfo.text}
+                  {op.deadline && (
+                    <div className={`opening-card__deadline ${deadlineInfo?.isExpired ? 'deadline--expired' : isClosingSoon ? 'deadline--closing-soon' : ''}`}>
+                      {deadlineInfo?.text || `Deadline: ${op.deadline}`}
                     </div>
                   )}
 

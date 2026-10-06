@@ -71,6 +71,21 @@ const normalizeText = (text) => {
   return text.replace(/\u2011/g, '-').replace(/\u202F/g, ' ');
 };
 
+const extractUserDisplayContent = (rawText) => {
+  if (!rawText) return { text: '', attachments: [] };
+  if (!rawText.includes('[Attached File:')) return { text: rawText, attachments: [] };
+
+  const attRegex = /\[Attached File:\s*([^\]]+)\][\s\S]*?\[\/Attached File\]/g;
+  const foundAtts = [];
+  let match;
+  while ((match = attRegex.exec(rawText)) !== null) {
+    foundAtts.push({ name: match[1].trim() });
+  }
+
+  const cleanText = rawText.replace(/\[Attached File:\s*[^\]]+\][\s\S]*?\[\/Attached File\]/g, '').trim();
+  return { text: cleanText, attachments: foundAtts };
+};
+
 const renderCellContent = (children) => {
   if (typeof children === 'string') {
     if (!children.includes(TABLE_BR_MARKER)) return children;
@@ -239,20 +254,33 @@ export default function ChatPage() {
     }
   };
 
+  const handleEditPrompt = (msg) => {
+    const parsed = extractUserDisplayContent(msg.text);
+    setInputText(parsed.text || '');
+    if (msg.attachments && msg.attachments.length > 0) {
+      setAttachments(msg.attachments);
+    } else if (parsed.attachments && parsed.attachments.length > 0) {
+      setAttachments(parsed.attachments);
+    }
+  };
+
   // SSE Stream Handler
   const handleSendMessage = useCallback(async (overrideText) => {
-    let messageText = (overrideText || inputText).trim();
-    if ((!messageText && attachments.length === 0) || isGenerating) return;
+    const promptText = (overrideText || inputText).trim();
+    if ((!promptText && attachments.length === 0) || isGenerating) return;
 
-    if (attachments.length > 0) {
-      const formattedAttachments = attachments.map(att =>
+    const currentAttachments = [...attachments];
+    let fullPayloadMessage = promptText;
+
+    if (currentAttachments.length > 0) {
+      const formattedAttachments = currentAttachments.map(att =>
         `[Attached File: ${att.name}]\n${att.content}\n[/Attached File]`
       ).join('\n\n');
 
-      if (messageText) {
-        messageText = `${messageText}\n\n${formattedAttachments}`;
+      if (fullPayloadMessage) {
+        fullPayloadMessage = `${fullPayloadMessage}\n\n${formattedAttachments}`;
       } else {
-        messageText = formattedAttachments;
+        fullPayloadMessage = formattedAttachments;
       }
     }
 
@@ -265,7 +293,12 @@ export default function ChatPage() {
       newConversation();
     }
 
-    const userMsg = { id: `msg_${Date.now()}`, sender: 'user', text: messageText };
+    const userMsg = {
+      id: `msg_${Date.now()}`,
+      sender: 'user',
+      text: promptText,
+      attachments: currentAttachments.map(a => ({ name: a.name, size: a.size, content: a.content })),
+    };
     appendMessage(userMsg);
 
     setIsGenerating(true);
@@ -286,7 +319,7 @@ export default function ChatPage() {
 
     try {
       const payload = {
-        message: messageText,
+        message: fullPayloadMessage,
         applicationId: selectedAppId ? Number(selectedAppId) : null,
         conversationId: activeId ? Number(activeId) : null,
       };
@@ -375,7 +408,7 @@ export default function ChatPage() {
       } else {
         try {
           const fallbackRes = await axiosInstance.post('/api/assistant/chat', {
-            message: messageText,
+            message: fullPayloadMessage,
             applicationId: selectedAppId ? Number(selectedAppId) : null,
             conversationId: activeId ? Number(activeId) : null,
           });
@@ -409,8 +442,8 @@ export default function ChatPage() {
 
   const processFiles = async (files) => {
     setFileError('');
-    const MAX_FILE_SIZE = 100 * 1024; // 100 KB limit
-    const MAX_TEXT_CHARS = 12000;
+    const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1 MB limit per prompt specification
+    const MAX_TEXT_CHARS = 20000;
 
     const allowedExtensions = ['txt', 'md', 'csv', 'json', 'pdf'];
 
@@ -422,12 +455,12 @@ export default function ChatPage() {
 
       const ext = file.name.split('.').pop().toLowerCase();
       if (!allowedExtensions.includes(ext)) {
-        setFileError(`Unsupported file "${file.name}". Only text files (.txt, .md, .csv, .json, .pdf) are accepted.`);
+        setFileError(`Unsupported file "${file.name}". Supported formats: .txt, .pdf, .md, .csv, .json`);
         continue;
       }
 
       if (file.size > MAX_FILE_SIZE) {
-        setFileError(`File "${file.name}" (${(file.size / 1024).toFixed(1)} KB) exceeds maximum size limit of 100 KB.`);
+        setFileError(`File "${file.name}" (${(file.size / (1024 * 1024)).toFixed(1)} MB) exceeds maximum size limit of 1 MB.`);
         continue;
       }
 
@@ -441,11 +474,15 @@ export default function ChatPage() {
         }
 
         if (extractedText.length > MAX_TEXT_CHARS) {
-          setFileError(`Extracted text from "${file.name}" (${extractedText.length} chars) exceeds maximum character limit of 12,000.`);
+          setFileError(`Extracted text from "${file.name}" (${extractedText.length} chars) exceeds maximum limit of 20,000 characters.`);
           continue;
         }
 
-        const sizeFormatted = file.size >= 1024 ? `${(file.size / 1024).toFixed(1)} KB` : `${file.size} B`;
+        const sizeFormatted = file.size >= 1024 * 1024
+          ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
+          : file.size >= 1024
+          ? `${(file.size / 1024).toFixed(1)} KB`
+          : `${file.size} B`;
         setAttachments(prev => [...prev, { name: file.name, size: sizeFormatted, content: extractedText.trim() }]);
       } catch (err) {
         setFileError(`Failed to read file "${file.name}": ${err.message || 'Unknown error'}`);
@@ -695,12 +732,42 @@ export default function ChatPage() {
                     <div key={msg.id || idx} className={`transcript-turn transcript-turn--${msg.sender}`}>
                       {msg.sender === 'user' ? (
                         <m.div
-                          className="user-bubble"
+                          className="user-bubble-wrapper"
                           initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
                         >
-                          {normalizeText(msg.text)}
+                          <div className="user-bubble">
+                            {(msg.attachments?.length > 0 || extractUserDisplayContent(msg.text).attachments.length > 0) && (
+                              <div className="message-attachments-list">
+                                {(msg.attachments || extractUserDisplayContent(msg.text).attachments).map((att, attIdx) => (
+                                  <div key={attIdx} className="message-attachment-pill">
+                                    <span className="attachment-pill-icon">📄</span>
+                                    <span className="attachment-pill-name" title={att.name}>{att.name}</span>
+                                    {att.size && <span className="attachment-pill-size">{att.size}</span>}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            {extractUserDisplayContent(msg.text).text && (
+                              <div className="user-message-text">
+                                {normalizeText(extractUserDisplayContent(msg.text).text)}
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            className="user-prompt-edit-btn"
+                            onClick={() => handleEditPrompt(msg)}
+                            title="Edit prompt"
+                            aria-label="Edit prompt"
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                            <span>Edit</span>
+                          </button>
                         </m.div>
                       ) : (
                         <div className="assistant-response">

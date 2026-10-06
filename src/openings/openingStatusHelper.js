@@ -110,3 +110,30 @@ export function getOpeningStatus(opening) {
     warningLevel: 'normal',
   };
 }
+
+export function formatYearOfStudy(yearOfStudy) {
+  if (!yearOfStudy || yearOfStudy === 'All Years' || yearOfStudy === 'All years') return 'All years';
+  const str = String(yearOfStudy).trim();
+  if (str.includes('-')) {
+    const parts = str.split('-').map(s => s.trim());
+    if (parts.length === 2) {
+      if (parts[0].toLowerCase() === parts[1].toLowerCase()) {
+        const single = parts[0].replace(/\s*year/i, '').trim();
+        return `${single.toLowerCase()} year`;
+      }
+      const start = parts[0].replace(/\s*year/i, '').trim();
+      const end = parts[1].replace(/\s*year/i, '').trim().toLowerCase();
+      return `${start}–${end} year`;
+    }
+  }
+  const clean = str.replace(/\s*year/i, '').trim();
+  return `${clean.toLowerCase()} year`;
+}
+
+export function formatPublishedBy(publisher, fallbackOfficeName) {
+  let name = publisher || fallbackOfficeName || 'Placement Cell';
+  if (name.toLowerCase().startsWith('published by:')) {
+    name = name.substring(13).trim();
+  }
+  return `Published by: ${name}`;
+}

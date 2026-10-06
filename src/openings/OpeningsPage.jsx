@@ -4,7 +4,7 @@ import { AnimatePresence, m } from 'framer-motion';
 import { useAuth } from '../auth/AuthContext';
 import { useOpeningsQuery, trackOpeningApi, untrackOpeningApi, invalidateOpeningQueries } from '../api/queries';
 import QueryStateNotice from '../components/QueryStateNotice';
-import { getOpeningStatus } from './openingStatusHelper';
+import { getOpeningStatus, formatYearOfStudy, formatPublishedBy } from './openingStatusHelper';
 import { modalBackdropVariants, modalCardVariants, listItemVariants } from '../lib/motion';
 import './OpeningsPage.css';
 
@@ -49,14 +49,6 @@ function formatDeadlineWithCountdown(deadline) {
   } else {
     return { text: `Deadline: ${formattedDate} • ${diffDays} days left`, isExpired: false, isClosingSoon: false };
   }
-}
-
-function formatPublishedBy(name) {
-  if (!name) return 'Published by: Placement Cell';
-  if (name.toLowerCase().includes('placement cell')) {
-    return `Published by: ${name}`;
-  }
-  return `Published by: ${name} Placement Cell`;
 }
 
 export default function OpeningsPage() {
@@ -280,7 +272,17 @@ export default function OpeningsPage() {
                     )}
                     {op.yearOfStudy && (
                       <span className="meta-tag">
-                        Year: {op.yearOfStudy}
+                        {formatYearOfStudy(op.yearOfStudy)}
+                      </span>
+                    )}
+                    {op.minCgpa != null && (
+                      <span className="meta-tag">
+                        Min CGPA: {op.minCgpa}
+                      </span>
+                    )}
+                    {op.maxBacklogs != null && (
+                      <span className="meta-tag">
+                        Max Backlogs: {op.maxBacklogs}
                       </span>
                     )}
                     <span className="meta-tag meta-tag--published">
@@ -288,10 +290,12 @@ export default function OpeningsPage() {
                     </span>
                   </div>
 
-                  {op.eligibleBranches && (
+                  {(op.eligibleBranches || op.minCgpa != null || op.maxBacklogs != null) && (
                     <p className="opening-card__eligibility">
                       <strong>Eligibility:</strong> {op.eligibleBranches === 'ALL' ? 'All Branches' : op.eligibleBranches}
                       {op.degree ? ` (${op.degree})` : ''}
+                      {op.minCgpa != null && ` • Min CGPA: ${op.minCgpa}`}
+                      {op.maxBacklogs != null && ` • Max Backlogs: ${op.maxBacklogs}`}
                     </p>
                   )}
 

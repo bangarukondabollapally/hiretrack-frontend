@@ -5,6 +5,7 @@ import { useApplicationQuery, invalidateApplicationQueries, queryClient } from '
 import axiosInstance from '../api/axiosInstance';
 import StatusControl from './StatusControl';
 import TagSelector from './TagSelector';
+import DeleteConfirmModal from './DeleteConfirmModal';
 import DatePickerPopover from '../components/DatePickerPopover';
 import InterviewTimeline from '../interviews/InterviewTimeline';
 import './ApplicationForm.css';
@@ -37,6 +38,8 @@ export default function ApplicationForm() {
 
   const [currentTags, setCurrentTags] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -76,6 +79,22 @@ export default function ApplicationForm() {
       setError(err.response?.data?.message || 'Failed to save application.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!id) return;
+    setIsDeleting(true);
+    try {
+      await axiosInstance.delete(`/api/applications/${id}`);
+      invalidateApplicationQueries(userId);
+      setIsDeleteModalOpen(false);
+      navigate('/applications', { state: { toastMessage: 'Application deleted permanently.' } });
+    } catch (err) {
+      console.error('Failed to delete application:', err);
+      setError('Failed to delete application. Please try again.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -200,13 +219,27 @@ export default function ApplicationForm() {
           </div>
         )}
 
-        <div className="form-actions">
-          <button type="button" onClick={() => navigate('/applications')} className="btn-secondary">
-            Cancel
-          </button>
-          <button type="submit" disabled={isSaving} className="btn-primary">
-            {isSaving ? 'Saving...' : isEdit ? 'Update Application' : 'Create Application'}
-          </button>
+        <div className="form-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            {isEdit && (
+              <button
+                type="button"
+                onClick={() => setIsDeleteModalOpen(true)}
+                className="btn-danger"
+                style={{ background: 'transparent', color: 'var(--danger)', border: '1px solid var(--danger)' }}
+              >
+                Delete Application
+              </button>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button type="button" onClick={() => navigate('/applications')} className="btn-secondary">
+              Cancel
+            </button>
+            <button type="submit" disabled={isSaving} className="btn-primary">
+              {isSaving ? 'Saving...' : isEdit ? 'Update Application' : 'Create Application'}
+            </button>
+          </div>
         </div>
       </form>
 
@@ -215,6 +248,15 @@ export default function ApplicationForm() {
           <InterviewTimeline applicationId={id} />
         </div>
       )}
+
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        title="Delete Application"
+        message={`Are you sure you want to permanently delete your application for "${formData.jobRole}" at "${formData.companyName}"? All related interview rounds will also be deleted. Deletion is permanent.`}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setIsDeleteModalOpen(false)}
+        isLoading={isDeleting}
+      />
     </div>
   );
 }

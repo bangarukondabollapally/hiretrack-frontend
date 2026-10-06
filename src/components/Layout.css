@@ -73,11 +73,15 @@
   border-color: var(--border-strong);
 }
 
-.app-sidebar__brand {
+.app-sidebar__brand,
+.app-sidebar__brand-link,
+.mobile-header__brand-link {
   display: flex;
   align-items: center;
   gap: 10px;
   overflow: hidden;
+  text-decoration: none;
+  color: inherit;
 }
 
 .app-sidebar__logo-mark {

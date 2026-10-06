@@ -1,5 +1,6 @@
 import { m } from 'framer-motion';
 import { listItemVariants } from '../lib/motion';
+import { formatYearOfStudy, formatPublishedBy } from '../openings/openingStatusHelper';
 
 function formatDisplayPackage(pkg) {
   if (!pkg) return '';
@@ -10,12 +11,6 @@ function formatDisplayPackage(pkg) {
 
 export default function AdminOpeningCard({ opening, onEdit, onClose, onReopen, onDelete }) {
   const isClosed = opening.status === 'CLOSED';
-
-  const publishedByDisplay = opening.publishedBy
-    ? (opening.publishedBy.toLowerCase().includes('placement cell')
-        ? `Published by: ${opening.publishedBy}`
-        : `Published by: ${opening.publishedBy} Placement Cell`)
-    : 'Published by: Placement Cell';
 
   return (
     <m.div
@@ -60,12 +55,22 @@ export default function AdminOpeningCard({ opening, onEdit, onClose, onReopen, o
         )}
         {opening.yearOfStudy && (
           <span className="meta-tag">
-            Year: {opening.yearOfStudy}
+            {formatYearOfStudy(opening.yearOfStudy)}
+          </span>
+        )}
+        {opening.minCgpa != null && (
+          <span className="meta-tag">
+            Min CGPA: {opening.minCgpa}
+          </span>
+        )}
+        {opening.maxBacklogs != null && (
+          <span className="meta-tag">
+            Max Backlogs: {opening.maxBacklogs}
           </span>
         )}
         {opening.deadline && <span className="meta-tag">Deadline: {opening.deadline}</span>}
         <span className="meta-tag meta-tag--published">
-          {publishedByDisplay}
+          {formatPublishedBy(opening.publishedBy)}
         </span>
       </div>
 
@@ -78,7 +83,7 @@ export default function AdminOpeningCard({ opening, onEdit, onClose, onReopen, o
 
       {opening.description && (
         <div className="admin-card__jd-preview">
-          <strong>Mini JD:</strong> {opening.description.length > 120 ? `${opening.description.slice(0, 120)}...` : opening.description}
+          <strong>Short JD:</strong> {opening.description.length > 120 ? `${opening.description.slice(0, 120)}...` : opening.description}
         </div>
       )}
 

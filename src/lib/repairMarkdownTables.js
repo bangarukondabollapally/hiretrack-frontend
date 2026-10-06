@@ -176,5 +176,6 @@ export function repairMarkdownTables(text) {
     i++;
   }
 
-  return output.join('\n');
+  const joined = output.join('\n');
+  return joined.replace(/__TABLE_BR_MARKER__|TABLE_BR_[A-Za-z0-9_]*/g, '<br />');
 }

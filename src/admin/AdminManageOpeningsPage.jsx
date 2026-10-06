@@ -51,6 +51,8 @@ export default function AdminManageOpeningsPage() {
     applicationLink: '',
     status: 'OPEN',
     seats: '',
+    minCgpa: '',
+    maxBacklogs: '',
   });
 
   const [yearStart, setYearStart] = useState('1st Year');
@@ -146,6 +148,8 @@ export default function AdminManageOpeningsPage() {
       applicationLink: opening.applicationLink || '',
       status: opening.status || 'OPEN',
       seats: opening.seats != null ? String(opening.seats) : '',
+      minCgpa: opening.minCgpa != null ? String(opening.minCgpa) : '',
+      maxBacklogs: opening.maxBacklogs != null ? String(opening.maxBacklogs) : '',
     });
   };
 
@@ -216,6 +220,20 @@ export default function AdminManageOpeningsPage() {
       }
     }
 
+    if (formData.minCgpa !== '' && formData.minCgpa != null) {
+      const cg = parseFloat(formData.minCgpa);
+      if (isNaN(cg) || cg < 0.0 || cg > 10.0) {
+        errs.minCgpa = 'Minimum CGPA must be a number between 0.0 and 10.0';
+      }
+    }
+
+    if (formData.maxBacklogs !== '' && formData.maxBacklogs != null) {
+      const mb = parseInt(formData.maxBacklogs, 10);
+      if (isNaN(mb) || mb < 0) {
+        errs.maxBacklogs = 'Maximum backlogs must be a non-negative integer';
+      }
+    }
+
     if (formData.description && formData.description.length > 2000) {
       errs.description = 'Short JD description cannot exceed 2000 characters';
     }
@@ -239,6 +257,8 @@ export default function AdminManageOpeningsPage() {
     const branchesStr = isAllBranches ? 'ALL' : selectedBranches.join(', ');
     const normalizedUrl = normalizeUrlInput(formData.applicationLink);
     const seatsVal = formData.seats ? parseInt(formData.seats, 10) : null;
+    const minCgpaVal = formData.minCgpa !== '' ? parseFloat(formData.minCgpa) : null;
+    const maxBacklogsVal = formData.maxBacklogs !== '' ? parseInt(formData.maxBacklogs, 10) : null;
 
     let yearFormatted = 'All Years';
     if (yearStart === yearEnd) {
@@ -257,6 +277,8 @@ export default function AdminManageOpeningsPage() {
       eligibleBranches: branchesStr,
       eligibilityNote,
       seats: seatsVal,
+      minCgpa: minCgpaVal,
+      maxBacklogs: maxBacklogsVal,
       yearOfStudy: yearFormatted,
     };
 
@@ -603,6 +625,37 @@ export default function AdminManageOpeningsPage() {
                 value={eligibilityNote}
                 onChange={(e) => setEligibilityNote(e.target.value)}
               />
+            </div>
+
+            {/* Row for CGPA & Backlogs */}
+            <div className="form-row">
+              <div className="field" style={{ flex: 1 }}>
+                <label className="field-label">Minimum CGPA</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0"
+                  max="10"
+                  className={`field-input ${formErrors.minCgpa ? 'field-input--error' : ''}`}
+                  placeholder="e.g. 7.5 (optional)"
+                  value={formData.minCgpa}
+                  onChange={(e) => setFormData({ ...formData, minCgpa: e.target.value })}
+                />
+                {formErrors.minCgpa && <span className="field-error">{formErrors.minCgpa}</span>}
+              </div>
+
+              <div className="field" style={{ flex: 1 }}>
+                <label className="field-label">Maximum Backlogs</label>
+                <input
+                  type="number"
+                  min="0"
+                  className={`field-input ${formErrors.maxBacklogs ? 'field-input--error' : ''}`}
+                  placeholder="e.g. 2 (optional)"
+                  value={formData.maxBacklogs}
+                  onChange={(e) => setFormData({ ...formData, maxBacklogs: e.target.value })}
+                />
+                {formErrors.maxBacklogs && <span className="field-error">{formErrors.maxBacklogs}</span>}
+              </div>
             </div>
           </div>
 

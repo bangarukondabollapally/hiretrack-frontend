@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getOpeningStatus } from './openingStatusHelper';
+import { getOpeningStatus, formatYearOfStudy, formatPublishedBy } from './openingStatusHelper';
 
 describe('getOpeningStatus', () => {
   it('returns CLOSED status when opening.status is CLOSED', () => {
@@ -57,5 +57,21 @@ describe('getOpeningStatus', () => {
     expect(res.status).toBe('OPEN');
     expect(res.label).toBe('Open');
     expect(res.warningLevel).toBe('normal');
+  });
+});
+
+describe('formatYearOfStudy', () => {
+  it('formats year range compactly', () => {
+    expect(formatYearOfStudy('2nd Year - 4th Year')).toBe('2nd–4th year');
+    expect(formatYearOfStudy('1st Year - 2nd Year')).toBe('1st–2nd year');
+    expect(formatYearOfStudy('3rd Year - 3rd Year')).toBe('3rd year');
+    expect(formatYearOfStudy('All Years')).toBe('All years');
+  });
+});
+
+describe('formatPublishedBy', () => {
+  it('prevents duplicated Published by prefix', () => {
+    expect(formatPublishedBy('Placement Cell')).toBe('Published by: Placement Cell');
+    expect(formatPublishedBy('Published by: Placement Cell')).toBe('Published by: Placement Cell');
   });
 });
