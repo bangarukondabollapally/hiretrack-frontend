@@ -37,6 +37,7 @@ export const fetchApplicationInterviews = (appId) => axiosInstance.get(`/api/app
 export const fetchTags = () => axiosInstance.get('/api/tags').then(r => r.data);
 export const fetchOpenings = (includeClosed = false) =>
   axiosInstance.get(`/api/openings${includeClosed ? '?includeClosed=true' : ''}`).then(r => r.data);
+export const fetchTrackedOpenings = () => axiosInstance.get('/api/openings/tracked').then(r => r.data);
 export const fetchAdminOpenings = () => axiosInstance.get('/api/admin/openings').then(r => r.data);
 export const fetchProfile = () => axiosInstance.get('/api/profile').then(r => r.data);
 export const trackOpeningApi = (id) => axiosInstance.post(`/api/openings/${id}/track`).then(r => r.data);
@@ -118,6 +119,16 @@ export function useOpeningsQuery(userId, includeClosed = false, options = {}) {
     queryKey: ['openings', userId, Boolean(includeClosed)],
     queryFn: () => fetchOpenings(includeClosed),
     staleTime: 60 * 1000,
+    enabled: !!userId,
+    ...options,
+  });
+}
+
+export function useTrackedOpeningsQuery(userId, options = {}) {
+  return useQuery({
+    queryKey: ['trackedOpenings', userId],
+    queryFn: fetchTrackedOpenings,
+    staleTime: 30 * 1000,
     enabled: !!userId,
     ...options,
   });
@@ -220,6 +231,7 @@ export function invalidateTagQueries(userId) {
 
 export function invalidateOpeningQueries(userId) {
   queryClient.invalidateQueries({ queryKey: ['openings', userId] });
+  queryClient.invalidateQueries({ queryKey: ['trackedOpenings', userId] });
   queryClient.invalidateQueries({ queryKey: ['adminOpenings', userId] });
 }
 
@@ -263,6 +275,8 @@ export function prefetchRouteData(userId, path) {
     queryClient.prefetchQuery({ queryKey: ['interviews', userId, { scope: 'all' }], queryFn: () => fetchInterviews({ scope: 'all' }), staleTime: 60000 });
   } else if (path === '/openings') {
     queryClient.prefetchQuery({ queryKey: ['openings', userId, false], queryFn: () => fetchOpenings(false), staleTime: 60000 });
+  } else if (path === '/tracked-openings' || path === '/track') {
+    queryClient.prefetchQuery({ queryKey: ['trackedOpenings', userId], queryFn: fetchTrackedOpenings, staleTime: 30000 });
   } else if (path === '/admin/openings') {
     queryClient.prefetchQuery({ queryKey: ['adminOpenings', userId], queryFn: fetchAdminOpenings, staleTime: 60000 });
   } else if (path === '/settings' || path === '/profile') {

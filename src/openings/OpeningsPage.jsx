@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { AnimatePresence, m } from 'framer-motion';
 import { useAuth } from '../auth/AuthContext';
 import { useOpeningsQuery, trackOpeningApi, untrackOpeningApi, invalidateOpeningQueries } from '../api/queries';
@@ -156,6 +156,11 @@ export default function OpeningsPage() {
         <div>
           <h1 className="openings-title">Placement openings</h1>
           <p className="openings-subtitle">Campus openings posted by your placement cell.</p>
+        </div>
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <Link to="/tracked-openings" className="btn-secondary" style={{ textDecoration: 'none', fontSize: '0.85rem' }}>
+            View Tracked Openings →
+          </Link>
         </div>
       </div>
 

@@ -30,6 +30,7 @@ const ApplicationsList = lazy(() => import('./applications/ApplicationsList'));
 const ApplicationForm = lazy(() => import('./applications/ApplicationForm'));
 const InterviewsPage = lazy(() => import('./interviews/InterviewsPage'));
 const OpeningsPage = lazy(() => import('./openings/OpeningsPage'));
+const TrackedOpeningsPage = lazy(() => import('./openings/TrackedOpeningsPage'));
 const AdminOpeningsPage = lazy(() => import('./admin/AdminOpeningsPage'));
 const AdminManageOpeningsPage = lazy(() => import('./admin/AdminManageOpeningsPage'));
 const ProfilePage = lazy(() => import('./profile/ProfilePage'));
@@ -68,6 +69,8 @@ function App() {
                         {/* Student-only routes (Admins cannot view student data) */}
                         <Route element={<StudentRoute />}>
                           <Route path="/dashboard" element={<DashboardPage />} />
+                          <Route path="/tracked-openings" element={<TrackedOpeningsPage />} />
+                          <Route path="/track" element={<Navigate to="/tracked-openings" replace />} />
                           <Route path="/applications" element={<ApplicationsList />} />
                           <Route path="/applications/new" element={<ApplicationForm />} />
                           <Route path="/applications/:id" element={<ApplicationForm />} />

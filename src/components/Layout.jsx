@@ -242,6 +242,24 @@ export default function Layout() {
           {user?.role !== 'ADMIN' && (
             <>
               <NavLink
+                to="/tracked-openings"
+                onClick={closeMobileMenu}
+                onMouseEnter={() => handleLinkPrefetch('/tracked-openings')}
+                onFocus={() => handleLinkPrefetch('/tracked-openings')}
+                onTouchStart={() => handleLinkPrefetch('/tracked-openings')}
+                className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
+                title="Tracked Openings"
+                aria-label="Tracked Openings"
+              >
+                <span className="app-sidebar__link-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                  </svg>
+                </span>
+                <span className="app-sidebar__link-text">Tracked Openings</span>
+              </NavLink>
+
+              <NavLink
                 to="/applications"
                 onClick={closeMobileMenu}
                 onMouseEnter={() => handleLinkPrefetch('/applications')}
