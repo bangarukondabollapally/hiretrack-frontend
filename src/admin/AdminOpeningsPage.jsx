@@ -236,7 +236,7 @@ export default function AdminOpeningsPage() {
 
     // Format package details with currency
     let formattedPackage = packageAmount.trim();
-    if (formattedPackage && !/^[₹$€₩¥£A\$]/.test(formattedPackage)) {
+    if (formattedPackage && !/^[₹$€₩¥£A$]/.test(formattedPackage)) {
       formattedPackage = `${currency} ${formattedPackage}`;
     } else if (!formattedPackage && packageAmount) {
       formattedPackage = `${currency} ${packageAmount}`;
@@ -285,7 +285,7 @@ export default function AdminOpeningsPage() {
       setSuccessMsg(`Placement opening for "${opening.companyName}" closed.`);
       invalidateOpeningQueries(userId);
       setTimeout(() => setSuccessMsg(''), 4000);
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to close opening.');
     }
   };
@@ -299,7 +299,7 @@ export default function AdminOpeningsPage() {
       setDeletingOpening(null);
       invalidateOpeningQueries(userId);
       setTimeout(() => setSuccessMsg(''), 4000);
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to delete opening.');
     } finally {
       setIsDeleting(false);

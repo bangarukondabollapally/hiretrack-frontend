@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useAuth } from '../auth/AuthContext';
 import { useProfileQuery, invalidateProfileQueries } from '../api/queries';
 import axiosInstance from '../api/axiosInstance';
@@ -166,7 +166,7 @@ export default function ProfilePage() {
       return saved ? JSON.parse(saved).defaultCurrency : 'INR (₹)';
     } catch { return 'INR (₹)'; }
   });
-  const [adminNotify, setAdminNotify] = useState(() => {
+  const [adminNotify, _setAdminNotify] = useState(() => {
     try {
       const saved = sessionStorage.getItem('ht_admin_settings');
       return saved ? JSON.parse(saved).emailNotify : true;
@@ -210,7 +210,7 @@ export default function ProfilePage() {
       invalidateProfileQueries(userId);
       setAccountStatus({ loading: false, success: true, error: '' });
       setTimeout(() => setAccountStatus(prev => ({ ...prev, success: false })), 3000);
-    } catch (err) {
+    } catch (_err) {
       setAccountStatus({ loading: false, success: false, error: 'Failed to save account details.' });
     }
   };
@@ -285,7 +285,7 @@ export default function ProfilePage() {
       });
       setAdminStatus({ loading: false, success: true, error: '' });
       setTimeout(() => setAdminStatus(prev => ({ ...prev, success: false })), 3000);
-    } catch (err) {
+    } catch (_err) {
       setAdminStatus({ loading: false, success: false, error: 'Failed to save placement settings.' });
     }
   };
@@ -302,7 +302,7 @@ export default function ProfilePage() {
         invalidateProfileQueries(userId);
         setJobSearchStatus({ loading: false, success: true, error: '' });
         setTimeout(() => setJobSearchStatus(prev => ({ ...prev, success: false })), 3000);
-      } catch (err) {
+      } catch (_err) {
         setJobSearchStatus({ loading: false, success: false, error: 'Failed to remove resume.' });
       }
     }

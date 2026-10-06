@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import axiosInstance, { setUnauthenticatedCallback } from '../api/axiosInstance';
 import { clearAllQueryCache } from '../api/queries';
 
-const AuthContext = createContext(null);
+export const AuthContext = createContext(null);
 
 export function parseJwt(token) {
   if (!token || typeof token !== 'string') return null;
@@ -29,7 +29,7 @@ export function parseJwt(token) {
       role: parsed.role || 'USER',
       exp: parsed.exp,
     };
-  } catch (e) {
+  } catch (_e) {
     return null;
   }
 }

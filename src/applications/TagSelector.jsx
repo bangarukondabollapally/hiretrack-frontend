@@ -9,7 +9,7 @@ export default function TagSelector({ applicationId, currentTags = [], onTagsUpd
   const userId = user?.userId || user?.id || user?.email;
 
   const { data: availableTagsData } = useTagsQuery(userId);
-  const availableTags = availableTagsData || [];
+  const _availableTags = availableTagsData || [];
 
   const [newTagName, setNewTagName] = useState('');
   const [isLoading, setIsLoading] = useState(false);

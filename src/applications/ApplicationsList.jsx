@@ -20,7 +20,7 @@ function formatDate(dateStr) {
     const day = parseInt(parts[2], 10);
     const date = new Date(year, month, day);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  } catch (e) {
+  } catch (_e) {
     return dateStr;
   }
 }

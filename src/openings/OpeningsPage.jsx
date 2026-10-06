@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, m } from 'framer-motion';
 import { useAuth } from '../auth/AuthContext';
@@ -11,7 +11,7 @@ import './OpeningsPage.css';
 function formatDisplayPackage(pkg) {
   if (!pkg) return '';
   const trimmed = pkg.trim();
-  if (/^[₹$€₩¥£A\$]/.test(trimmed)) return trimmed;
+  if (/^[₹$€₩¥£A$]/.test(trimmed)) return trimmed;
   return `₹ ${trimmed}`;
 }
 

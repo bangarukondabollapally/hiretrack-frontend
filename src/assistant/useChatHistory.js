@@ -177,7 +177,7 @@ export function useChatHistory(userId, initialGreeting) {
     [deleteMutation, activeId, navigate]
   );
 
-  const togglePinConversation = useCallback((id) => {
+  const togglePinConversation = useCallback((_id) => {
     // Pin toggle placeholder if needed
   }, []);
 

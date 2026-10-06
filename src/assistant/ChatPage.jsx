@@ -103,10 +103,6 @@ export default function ChatPage() {
   const { user, token } = useAuth();
   const userId = user?.userId;
 
-  if (user?.role === 'ADMIN') {
-    return <Navigate to="/admin/openings" replace />;
-  }
-
   // Read layout context if provided, or fallback to local hook for standalone testability
   const outletContext = useOutletContext() || {};
   const isSidebarCollapsed = outletContext.isSidebarCollapsed ?? false;
@@ -133,7 +129,7 @@ export default function ChatPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const isDesktopExpanded = windowWidth >= 1024 && !isSidebarCollapsed;
+  const _isDesktopExpanded = windowWidth >= 1024 && !isSidebarCollapsed;
   const isTabletOrCollapsed = windowWidth >= 768 && (windowWidth < 1024 || isSidebarCollapsed);
   const isMobile = windowWidth < 768;
 
@@ -527,6 +523,10 @@ export default function ChatPage() {
   const nonGreetingMessages = messages.filter(m => m.text !== INITIAL_GREETING);
   const isTranscriptEmpty = nonGreetingMessages.length === 0;
 
+  if (user?.role === 'ADMIN') {
+    return <Navigate to="/admin/openings" replace />;
+  }
+
   return (
     <div className={`assistant-layout assistant-theme ${isDragging ? 'assistant-layout--dragging' : ''}`} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
       <main className="assistant-main">
@@ -727,7 +727,7 @@ export default function ChatPage() {
                                   td({ children, ...props }) {
                                     return <td {...props}>{renderCellContent(children)}</td>;
                                   },
-                                  code({ node, inline, className, children, ...props }) {
+                                  code({ node: _node, inline, className, children, ...props }) {
                                     const match = /language-(\w+)/.exec(className || '');
                                     const codeText = String(children).replace(/\n$/, '');
                                     if (inline) {

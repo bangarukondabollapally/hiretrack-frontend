@@ -6,7 +6,7 @@ import { useChatHistory } from '../assistant/useChatHistory';
 import ChatHistoryList from '../assistant/ChatHistoryList';
 import { renderAvatarSvg } from '../lib/avatarPresets';
 import { AnimatePresence, m } from 'framer-motion';
-import { pageVariants, modalBackdropVariants, drawerVariants } from '../lib/motion';
+import { pageVariants, modalBackdropVariants } from '../lib/motion';
 import './Layout.css';
 
 const INITIAL_GREETING = "What can I help you with today?";
@@ -50,7 +50,9 @@ export default function Layout() {
       const next = !prev;
       try {
         localStorage.setItem('ht_sidebar_collapsed', String(next));
-      } catch {}
+      } catch {
+        /* ignore localStorage errors */
+      }
       return next;
     });
   };

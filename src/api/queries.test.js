@@ -3,7 +3,6 @@ import {
   queryClient,
   clearAllQueryCache,
   invalidateApplicationQueries,
-  invalidateInterviewQueries,
   invalidateOpeningQueries,
   invalidateTagQueries,
   invalidateProfileQueries,

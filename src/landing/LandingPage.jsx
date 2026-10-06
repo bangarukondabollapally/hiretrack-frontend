@@ -1,12 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../auth/AuthContext';
 import { m } from 'framer-motion';
 import { heroItemVariants, viewportRevealVariants, staggerContainerVariants, listItemVariants } from '../lib/motion';
 import './LandingPage.css';
 
 export default function LandingPage() {
-  const { isAuthenticated, user } = useAuth();
   const [openFaq, setOpenFaq] = useState(null);
 
   const toggleFaq = (index) => {

@@ -38,7 +38,7 @@ function extractTextFromTextFile(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => resolve(e.target.result);
-    reader.onerror = (e) => reject(new Error('Failed to read text file.'));
+    reader.onerror = () => reject(new Error('Failed to read text file.'));
     reader.readAsText(file);
   });
 }
@@ -48,7 +48,7 @@ async function extractTextFromBinaryFile(file) {
   const decoder = new TextDecoder('utf-8', { ignoreBOM: true, fatal: false });
   const rawText = decoder.decode(arrayBuffer);
   // Strip non-printable ASCII/Unicode control characters
-  const cleanText = rawText.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/g, ' ')
+  const cleanText = rawText.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, ' ')
                            .replace(/\s+/g, ' ');
   return cleanText.trim();
 }
