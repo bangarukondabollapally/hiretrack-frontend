@@ -64,3 +64,36 @@ export const ROUTES = {
   PROFILE: '/settings', // Backward compatibility alias
 };
 
+/**
+ * Standardized branch names for placement openings.
+ */
+export const COMMON_BRANCHES = [
+  'Computer Science & Engineering (CSE)',
+  'Information Technology (IT)',
+  'Artificial Intelligence & Machine Learning (AI&ML)',
+  'Electronics & Communication Engineering (ECE)',
+  'Electrical & Electronics Engineering (EEE)',
+  'Mechanical Engineering',
+  'Civil Engineering',
+  'Chemical Engineering',
+  'Biotechnology',
+];
+
+/**
+ * Mapping helper to tolerate and map legacy branch names/abbreviations to standard names.
+ */
+export const LEGACY_BRANCH_MAPPING = {
+  CSE: 'Computer Science & Engineering (CSE)',
+  IT: 'Information Technology (IT)',
+  'AI/ML': 'Artificial Intelligence & Machine Learning (AI&ML)',
+  'AI & ML': 'Artificial Intelligence & Machine Learning (AI&ML)',
+  'AI&ML': 'Artificial Intelligence & Machine Learning (AI&ML)',
+  ECE: 'Electronics & Communication Engineering (ECE)',
+  EEE: 'Electrical & Electronics Engineering (EEE)',
+  ME: 'Mechanical Engineering',
+  CE: 'Civil Engineering',
+  'Data Science': 'Computer Science & Engineering (CSE)',
+  'Software Engineering': 'Computer Science & Engineering (CSE)',
+};
+
+

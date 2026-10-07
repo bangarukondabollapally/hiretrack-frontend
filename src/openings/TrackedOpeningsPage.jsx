@@ -276,11 +276,6 @@ export default function TrackedOpeningsPage() {
                         {formatDisplayPackage(op.packageDetails)}
                       </span>
                     )}
-                    {op.seats != null && op.seats > 0 && (
-                      <span className="meta-tag meta-tag--seats">
-                        Seats: {op.seats}
-                      </span>
-                    )}
                     {op.yearOfStudy && (
                       <span className="meta-tag">
                         {formatYearOfStudy(op.yearOfStudy)}
@@ -425,12 +420,6 @@ export default function TrackedOpeningsPage() {
                       <div className="meta-item">
                         <span className="meta-label">Location</span>
                         <span className="meta-value">{selectedOpening.location}</span>
-                      </div>
-                    )}
-                    {selectedOpening.seats != null && (
-                      <div className="meta-item">
-                        <span className="meta-label">Seats / Openings</span>
-                        <span className="meta-value">{selectedOpening.seats}</span>
                       </div>
                     )}
                     {selectedOpening.yearOfStudy && (

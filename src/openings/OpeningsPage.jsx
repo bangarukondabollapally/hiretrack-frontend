@@ -265,11 +265,6 @@ export default function OpeningsPage() {
                         {formatDisplayPackage(op.packageDetails)}
                       </span>
                     )}
-                    {op.seats != null && op.seats > 0 && (
-                      <span className="meta-tag meta-tag--seats">
-                        Seats: {op.seats}
-                      </span>
-                    )}
                     {op.yearOfStudy && (
                       <span className="meta-tag">
                         {formatYearOfStudy(op.yearOfStudy)}
@@ -393,7 +388,6 @@ export default function OpeningsPage() {
                     <div><strong>Work Mode:</strong> {selectedOpening.workMode || 'N/A'}</div>
                     <div><strong>Location:</strong> {selectedOpening.location || 'N/A'}</div>
                     <div><strong>Package/Stipend:</strong> {formatDisplayPackage(selectedOpening.packageDetails) || 'N/A'}</div>
-                    <div><strong>Seats:</strong> {selectedOpening.seats != null ? selectedOpening.seats : 'Unlimited'}</div>
                     <div><strong>Year of Study:</strong> {selectedOpening.yearOfStudy || 'All Years'}</div>
                     <div><strong>Deadline:</strong> {selectedOpening.deadline || 'Rolling'}</div>
                     <div><strong>Published by:</strong> {formatPublishedBy(selectedOpening.publishedBy)}</div>

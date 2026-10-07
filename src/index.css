@@ -200,6 +200,19 @@ select {
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
+input[type="date"],
+input[type="datetime-local"],
+.date-picker-native {
+  color-scheme: light dark;
+  min-height: 38px;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.7;
+}
+
 select,
 .field-select,
 .applications-status-filter,

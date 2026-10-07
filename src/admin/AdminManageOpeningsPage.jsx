@@ -3,10 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useAdminOpeningsQuery, invalidateOpeningQueries } from '../api/queries';
 import axiosInstance from '../api/axiosInstance';
+import { COMMON_BRANCHES, LEGACY_BRANCH_MAPPING } from '../lib/constants';
 import DatePickerPopover from '../components/DatePickerPopover';
 import './AdminOpeningsPage.css';
 
-const COMMON_BRANCHES = ['CSE', 'IT', 'ECE', 'EEE', 'ME', 'CE', 'AI/ML', 'Data Science', 'Software Engineering'];
 const STUDY_YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
 
 function normalizeUrlInput(rawUrl) {
@@ -50,7 +50,6 @@ export default function AdminManageOpeningsPage() {
     description: '',
     applicationLink: '',
     status: 'OPEN',
-    seats: '',
     minCgpa: '',
     maxBacklogs: '',
   });
@@ -59,10 +58,9 @@ export default function AdminManageOpeningsPage() {
   const [yearEnd, setYearEnd] = useState('4th Year');
 
   const [isAllBranches, setIsAllBranches] = useState(false);
-  const [selectedBranches, setSelectedBranches] = useState(['CSE', 'IT', 'ECE']);
+  const [selectedBranches, setSelectedBranches] = useState([]);
   const [customBranchInput, setCustomBranchInput] = useState('');
   const [degree, setDegree] = useState('B.Tech');
-  const [eligibilityNote, setEligibilityNote] = useState('');
 
   const [currency, setCurrency] = useState('₹');
   const [packageAmount, setPackageAmount] = useState('');
@@ -107,8 +105,8 @@ export default function AdminManageOpeningsPage() {
     } else {
       setIsAllBranches(false);
       const branches = branchesRaw
-        ? branchesRaw.split(',').map(b => b.trim()).filter(Boolean)
-        : ['CSE', 'IT', 'ECE'];
+        ? branchesRaw.split(',').map(b => b.trim()).filter(Boolean).map(b => LEGACY_BRANCH_MAPPING[b] || b)
+        : [];
       setSelectedBranches(branches);
     }
 
@@ -134,8 +132,6 @@ export default function AdminManageOpeningsPage() {
       setYearEnd('4th Year');
     }
 
-    setEligibilityNote(opening.eligibilityNote || '');
-
     setFormData({
       companyName: opening.companyName || '',
       jobRole: opening.jobRole || '',
@@ -147,7 +143,6 @@ export default function AdminManageOpeningsPage() {
       description: opening.description || '',
       applicationLink: opening.applicationLink || '',
       status: opening.status || 'OPEN',
-      seats: opening.seats != null ? String(opening.seats) : '',
       minCgpa: opening.minCgpa != null ? String(opening.minCgpa) : '',
       maxBacklogs: opening.maxBacklogs != null ? String(opening.maxBacklogs) : '',
     });
@@ -159,7 +154,7 @@ export default function AdminManageOpeningsPage() {
       if (next) {
         setSelectedBranches([]);
       } else {
-        setSelectedBranches(['CSE', 'IT', 'ECE']);
+        setSelectedBranches([]);
       }
       return next;
     });
@@ -204,20 +199,13 @@ export default function AdminManageOpeningsPage() {
     }
 
     if (!isAllBranches && selectedBranches.length === 0) {
-      errs.branches = 'Select at least one branch or choose "All branches"';
+      errs.branches = 'Please select at least one eligible branch.';
     }
 
     const startIdx = STUDY_YEARS.indexOf(yearStart);
     const endIdx = STUDY_YEARS.indexOf(yearEnd);
     if (startIdx > endIdx) {
       errs.yearOfStudy = 'Start year cannot be after end year';
-    }
-
-    if (formData.seats) {
-      const s = parseInt(formData.seats, 10);
-      if (isNaN(s) || s <= 0) {
-        errs.seats = 'Seats must be a positive integer';
-      }
     }
 
     if (formData.minCgpa !== '' && formData.minCgpa != null) {
@@ -256,7 +244,6 @@ export default function AdminManageOpeningsPage() {
 
     const branchesStr = isAllBranches ? 'ALL' : selectedBranches.join(', ');
     const normalizedUrl = normalizeUrlInput(formData.applicationLink);
-    const seatsVal = formData.seats ? parseInt(formData.seats, 10) : null;
     const minCgpaVal = formData.minCgpa !== '' ? parseFloat(formData.minCgpa) : null;
     const maxBacklogsVal = formData.maxBacklogs !== '' ? parseInt(formData.maxBacklogs, 10) : null;
 
@@ -275,8 +262,6 @@ export default function AdminManageOpeningsPage() {
       packageDetails: formattedPackage || formData.packageDetails,
       degree,
       eligibleBranches: branchesStr,
-      eligibilityNote,
-      seats: seatsVal,
       minCgpa: minCgpaVal,
       maxBacklogs: maxBacklogsVal,
       yearOfStudy: yearFormatted,
@@ -393,9 +378,9 @@ export default function AdminManageOpeningsPage() {
             </div>
           </div>
 
-          {/* Row 3: Location, Package, Seats */}
+          {/* Row 3: Location & Package */}
           <div className="form-row">
-            <div className="field">
+            <div className="field" style={{ flex: 1 }}>
               <label className="field-label">Location</label>
               <input
                 type="text"
@@ -406,7 +391,7 @@ export default function AdminManageOpeningsPage() {
               />
             </div>
 
-            <div className="field">
+            <div className="field" style={{ flex: 1 }}>
               <label className="field-label">Package / Stipend</label>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <select
@@ -429,19 +414,6 @@ export default function AdminManageOpeningsPage() {
                   placeholder="e.g. 12 LPA or 50,000/pm"
                 />
               </div>
-            </div>
-
-            <div className="field">
-              <label className="field-label">Seats (Empty = Unlimited)</label>
-              <input
-                type="number"
-                min="1"
-                className={`field-input ${formErrors.seats ? 'field-input--error' : ''}`}
-                value={formData.seats}
-                onChange={(e) => setFormData({ ...formData, seats: e.target.value })}
-                placeholder="e.g. 50"
-              />
-              {formErrors.seats && <span className="field-error">{formErrors.seats}</span>}
             </div>
           </div>
 
@@ -471,7 +443,7 @@ export default function AdminManageOpeningsPage() {
 
           {/* Eligibility Section Group */}
           <div className="structured-eligibility-group" style={{ background: 'var(--surface-sunken, #F8F6F0)', padding: '1.25rem', borderRadius: '8px', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-            <h3 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>Eligibility & Audience</h3>
+            <h3 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>Eligibility Criteria</h3>
 
             <div className="form-row">
               <div className="field" style={{ flex: 1 }}>
@@ -614,17 +586,6 @@ export default function AdminManageOpeningsPage() {
               )}
 
               {formErrors.branches && <span className="field-error" style={{ marginTop: '4px', display: 'block' }}>{formErrors.branches}</span>}
-            </div>
-
-            <div className="field">
-              <label className="field-label">Additional Eligibility Notes</label>
-              <input
-                type="text"
-                className="field-input"
-                placeholder="e.g. Min 60% aggregate in X, XII & B.Tech"
-                value={eligibilityNote}
-                onChange={(e) => setEligibilityNote(e.target.value)}
-              />
             </div>
 
             {/* Row for CGPA & Backlogs */}

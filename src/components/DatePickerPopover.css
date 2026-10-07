@@ -18,26 +18,27 @@
   justify-content: space-between;
   width: 100%;
   height: 38px;
-  padding: 0 12px;
-  background: var(--surface, #FFFFFF);
-  border: 1px solid var(--border, #DDD8CE);
-  border-radius: var(--radius-md, 8px);
-  font-size: var(--text-body, 13px);
-  color: var(--text-primary, #1C1B19);
+  padding: var(--space-2, 8px) var(--space-3, 12px);
+  background-color: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: var(--font-primary);
+  font-size: var(--text-body);
+  color: var(--text-primary);
   cursor: pointer;
   box-sizing: border-box;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
 .date-picker-trigger:hover:not(:disabled) {
-  border-color: var(--accent, #2563EB);
+  border-color: var(--accent);
 }
 
 .date-picker-trigger:focus-visible,
 .date-picker-trigger--open {
   outline: none;
-  border-color: var(--accent, #2563EB);
-  box-shadow: 0 0 0 2px var(--focus, rgba(37, 99, 235, 0.25));
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--focus);
 }
 
 .date-picker-trigger--placeholder {

@@ -1,6 +1,6 @@
 import { m } from 'framer-motion';
 import { listItemVariants } from '../lib/motion';
-import { formatYearOfStudy, formatPublishedBy } from '../openings/openingStatusHelper';
+import { formatYearOfStudy } from '../openings/openingStatusHelper';
 
 function formatDisplayPackage(pkg) {
   if (!pkg) return '';
@@ -48,11 +48,6 @@ export default function AdminOpeningCard({ opening, onEdit, onClose, onReopen, o
             {formatDisplayPackage(opening.packageDetails)}
           </span>
         )}
-        {opening.seats != null && opening.seats > 0 && (
-          <span className="meta-tag meta-tag--seats">
-            Seats: {opening.seats}
-          </span>
-        )}
         {opening.yearOfStudy && (
           <span className="meta-tag">
             {formatYearOfStudy(opening.yearOfStudy)}
@@ -69,9 +64,6 @@ export default function AdminOpeningCard({ opening, onEdit, onClose, onReopen, o
           </span>
         )}
         {opening.deadline && <span className="meta-tag">Deadline: {opening.deadline}</span>}
-        <span className="meta-tag meta-tag--published">
-          {formatPublishedBy(opening.publishedBy)}
-        </span>
       </div>
 
       {opening.eligibleBranches && (
