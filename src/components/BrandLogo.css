@@ -1,0 +1,64 @@
+.brand-logo {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 10px !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+  box-sizing: border-box;
+}
+
+.brand-logo__mark {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  background-color: var(--accent, #2A5C4B);
+  color: #ffffff !important;
+  border-radius: var(--radius-sm, 6px);
+  font-weight: var(--weight-bold, 700);
+  font-size: 14px;
+  line-height: 1 !important;
+  flex-shrink: 0 !important;
+  box-sizing: border-box;
+}
+
+.brand-logo__text {
+  display: inline-block !important;
+  font-size: var(--text-page-heading, 16px);
+  font-weight: var(--weight-bold, 700);
+  color: var(--text-primary, #1C1B19);
+  letter-spacing: -0.03em;
+  white-space: nowrap !important;
+  line-height: 1 !important;
+  flex-shrink: 0 !important;
+}
+
+/* Size variants */
+.brand-logo--lg .brand-logo__mark {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  min-height: 34px;
+  font-size: 16px;
+  border-radius: 8px;
+}
+
+.brand-logo--lg .brand-logo__text {
+  font-size: 20px;
+}
+
+.brand-logo--sm .brand-logo__mark {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  font-size: 12px;
+}
+
+.brand-logo--sm .brand-logo__text {
+  font-size: 14px;
+}

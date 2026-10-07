@@ -23,6 +23,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import axiosInstance from '../api/axiosInstance';
 import { ROUTES } from '../lib/constants';
+import BrandLogo from '../components/BrandLogo';
 import './Auth.css';
 
 // ── Validation ───────────────────────────────────────────────────────────────
@@ -132,7 +133,9 @@ export default function RegisterPage() {
     <main className="auth-page">
       <div className="auth-card">
         {/* Brand */}
-        <div className="auth-brand" aria-label="HireTrack">HireTrack</div>
+        <div className="auth-brand">
+          <BrandLogo size="lg" />
+        </div>
         <p className="auth-tagline">Stay organized. Know what's next.</p>
 
         <h1 className="auth-heading">Get started</h1>

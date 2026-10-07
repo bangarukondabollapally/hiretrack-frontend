@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { m } from 'framer-motion';
 import { heroItemVariants, viewportRevealVariants, staggerContainerVariants, listItemVariants } from '../lib/motion';
+import BrandLogo from '../components/BrandLogo';
 import './LandingPage.css';
 
 export default function LandingPage() {
@@ -51,8 +52,7 @@ export default function LandingPage() {
       <header className="landing-nav">
         <div className="landing-nav__container">
           <button type="button" className="landing-brand" onClick={scrollToTop} aria-label="HireTrack Home">
-            <span className="landing-brand__logo-mark">H</span>
-            <span className="landing-brand__logo-text">HireTrack</span>
+            <BrandLogo size="md" />
           </button>
 
           <nav className="landing-nav__links">
@@ -389,8 +389,7 @@ export default function LandingPage() {
           <div className="landing-footer__grid">
             <div className="footer-col footer-col--brand">
               <div className="footer-brand">
-                <span className="landing-brand__logo-mark">H</span>
-                <span className="landing-brand__logo-text">HireTrack</span>
+                <BrandLogo size="md" />
               </div>
               <p className="footer-tagline">Your job search, organized.</p>
             </div>

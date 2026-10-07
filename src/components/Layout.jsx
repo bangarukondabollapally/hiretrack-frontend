@@ -5,6 +5,7 @@ import { useProfileQuery, prefetchUserData, prefetchRouteData } from '../api/que
 import { useChatHistory } from '../assistant/useChatHistory';
 import ChatHistoryList from '../assistant/ChatHistoryList';
 import { renderAvatarSvg } from '../lib/avatarPresets';
+import BrandLogo from './BrandLogo';
 import { AnimatePresence, m } from 'framer-motion';
 import { pageVariants, modalBackdropVariants } from '../lib/motion';
 import './Layout.css';
@@ -106,8 +107,7 @@ export default function Layout() {
       {/* Mobile Top Header (visible below 768px) */}
       <header className="mobile-header">
         <Link to={homePath} className="mobile-header__brand-link" title="HireTrack Dashboard">
-          <span className="app-sidebar__logo-mark">H</span>
-          <span className="app-sidebar__logo-text">HireTrack</span>
+          <BrandLogo showText={true} />
         </Link>
         <button
           type="button"
@@ -149,8 +149,7 @@ export default function Layout() {
       <aside className={`app-sidebar ${isCollapsed ? 'app-sidebar--collapsed' : ''} ${mobileMenuOpen ? 'app-sidebar--mobile-open' : ''}`}>
         <div className="app-sidebar__header">
           <Link to={homePath} className="app-sidebar__brand-link" title="HireTrack Dashboard">
-            <span className="app-sidebar__logo-mark">H</span>
-            {(!isCollapsed || mobileMenuOpen) && <span className="app-sidebar__logo-text">HireTrack</span>}
+            <BrandLogo showText={!isCollapsed || mobileMenuOpen} />
           </Link>
           <button
             type="button"
