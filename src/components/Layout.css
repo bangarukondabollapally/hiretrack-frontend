@@ -76,35 +76,9 @@
 .app-sidebar__brand,
 .app-sidebar__brand-link,
 .mobile-header__brand-link {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
-  overflow: hidden;
   text-decoration: none;
   color: inherit;
-}
-
-.app-sidebar__logo-mark {
-  width: 28px;
-  height: 28px;
-  background-color: var(--accent);
-  color: #ffffff;
-  border-radius: var(--radius-sm);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: var(--weight-bold);
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-.app-sidebar__logo-text {
-  font-size: var(--text-page-heading, 16px);
-  font-weight: var(--weight-bold);
-  color: var(--text-primary);
-  letter-spacing: -0.03em;
-  white-space: nowrap;
+  overflow: hidden;
 }
 
 .app-sidebar__nav {
@@ -331,12 +305,6 @@
     height: 56px;
   }
 
-  .mobile-header__brand {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-  }
 
   .mobile-header__menu-btn {
     display: flex;

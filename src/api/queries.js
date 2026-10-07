@@ -277,7 +277,7 @@ export function prefetchRouteData(userId, path) {
     queryClient.prefetchQuery({ queryKey: ['openings', userId, false], queryFn: () => fetchOpenings(false), staleTime: 60000 });
   } else if (path === '/tracked-openings' || path === '/track') {
     queryClient.prefetchQuery({ queryKey: ['trackedOpenings', userId], queryFn: fetchTrackedOpenings, staleTime: 30000 });
-  } else if (path === '/admin/openings') {
+  } else if (path === '/admin/openings' || path === '/admin/manageopenings') {
     queryClient.prefetchQuery({ queryKey: ['adminOpenings', userId], queryFn: fetchAdminOpenings, staleTime: 60000 });
   } else if (path === '/settings' || path === '/profile') {
     queryClient.prefetchQuery({ queryKey: ['profile', userId], queryFn: fetchProfile, staleTime: 60000 });

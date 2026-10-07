@@ -227,23 +227,45 @@ export default function Layout() {
           </NavLink>
 
           {user?.role === 'ADMIN' && (
-            <NavLink
-              to="/admin/openings"
-              onClick={closeMobileMenu}
-              onMouseEnter={() => handleLinkPrefetch('/admin/openings')}
-              onFocus={() => handleLinkPrefetch('/admin/openings')}
-              onTouchStart={() => handleLinkPrefetch('/admin/openings')}
-              className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
-              title="Manage Openings (Admin)"
-              aria-label="Manage Openings (Admin)"
-            >
-              <span className="app-sidebar__link-icon" aria-hidden="true">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-              </span>
-              <span className="app-sidebar__link-text">Manage Openings</span>
-            </NavLink>
+            <>
+              <NavLink
+                to="/admin/openings"
+                end
+                onClick={closeMobileMenu}
+                onMouseEnter={() => handleLinkPrefetch('/admin/openings')}
+                onFocus={() => handleLinkPrefetch('/admin/openings')}
+                onTouchStart={() => handleLinkPrefetch('/admin/openings')}
+                className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
+                title="Admin Openings"
+                aria-label="Admin Openings"
+              >
+                <span className="app-sidebar__link-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                </span>
+                <span className="app-sidebar__link-text">Admin Openings</span>
+              </NavLink>
+
+              <NavLink
+                to="/admin/manageopenings"
+                onClick={closeMobileMenu}
+                onMouseEnter={() => handleLinkPrefetch('/admin/manageopenings')}
+                onFocus={() => handleLinkPrefetch('/admin/manageopenings')}
+                onTouchStart={() => handleLinkPrefetch('/admin/manageopenings')}
+                className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
+                title="Manage Openings"
+                aria-label="Manage Openings"
+              >
+                <span className="app-sidebar__link-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                </span>
+                <span className="app-sidebar__link-text">Manage Openings</span>
+              </NavLink>
+            </>
           )}
 
           {user?.role !== 'ADMIN' && (
