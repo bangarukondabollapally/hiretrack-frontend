@@ -92,7 +92,34 @@
 .admin-card__meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  align-items: center;
+  gap: 8px;
+}
+
+.meta-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  padding: 0 10px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  background: var(--surface-sunken, #F3F1EC);
+  border: 1px solid var(--border, #DDD8CE);
+  border-radius: 6px;
+  color: var(--text-secondary, #4D4A43);
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.meta-tag svg {
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.meta-tag--package {
+  font-weight: 600;
+  color: var(--text-primary, #1C1B19);
 }
 
 .admin-card__eligibility {
