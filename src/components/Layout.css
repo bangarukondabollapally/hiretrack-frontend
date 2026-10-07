@@ -77,6 +77,7 @@
 .app-sidebar__brand-link,
 .mobile-header__brand-link {
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 10px;
   overflow: hidden;
@@ -332,6 +333,7 @@
 
   .mobile-header__brand {
     display: flex;
+    flex-direction: row;
     align-items: center;
     gap: 10px;
   }
