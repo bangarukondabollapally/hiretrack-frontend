@@ -65,35 +65,47 @@ export const ROUTES = {
 };
 
 /**
- * Standardized branch names for placement openings.
+ * Standardized branch abbreviations for placement openings.
  */
 export const COMMON_BRANCHES = [
-  'Computer Science & Engineering (CSE)',
-  'Information Technology (IT)',
-  'Artificial Intelligence & Machine Learning (AI&ML)',
-  'Electronics & Communication Engineering (ECE)',
-  'Electrical & Electronics Engineering (EEE)',
-  'Mechanical Engineering',
-  'Civil Engineering',
-  'Chemical Engineering',
-  'Biotechnology',
+  'CSE',
+  'IT',
+  'AI & ML',
+  'ECE',
+  'EEE',
+  'ME',
+  'CE',
+  'CHE',
+  'Biotech',
 ];
 
 /**
- * Mapping helper to tolerate and map legacy branch names/abbreviations to standard names.
+ * Mapping helper to tolerate and map legacy/full branch names to standard branch abbreviations.
  */
 export const LEGACY_BRANCH_MAPPING = {
-  CSE: 'Computer Science & Engineering (CSE)',
-  IT: 'Information Technology (IT)',
-  'AI/ML': 'Artificial Intelligence & Machine Learning (AI&ML)',
-  'AI & ML': 'Artificial Intelligence & Machine Learning (AI&ML)',
-  'AI&ML': 'Artificial Intelligence & Machine Learning (AI&ML)',
-  ECE: 'Electronics & Communication Engineering (ECE)',
-  EEE: 'Electrical & Electronics Engineering (EEE)',
-  ME: 'Mechanical Engineering',
-  CE: 'Civil Engineering',
-  'Data Science': 'Computer Science & Engineering (CSE)',
-  'Software Engineering': 'Computer Science & Engineering (CSE)',
+  'Computer Science & Engineering (CSE)': 'CSE',
+  'Computer Science & Engineering': 'CSE',
+  'Computer Science': 'CSE',
+  'Information Technology (IT)': 'IT',
+  'Information Technology': 'IT',
+  'Artificial Intelligence & Machine Learning (AI&ML)': 'AI & ML',
+  'Artificial Intelligence & Machine Learning': 'AI & ML',
+  'AI/ML': 'AI & ML',
+  'AI&ML': 'AI & ML',
+  'Electronics & Communication Engineering (ECE)': 'ECE',
+  'Electronics & Communication Engineering': 'ECE',
+  'Electrical & Electronics Engineering (EEE)': 'EEE',
+  'Electrical & Electronics Engineering': 'EEE',
+  'Mechanical Engineering': 'ME',
+  Mechanical: 'ME',
+  'Civil Engineering': 'CE',
+  Civil: 'CE',
+  'Chemical Engineering': 'CHE',
+  Chemical: 'CHE',
+  Biotechnology: 'Biotech',
+  BT: 'Biotech',
+  'Data Science': 'CSE',
+  'Software Engineering': 'CSE',
 };
 
 

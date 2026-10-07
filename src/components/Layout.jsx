@@ -206,25 +206,27 @@ export default function Layout() {
             </NavLink>
           )}
 
-          <NavLink
-            to="/openings"
-            onClick={closeMobileMenu}
-            onMouseEnter={() => handleLinkPrefetch('/openings')}
-            onFocus={() => handleLinkPrefetch('/openings')}
-            onTouchStart={() => handleLinkPrefetch('/openings')}
-            className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
-            title="Placement Openings"
-            aria-label="Placement Openings"
-          >
-            <span className="app-sidebar__link-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-                <path d="M11 7v8M7 11h8" />
-              </svg>
-            </span>
-            <span className="app-sidebar__link-text">Openings</span>
-          </NavLink>
+          {user?.role !== 'ADMIN' && (
+            <NavLink
+              to="/openings"
+              onClick={closeMobileMenu}
+              onMouseEnter={() => handleLinkPrefetch('/openings')}
+              onFocus={() => handleLinkPrefetch('/openings')}
+              onTouchStart={() => handleLinkPrefetch('/openings')}
+              className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
+              title="Placement Openings"
+              aria-label="Placement Openings"
+            >
+              <span className="app-sidebar__link-icon" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  <path d="M11 7v8M7 11h8" />
+                </svg>
+              </span>
+              <span className="app-sidebar__link-text">Openings</span>
+            </NavLink>
+          )}
 
           {user?.role === 'ADMIN' && (
             <>
@@ -236,15 +238,17 @@ export default function Layout() {
                 onFocus={() => handleLinkPrefetch('/admin/openings')}
                 onTouchStart={() => handleLinkPrefetch('/admin/openings')}
                 className={({ isActive }) => `app-sidebar__link ${isActive ? 'app-sidebar__link--active' : ''}`}
-                title="Admin Openings"
-                aria-label="Admin Openings"
+                title="Openings"
+                aria-label="Openings"
               >
                 <span className="app-sidebar__link-icon" aria-hidden="true">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    <path d="M11 7v8M7 11h8" />
                   </svg>
                 </span>
-                <span className="app-sidebar__link-text">Admin Openings</span>
+                <span className="app-sidebar__link-text">Openings</span>
               </NavLink>
 
               <NavLink
