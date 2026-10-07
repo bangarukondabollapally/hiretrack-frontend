@@ -6,6 +6,10 @@
   text-decoration: none !important;
   white-space: nowrap !important;
   box-sizing: border-box;
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
 }
 
 .brand-logo__mark {

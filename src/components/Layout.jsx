@@ -106,9 +106,13 @@ export default function Layout() {
     <div className={`app-layout ${isCollapsed ? 'app-layout--sidebar-collapsed' : ''}`}>
       {/* Mobile Top Header (visible below 768px) */}
       <header className="mobile-header">
-        <Link to={homePath} className="mobile-header__brand-link" title="HireTrack Dashboard">
-          <BrandLogo showText={true} />
-        </Link>
+        <BrandLogo
+          as={Link}
+          to={homePath}
+          className="mobile-header__brand-link"
+          title="HireTrack Dashboard"
+          showText={true}
+        />
         <button
           type="button"
           className="mobile-header__menu-btn"
@@ -148,9 +152,13 @@ export default function Layout() {
       {/* Sidebar / Slide-out Drawer */}
       <aside className={`app-sidebar ${isCollapsed ? 'app-sidebar--collapsed' : ''} ${mobileMenuOpen ? 'app-sidebar--mobile-open' : ''}`}>
         <div className="app-sidebar__header">
-          <Link to={homePath} className="app-sidebar__brand-link" title="HireTrack Dashboard">
-            <BrandLogo showText={!isCollapsed || mobileMenuOpen} />
-          </Link>
+          <BrandLogo
+            as={Link}
+            to={homePath}
+            className="app-sidebar__brand-link"
+            title="HireTrack Dashboard"
+            showText={!isCollapsed || mobileMenuOpen}
+          />
           <button
             type="button"
             className="app-sidebar__toggle-btn"
