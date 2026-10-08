@@ -8,6 +8,7 @@ import Avatar from './Avatar';
 import BrandLogo from './BrandLogo';
 import { AnimatePresence, m } from 'framer-motion';
 import { pageVariants, modalBackdropVariants } from '../lib/motion';
+import { useScrollLock } from '../hooks/useScrollLock';
 import './Layout.css';
 
 const INITIAL_GREETING = "What can I help you with today?";
@@ -29,6 +30,8 @@ export default function Layout() {
   });
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  useScrollLock(mobileMenuOpen);
+
 
   // Initialize single source of truth chat history for current user
   const chatHistory = useChatHistory(user?.userId, INITIAL_GREETING);

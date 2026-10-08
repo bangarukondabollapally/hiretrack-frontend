@@ -5,11 +5,16 @@ import { useAuth } from '../auth/AuthContext';
 import { useOpeningsQuery, trackOpeningApi, untrackOpeningApi, invalidateOpeningQueries } from '../api/queries';
 import QueryStateNotice from '../components/QueryStateNotice';
 import { getOpeningStatus } from './openingStatusHelper';
-import StudentOpeningCard, { StudentOpeningCardSkeleton, formatDisplayPackage } from './StudentOpeningCard';
+import StudentOpeningCard, {
+  StudentOpeningCardSkeleton,
+  formatDisplayPackage,
+  formatDeadlineDate,
+  getStatusPillInfo,
+} from './StudentOpeningCard';
+import { useScrollLock } from '../hooks/useScrollLock';
 import { DEGREE_TYPES } from '../lib/constants';
 import { modalBackdropVariants, modalCardVariants } from '../lib/motion';
 import './OpeningsPage.css';
-
 
 export default function OpeningsPage() {
   const { user } = useAuth();
@@ -21,6 +26,10 @@ export default function OpeningsPage() {
   const [selectedOpening, setSelectedOpening] = useState(null);
   const [trackingLoadingId, setTrackingLoadingId] = useState(null);
   const [trackError, setTrackError] = useState('');
+
+  const modalRef = useRef(null);
+  useScrollLock(Boolean(selectedOpening), modalRef);
+
 
   const {
     data: openingsData,
@@ -222,7 +231,7 @@ export default function OpeningsPage() {
       {/* Opening Details Modal */}
       <AnimatePresence>
         {selectedOpening && (() => {
-          const modalStatus = getOpeningStatus(selectedOpening);
+          const pillInfo = getStatusPillInfo(selectedOpening);
           return (
             <m.div
               className="modal-backdrop"
@@ -233,19 +242,25 @@ export default function OpeningsPage() {
               onClick={() => setSelectedOpening(null)}
             >
               <m.div
+                ref={modalRef}
                 className="modal-card modal-card--lg"
                 variants={modalCardVariants}
                 onClick={(e) => e.stopPropagation()}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="modal-title"
+                tabIndex={-1}
               >
                 <div className="modal-header">
                   <div>
-                    <h2>{selectedOpening.companyName}</h2>
+                    <h2 id="modal-title">{selectedOpening.companyName}</h2>
                     <p className="modal-subtitle">{selectedOpening.jobRole}</p>
                   </div>
                   <button
                     type="button"
                     className="modal-close"
                     onClick={() => setSelectedOpening(null)}
+                    aria-label="Close modal"
                   >
                     ✕
                   </button>
@@ -258,17 +273,17 @@ export default function OpeningsPage() {
                     <div><strong>Location:</strong> {selectedOpening.location || 'N/A'}</div>
                     <div><strong>Package/Stipend:</strong> {formatDisplayPackage(selectedOpening.packageDetails) || 'N/A'}</div>
                     <div><strong>Year of Study:</strong> {selectedOpening.yearOfStudy || 'All Years'}</div>
-                    <div><strong>Deadline:</strong> {selectedOpening.deadline || 'Rolling'}</div>
+                    <div><strong>Deadline:</strong> {formatDeadlineDate(selectedOpening.deadline)}</div>
                     <div>
                       <strong>Status: </strong>
-                      <span className={`status-badge ${modalStatus.isClosedOrExpired ? 'status-badge--closed' : 'status-badge--open'}`}>
-                        {modalStatus.label.toUpperCase()}
+                      <span className={pillInfo.className}>
+                        {pillInfo.text}
                       </span>
                     </div>
                   </div>
 
                   <div className="opening-detail-section">
-                    <h4>Eligibility criteria</h4>
+                    <h4>Eligibility Criteria</h4>
                     <p><strong>Degrees:</strong> {selectedOpening.degreeTypes || selectedOpening.degree || 'All degrees'}</p>
                     <p><strong>Branches:</strong> {selectedOpening.eligibleBranches === 'ALL' ? 'All Branches' : (selectedOpening.eligibleBranches || 'All Branches')}</p>
                     {selectedOpening.minCgpa != null && parseFloat(selectedOpening.minCgpa) > 0 && (
@@ -289,26 +304,39 @@ export default function OpeningsPage() {
                 </div>
 
                 <div className="modal-footer">
+                  {user?.role !== 'ADMIN' && (
+                    <button
+                      type="button"
+                      className={`bookmark-btn ${selectedOpening.isTracked ? 'bookmark-btn--active' : ''}`}
+                      disabled={pillInfo.isClosed || trackingLoadingId === selectedOpening.id}
+                      onClick={(e) => handleToggleTrack(selectedOpening, e)}
+                      aria-label={selectedOpening.isTracked ? "Remove from saved" : "Save opening"}
+                      title={selectedOpening.isTracked ? "Remove from saved" : "Save opening"}
+                      aria-pressed={!!selectedOpening.isTracked}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill={selectedOpening.isTracked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                      </svg>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => setSelectedOpening(null)}
+                  >
+                    Close
+                  </button>
+
                   {selectedOpening.applicationLink && (
                     <a
                       href={selectedOpening.applicationLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="btn-secondary"
+                      className="btn-primary"
                     >
                       Apply on portal ↗
                     </a>
-                  )}
-
-                  {user?.role !== 'ADMIN' && (
-                    <button
-                      type="button"
-                      className={`btn-sm ${selectedOpening.isTracked ? 'btn-secondary btn-tracked' : 'btn-primary'}`}
-                      disabled={modalStatus.isClosedOrExpired || trackingLoadingId === selectedOpening.id}
-                      onClick={(e) => handleToggleTrack(selectedOpening, e)}
-                    >
-                      {selectedOpening.isTracked ? '✓ Tracked' : 'Track'}
-                    </button>
                   )}
                 </div>
               </m.div>
@@ -319,3 +347,4 @@ export default function OpeningsPage() {
     </div>
   );
 }
+

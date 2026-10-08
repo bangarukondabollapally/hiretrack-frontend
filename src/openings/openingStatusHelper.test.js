@@ -76,9 +76,14 @@ describe('formatPublishedBy', () => {
   });
 });
 
-import { formatEligibilityText } from './StudentOpeningCard';
+import {
+  formatEligibilityText,
+  formatMetaLine1,
+  formatMetaLine2,
+  formatEligibleBranchesCompact,
+} from './StudentOpeningCard';
 
-describe('formatEligibilityText', () => {
+describe('formatEligibilityText & card formatting helpers', () => {
   it('hides Min CGPA when minCgpa is 0 or 0.0 or null', () => {
     const opZero = { degreeTypes: 'B.Tech', eligibleBranches: 'CSE', minCgpa: 0, maxBacklogs: 2 };
     expect(formatEligibilityText(opZero)).toBe('Degrees: B.Tech • Branches: CSE • Max Backlogs: 2');
@@ -95,9 +100,16 @@ describe('formatEligibilityText', () => {
     const result = formatEligibilityText(op);
     expect(result).toContain('Min CGPA: 7.5');
     expect(result).toContain('Max Backlogs: 0');
-    expect(result).toContain('12 LPA');
-    expect(result).toContain('4th Year');
+    expect(formatMetaLine1(op)).toBe('');
+    expect(formatMetaLine2(op)).toBe('₹ 12 LPA · 4th Year');
+  });
+
+  it('formats eligible branches compactly with +N more', () => {
+    expect(formatEligibleBranchesCompact('CSE, ECE, EEE, ME, CE')).toBe('CSE, ECE, EEE +2 more');
+    expect(formatEligibleBranchesCompact('CSE, ECE')).toBe('CSE, ECE');
+    expect(formatEligibleBranchesCompact('ALL')).toBe('All Branches');
   });
 });
+
 
 

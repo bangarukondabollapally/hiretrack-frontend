@@ -1,10 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { AnimatePresence, m } from 'framer-motion';
+import { useScrollLock } from '../hooks/useScrollLock';
 import { modalBackdropVariants, modalCardVariants } from '../lib/motion';
 import './DeleteConfirmModal.css';
 
 export default function DeleteConfirmModal({ isOpen, title, message, onConfirm, onCancel, isLoading }) {
+  useScrollLock(isOpen);
   const lastFocusedRef = useRef(null);
+
 
   useEffect(() => {
     if (!isOpen) return;

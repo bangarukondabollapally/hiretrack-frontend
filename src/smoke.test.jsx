@@ -235,8 +235,9 @@ describe('Component Smoke Tests - Missing Import Guard', () => {
       />
     );
     expect(html).toContain('aria-pressed="true"');
-    expect(html).toContain('Untrack opening');
+    expect(html).toContain('Remove from saved');
     expect(html).not.toContain('Min CGPA: 0');
+
   });
 });
 

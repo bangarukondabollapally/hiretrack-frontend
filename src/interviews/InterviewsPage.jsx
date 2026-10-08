@@ -8,6 +8,7 @@ import QueryStateNotice from '../components/QueryStateNotice';
 import DeleteConfirmModal from '../applications/DeleteConfirmModal';
 import DatePickerPopover from '../components/DatePickerPopover';
 import { modalBackdropVariants, modalCardVariants, listItemVariants } from '../lib/motion';
+import { useScrollLock } from '../hooks/useScrollLock';
 import './InterviewsPage.css';
 
 const OUTCOMES = ['PENDING', 'PASSED', 'FAILED', 'CANCELLED'];
@@ -47,6 +48,8 @@ export default function InterviewsPage() {
 
   // Modal State for Add / Edit
   const [isModalOpen, setIsModalOpen] = useState(false);
+  useScrollLock(isModalOpen);
+
   const [editingInterview, setEditingInterview] = useState(null); // null = create, object = edit
   const [isSaving, setIsSaving] = useState(false);
   const [modalError, setModalError] = useState('');
