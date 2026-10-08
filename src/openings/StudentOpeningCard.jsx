@@ -55,16 +55,15 @@ export function getStatusPillInfo(op) {
   const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
 
   if (diffDays <= 5 && diffDays >= 0) {
-    let daysText = `${diffDays} days`;
-    if (diffDays === 0) daysText = 'today';
-    else if (diffDays === 1) daysText = '1 day';
+    const daysText = diffDays === 0 ? 'today' : `${diffDays}d`;
     return {
-      text: diffDays === 0 ? 'Closes today' : `Closing soon · ${daysText}`,
+      text: diffDays === 0 ? 'Closes today' : `Closing soon (${daysText})`,
       className: 'status-pill status-pill--closing-soon',
       isClosed: false,
       isClosingSoon: true,
     };
   }
+
 
   return { text: 'Open', className: 'status-pill status-pill--open', isClosed: false, isClosingSoon: false };
 }
