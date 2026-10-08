@@ -12,6 +12,7 @@ vi.mock('react-router-dom', () => ({
   Link: ({ children }) => children,
   NavLink: ({ children }) => children,
   Navigate: () => null,
+  Outlet: () => null,
 }));
 
 // Mock API queries module
@@ -68,9 +69,28 @@ vi.mock('./api/queries', () => ({
     error: null,
     refetch: vi.fn(),
   }),
+  useProfileQuery: () => ({
+    data: { avatarPreset: 'preset-1', avatarDataUrl: null },
+    isLoading: false,
+  }),
+  prefetchUserData: vi.fn(),
+  prefetchRouteData: vi.fn(),
   invalidateOpeningQueries: vi.fn(),
   invalidateInterviewQueries: vi.fn(),
   invalidateApplicationQueries: vi.fn(),
+}));
+
+vi.mock('./assistant/useChatHistory', () => ({
+  useChatHistory: () => ({
+    conversations: [{ id: 1, title: 'Chat 1' }],
+    activeId: 1,
+    messages: [],
+    switchConversation: vi.fn(),
+    newConversation: vi.fn(),
+    renameConversation: vi.fn(),
+    deleteConversation: vi.fn(),
+    togglePinConversation: vi.fn(),
+  }),
 }));
 
 vi.mock('framer-motion', () => ({
@@ -88,6 +108,7 @@ vi.mock('framer-motion', () => ({
 
 // Import AuthContext & components to test
 import { AuthContext } from './auth/AuthContext';
+import Layout from './components/Layout';
 import OpeningsPage from './openings/OpeningsPage';
 import AdminOpeningsPage from './admin/AdminOpeningsPage';
 import InterviewsPage from './interviews/InterviewsPage';
@@ -95,21 +116,58 @@ import DatePickerPopover from './components/DatePickerPopover';
 import DeleteConfirmModal from './applications/DeleteConfirmModal';
 
 const mockAuthValue = {
-  user: { userId: 1, id: 1, email: 'test@example.com', role: 'ADMIN' },
+  user: { userId: 1, id: 1, email: 'student@example.com', role: 'STUDENT' },
   token: 'mock-token',
   logout: vi.fn(),
   login: vi.fn(),
 };
 
-function renderWithProviders(ui) {
+const mockAdminAuthValue = {
+  user: { userId: 2, id: 2, email: 'admin@example.com', role: 'ADMIN' },
+  token: 'mock-admin-token',
+  logout: vi.fn(),
+  login: vi.fn(),
+};
+
+function renderWithProviders(ui, authVal = mockAuthValue) {
   return renderToString(
-    <AuthContext.Provider value={mockAuthValue}>
+    <AuthContext.Provider value={authVal}>
       {ui}
     </AuthContext.Provider>
   );
 }
 
+if (typeof globalThis.localStorage === 'undefined') {
+  const store = {};
+  globalThis.localStorage = {
+    getItem: (key) => store[key] || null,
+    setItem: (key, val) => { store[key] = String(val); },
+    removeItem: (key) => { delete store[key]; },
+    clear: () => { Object.keys(store).forEach(k => delete store[k]); }
+  };
+}
+
 describe('Component Smoke Tests - Missing Import Guard', () => {
+  it('renders Layout for STUDENT user (expanded) without throwing', () => {
+    localStorage.setItem('ht_sidebar_collapsed', 'false');
+    expect(() => {
+      renderWithProviders(<Layout />);
+    }).not.toThrow();
+  });
+
+  it('renders Layout for STUDENT user (collapsed) without throwing', () => {
+    localStorage.setItem('ht_sidebar_collapsed', 'true');
+    expect(() => {
+      renderWithProviders(<Layout />);
+    }).not.toThrow();
+  });
+
+  it('renders Layout for ADMIN user without throwing', () => {
+    expect(() => {
+      renderWithProviders(<Layout />, mockAdminAuthValue);
+    }).not.toThrow();
+  });
+
   it('renders OpeningsPage without throwing', () => {
     expect(() => {
       renderWithProviders(<OpeningsPage />);
@@ -118,7 +176,7 @@ describe('Component Smoke Tests - Missing Import Guard', () => {
 
   it('renders AdminOpeningsPage without throwing', () => {
     expect(() => {
-      renderWithProviders(<AdminOpeningsPage />);
+      renderWithProviders(<AdminOpeningsPage />, mockAdminAuthValue);
     }).not.toThrow();
   });
 

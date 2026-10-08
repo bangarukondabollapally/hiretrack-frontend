@@ -3,6 +3,7 @@ import { NavLink, Link, Outlet, useNavigate, useLocation } from 'react-router-do
 import { useAuth } from '../auth/AuthContext';
 import { useProfileQuery, prefetchUserData, prefetchRouteData } from '../api/queries';
 import { useChatHistory } from '../assistant/useChatHistory';
+import ChatHistoryList from '../assistant/ChatHistoryList';
 import Avatar from './Avatar';
 import BrandLogo from './BrandLogo';
 import { AnimatePresence, m } from 'framer-motion';
