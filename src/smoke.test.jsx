@@ -111,6 +111,7 @@ import { AuthContext } from './auth/AuthContext';
 import Layout from './components/Layout';
 import OpeningsPage from './openings/OpeningsPage';
 import AdminOpeningsPage from './admin/AdminOpeningsPage';
+import AdminManageOpeningsPage from './admin/AdminManageOpeningsPage';
 import InterviewsPage from './interviews/InterviewsPage';
 import DatePickerPopover from './components/DatePickerPopover';
 import DeleteConfirmModal from './applications/DeleteConfirmModal';
@@ -177,6 +178,12 @@ describe('Component Smoke Tests - Missing Import Guard', () => {
   it('renders AdminOpeningsPage without throwing', () => {
     expect(() => {
       renderWithProviders(<AdminOpeningsPage />, mockAdminAuthValue);
+    }).not.toThrow();
+  });
+
+  it('renders AdminManageOpeningsPage without throwing', () => {
+    expect(() => {
+      renderWithProviders(<AdminManageOpeningsPage />, mockAdminAuthValue);
     }).not.toThrow();
   });
 

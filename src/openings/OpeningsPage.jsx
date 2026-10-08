@@ -5,6 +5,7 @@ import { useAuth } from '../auth/AuthContext';
 import { useOpeningsQuery, trackOpeningApi, untrackOpeningApi, invalidateOpeningQueries } from '../api/queries';
 import QueryStateNotice from '../components/QueryStateNotice';
 import { getOpeningStatus, formatYearOfStudy, formatPublishedBy } from './openingStatusHelper';
+import { DEGREE_TYPES } from '../lib/constants';
 import { modalBackdropVariants, modalCardVariants, listItemVariants } from '../lib/motion';
 import './OpeningsPage.css';
 
@@ -56,6 +57,7 @@ export default function OpeningsPage() {
   const userId = user?.userId || user?.id || user?.email;
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDegreeFilter, setSelectedDegreeFilter] = useState('');
   const [includeClosed, setIncludeClosed] = useState(false);
   const [selectedOpening, setSelectedOpening] = useState(null);
   const [trackingLoadingId, setTrackingLoadingId] = useState(null);
@@ -103,6 +105,15 @@ export default function OpeningsPage() {
   const filteredOpenings = openings.filter(op => {
     const statusInfo = getOpeningStatus(op);
     if (!includeClosed && statusInfo.isClosedOrExpired) return false;
+
+    if (selectedDegreeFilter) {
+      const degreesRaw = op.degreeTypes || op.degree || '';
+      const opDegrees = degreesRaw ? degreesRaw.split(',').map(d => d.trim()).filter(Boolean) : [];
+      if (opDegrees.length > 0 && !opDegrees.includes(selectedDegreeFilter)) {
+        return false;
+      }
+    }
+
     const q = searchQuery.toLowerCase();
     return (
       op.companyName?.toLowerCase().includes(q) ||
@@ -176,6 +187,19 @@ export default function OpeningsPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
+
+        <select
+          className="field-input field-select"
+          value={selectedDegreeFilter}
+          onChange={(e) => setSelectedDegreeFilter(e.target.value)}
+          aria-label="Filter by degree type"
+          style={{ width: 'auto', minWidth: '150px' }}
+        >
+          <option value="">All Degrees</option>
+          {DEGREE_TYPES.map(deg => (
+            <option key={deg} value={deg}>{deg}</option>
+          ))}
+        </select>
 
         <label className="openings-toggle">
           <input
@@ -285,15 +309,11 @@ export default function OpeningsPage() {
                     </span>
                   </div>
 
-                  {(op.eligibleBranches || op.minCgpa != null || op.maxBacklogs != null) && (
-                    <p className="opening-card__eligibility">
-                      <strong>Eligibility:</strong> {op.eligibleBranches === 'ALL' ? 'All Branches' : op.eligibleBranches}
-                      {op.degree ? ` (${op.degree})` : ''}
-                      {op.minCgpa != null && ` • Min CGPA: ${op.minCgpa}`}
-                      {op.maxBacklogs != null && ` • Max Backlogs: ${op.maxBacklogs}`}
-                    </p>
-                  )}
-
+                  <p className="opening-card__eligibility">
+                    <strong>Eligibility:</strong> {op.degreeTypes || op.degree || 'All degrees'} • {op.eligibleBranches === 'ALL' ? 'All Branches' : (op.eligibleBranches || 'All Branches')}
+                    {op.minCgpa != null && ` • Min CGPA: ${op.minCgpa}`}
+                    {op.maxBacklogs != null && ` • Max Backlogs: ${op.maxBacklogs}`}
+                  </p>
                   {op.deadline && (
                     <div className={`opening-card__deadline ${deadlineInfo?.isExpired ? 'deadline--expired' : isClosingSoon ? 'deadline--closing-soon' : ''}`}>
                       {deadlineInfo?.text || `Deadline: ${op.deadline}`}
@@ -399,13 +419,12 @@ export default function OpeningsPage() {
                     </div>
                   </div>
 
-                  {selectedOpening.eligibleBranches && (
-                    <div className="opening-detail-section">
-                      <h4>Eligibility criteria</h4>
-                      <p><strong>Branches:</strong> {selectedOpening.eligibleBranches === 'ALL' ? 'All Branches' : selectedOpening.eligibleBranches}</p>
-                      {selectedOpening.eligibilityNote && <p><strong>Note:</strong> {selectedOpening.eligibilityNote}</p>}
-                    </div>
-                  )}
+                  <div className="opening-detail-section">
+                    <h4>Eligibility criteria</h4>
+                    <p><strong>Degrees:</strong> {selectedOpening.degreeTypes || selectedOpening.degree || 'All degrees'}</p>
+                    <p><strong>Branches:</strong> {selectedOpening.eligibleBranches === 'ALL' ? 'All Branches' : (selectedOpening.eligibleBranches || 'All Branches')}</p>
+                    {selectedOpening.eligibilityNote && <p><strong>Note:</strong> {selectedOpening.eligibilityNote}</p>}
+                  </div>
 
                   {selectedOpening.description && (
                     <div className="opening-detail-section">

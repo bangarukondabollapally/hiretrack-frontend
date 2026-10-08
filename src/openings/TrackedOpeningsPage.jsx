@@ -296,14 +296,11 @@ export default function TrackedOpeningsPage() {
                     </span>
                   </div>
 
-                  {(op.eligibleBranches || op.eligibility || op.minCgpa != null || op.maxBacklogs != null) && (
-                    <p className="opening-card__eligibility">
-                      <strong>Eligibility:</strong> {op.eligibleBranches ? (op.eligibleBranches === 'ALL' ? 'All Branches' : op.eligibleBranches) : (op.eligibility || 'All Branches')}
-                      {op.degree ? ` (${op.degree})` : ''}
-                      {op.minCgpa != null && ` • Min CGPA: ${op.minCgpa}`}
-                      {op.maxBacklogs != null && ` • Max Backlogs: ${op.maxBacklogs}`}
-                    </p>
-                  )}
+                  <p className="opening-card__eligibility">
+                    <strong>Eligibility:</strong> {op.degreeTypes || op.degree || 'All degrees'} • {op.eligibleBranches === 'ALL' ? 'All Branches' : (op.eligibleBranches || 'All Branches')}
+                    {op.minCgpa != null && ` • Min CGPA: ${op.minCgpa}`}
+                    {op.maxBacklogs != null && ` • Max Backlogs: ${op.maxBacklogs}`}
+                  </p>
 
                   {op.deadline && (
                     <div className={`opening-card__deadline ${deadlineInfo?.isExpired ? 'deadline--expired' : isClosingSoon ? 'deadline--closing-soon' : ''}`}>
@@ -436,12 +433,12 @@ export default function TrackedOpeningsPage() {
                     </div>
                   </div>
 
-                  {selectedOpening.eligibility && (
-                    <div className="modal-section">
-                      <h4>Eligibility Criteria</h4>
-                      <p>{selectedOpening.eligibility}</p>
-                    </div>
-                  )}
+                  <div className="modal-section">
+                    <h4>Eligibility Criteria</h4>
+                    <p><strong>Degrees:</strong> {selectedOpening.degreeTypes || selectedOpening.degree || 'All degrees'}</p>
+                    <p><strong>Branches:</strong> {selectedOpening.eligibleBranches === 'ALL' ? 'All Branches' : (selectedOpening.eligibleBranches || 'All Branches')}</p>
+                    {selectedOpening.eligibility && <p>{selectedOpening.eligibility}</p>}
+                  </div>
 
                   {modalDeadline && (
                     <div className="modal-section">

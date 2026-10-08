@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useAdminOpeningsQuery, invalidateOpeningQueries } from '../api/queries';
 import axiosInstance from '../api/axiosInstance';
-import { COMMON_BRANCHES, LEGACY_BRANCH_MAPPING } from '../lib/constants';
+import { COMMON_BRANCHES, LEGACY_BRANCH_MAPPING, DEGREE_TYPES } from '../lib/constants';
 import DatePickerPopover from '../components/DatePickerPopover';
 import './AdminOpeningsPage.css';
 
@@ -60,7 +60,7 @@ export default function AdminManageOpeningsPage() {
   const [isAllBranches, setIsAllBranches] = useState(false);
   const [selectedBranches, setSelectedBranches] = useState([]);
   const [customBranchInput, setCustomBranchInput] = useState('');
-  const [degree, setDegree] = useState('B.Tech');
+  const [selectedDegrees, setSelectedDegrees] = useState([]);
 
   const [currency, setCurrency] = useState('₹');
   const [packageAmount, setPackageAmount] = useState('');
@@ -96,7 +96,11 @@ export default function AdminManageOpeningsPage() {
     setCurrency(foundCurr);
     setPackageAmount(rawPkg);
 
-    setDegree(opening.degree || 'B.Tech');
+    const degRaw = opening.degreeTypes || opening.degree || '';
+    const degrees = degRaw
+      ? degRaw.split(',').map(d => d.trim()).filter(Boolean)
+      : [];
+    setSelectedDegrees(degrees);
 
     const branchesRaw = opening.eligibleBranches || '';
     if (branchesRaw === 'ALL') {
@@ -146,6 +150,14 @@ export default function AdminManageOpeningsPage() {
       minCgpa: opening.minCgpa != null ? String(opening.minCgpa) : '',
       maxBacklogs: opening.maxBacklogs != null ? String(opening.maxBacklogs) : '',
     });
+  };
+
+  const toggleDegreeChip = (degreeType) => {
+    if (selectedDegrees.includes(degreeType)) {
+      setSelectedDegrees(selectedDegrees.filter(d => d !== degreeType));
+    } else {
+      setSelectedDegrees([...selectedDegrees, degreeType]);
+    }
   };
 
   const handleAllBranchesToggle = () => {
@@ -198,6 +210,10 @@ export default function AdminManageOpeningsPage() {
       errs.applicationLink = 'Valid application URL (e.g. https://company.com/careers) is required';
     }
 
+    if (selectedDegrees.length === 0) {
+      errs.degreeTypes = 'Please select at least one degree type.';
+    }
+
     if (!isAllBranches && selectedBranches.length === 0) {
       errs.branches = 'Please select at least one eligible branch.';
     }
@@ -242,6 +258,7 @@ export default function AdminManageOpeningsPage() {
       formattedPackage = `${currency} ${formattedPackage}`;
     }
 
+    const degreeTypesStr = selectedDegrees.join(', ');
     const branchesStr = isAllBranches ? 'ALL' : selectedBranches.join(', ');
     const normalizedUrl = normalizeUrlInput(formData.applicationLink);
     const minCgpaVal = formData.minCgpa !== '' ? parseFloat(formData.minCgpa) : null;
@@ -260,7 +277,8 @@ export default function AdminManageOpeningsPage() {
       ...formData,
       applicationLink: normalizedUrl,
       packageDetails: formattedPackage || formData.packageDetails,
-      degree,
+      degree: degreeTypesStr,
+      degreeTypes: degreeTypesStr,
       eligibleBranches: branchesStr,
       minCgpa: minCgpaVal,
       maxBacklogs: maxBacklogsVal,
@@ -446,26 +464,8 @@ export default function AdminManageOpeningsPage() {
             <h3 style={{ fontSize: '0.95rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>Eligibility Criteria</h3>
 
             <div className="form-row">
-              <div className="field" style={{ flex: 1 }}>
-                <label className="field-label">Degree</label>
-                <select
-                  className="field-input field-select"
-                  value={degree}
-                  onChange={(e) => setDegree(e.target.value)}
-                >
-                  <option value="B.Tech">B.Tech</option>
-                  <option value="M.Tech">M.Tech</option>
-                  <option value="MBA">MBA</option>
-                  <option value="BCA">BCA</option>
-                  <option value="MCA">MCA</option>
-                  <option value="B.Sc">B.Sc</option>
-                  <option value="M.Sc">M.Sc</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
               {/* Year of Study Range Selector */}
-              <div className="field" style={{ flex: 2 }}>
+              <div className="field" style={{ flex: 1 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                   <label className="field-label" style={{ marginBottom: 0 }}>Year of Study Range</label>
                   <button
@@ -514,6 +514,38 @@ export default function AdminManageOpeningsPage() {
 
                 {formErrors.yearOfStudy && <span className="field-error" style={{ marginTop: '4px', display: 'block' }}>{formErrors.yearOfStudy}</span>}
               </div>
+            </div>
+
+            {/* Degree Types Selection */}
+            <div className="field">
+              <label className="field-label" style={{ marginBottom: '8px', display: 'block' }}>
+                Degree Types <span style={{ color: 'var(--danger, #EF4444)' }}>*</span>
+              </label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                {DEGREE_TYPES.map(deg => {
+                  const isSelected = selectedDegrees.includes(deg);
+                  return (
+                    <button
+                      type="button"
+                      key={deg}
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: '16px',
+                        border: '1px solid ' + (isSelected ? 'var(--accent)' : 'var(--border)'),
+                        background: isSelected ? 'var(--accent-light, #EFF6FF)' : 'var(--surface)',
+                        color: isSelected ? 'var(--accent)' : 'var(--text-secondary)',
+                        fontSize: '0.8rem',
+                        fontWeight: isSelected ? '600' : '400',
+                        cursor: 'pointer',
+                      }}
+                      onClick={() => toggleDegreeChip(deg)}
+                    >
+                      {isSelected ? '✓ ' : '+ '}{deg}
+                    </button>
+                  );
+                })}
+              </div>
+              {formErrors.degreeTypes && <span className="field-error" style={{ display: 'block' }}>{formErrors.degreeTypes}</span>}
             </div>
 
             {/* Branches Selection */}

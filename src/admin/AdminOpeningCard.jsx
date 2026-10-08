@@ -66,12 +66,9 @@ export default function AdminOpeningCard({ opening, onEdit, onClose, onReopen, o
         {opening.deadline && <span className="meta-tag">Deadline: {opening.deadline}</span>}
       </div>
 
-      {opening.eligibleBranches && (
-        <div className="admin-card__eligibility">
-          <strong>Eligibility:</strong> {opening.eligibleBranches === 'ALL' ? 'All Branches' : opening.eligibleBranches}
-          {opening.degree ? ` (${opening.degree})` : ''}
-        </div>
-      )}
+      <div className="admin-card__eligibility">
+        <strong>Eligibility:</strong> {opening.degreeTypes || opening.degree || 'All degrees'} • {opening.eligibleBranches === 'ALL' ? 'All Branches' : (opening.eligibleBranches || 'All Branches')}
+      </div>
 
       {opening.description && (
         <div className="admin-card__jd-preview">

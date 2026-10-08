@@ -108,4 +108,19 @@ export const LEGACY_BRANCH_MAPPING = {
   'Software Engineering': 'CSE',
 };
 
+/**
+ * Standard degree types for placement openings.
+ */
+export const DEGREE_TYPES = [
+  'B.Tech / B.E.',
+  'M.Tech / M.E.',
+  'BCA',
+  'MCA',
+  'B.Sc',
+  'M.Sc',
+  'BBA',
+  'MBA',
+];
+
+
 
