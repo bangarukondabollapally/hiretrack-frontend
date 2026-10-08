@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { useApplicationInterviewsQuery, invalidateInterviewQueries } from '../api/queries';
 import axiosInstance from '../api/axiosInstance';
+import DatePickerPopover from '../components/DatePickerPopover';
 import './InterviewTimeline.css';
 
 export default function InterviewTimeline({ applicationId, readOnly = false }) {
@@ -70,12 +71,15 @@ export default function InterviewTimeline({ applicationId, readOnly = false }) {
 
           <div className="form-row">
             <div className="form-group">
-              <label>Date & Time *</label>
-              <input
-                type="datetime-local"
+              <label>Interview Date *</label>
+              <DatePickerPopover
+                value={formData.interviewDate ? formData.interviewDate.split('T')[0] : ''}
+                onChange={(dateVal) => {
+                  const timePart = formData.interviewDate?.includes('T') ? formData.interviewDate.split('T')[1] : '10:00';
+                  setFormData({ ...formData, interviewDate: `${dateVal}T${timePart}` });
+                }}
+                placeholder="Select interview date"
                 required
-                value={formData.interviewDate}
-                onChange={(e) => setFormData({ ...formData, interviewDate: e.target.value })}
               />
             </div>
 

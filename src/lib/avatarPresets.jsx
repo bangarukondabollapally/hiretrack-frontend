@@ -20,11 +20,28 @@ export function getAvatarPreset(presetId) {
   return AVATAR_PRESETS.find((p) => p.id === presetId) || null;
 }
 
-export function renderAvatarSvg(presetId, initial = 'U', size = 32) {
-  const preset = getAvatarPreset(presetId);
+export function renderAvatarSvg(presetId, size = 32, label = 'User profile avatar', className = '', customStyle = {}) {
+  const preset = typeof presetId === 'string' ? getAvatarPreset(presetId) : null;
 
   if (!preset) {
-    return initial;
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox="0 0 36 36"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        style={{ borderRadius: '50%', flexShrink: 0, ...customStyle }}
+        className={`app-avatar-svg app-avatar-svg--default ${className}`}
+        aria-label={label}
+      >
+        <rect width="36" height="36" rx="18" fill="var(--avatar-default-bg, #475569)" />
+        <path
+          d="M18 9a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm-7 18c0-3.87 3.13-7 7-7s7 3.13 7 7v1H11v-1z"
+          fill="#ffffff"
+        />
+      </svg>
+    );
   }
 
   return (
@@ -34,8 +51,9 @@ export function renderAvatarSvg(presetId, initial = 'U', size = 32) {
       viewBox="0 0 36 36"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      style={{ borderRadius: '50%', flexShrink: 0 }}
-      aria-label={preset.label}
+      style={{ borderRadius: '50%', flexShrink: 0, ...customStyle }}
+      className={`app-avatar-svg app-avatar-svg--preset ${className}`}
+      aria-label={preset.label || label}
     >
       <rect width="36" height="36" rx="18" fill={preset.color} />
       <text

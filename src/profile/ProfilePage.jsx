@@ -7,6 +7,7 @@ import axiosInstance from '../api/axiosInstance';
 import { extractTextFromFile } from '../lib/fileParser';
 import QueryStateNotice from '../components/QueryStateNotice';
 import { AVATAR_PRESETS, renderAvatarSvg } from '../lib/avatarPresets';
+import Avatar from '../components/Avatar';
 import './ProfilePage.css';
 
 const TABS_STUDENT = [
@@ -466,11 +467,11 @@ export default function ProfilePage() {
         transition={{ duration: 0.25 }}
       >
         <div className="profile-avatar">
-          {avatarDataUrl ? (
-            <img src={avatarDataUrl} alt="Profile" style={{ width: '44px', height: '44px', borderRadius: '50%', objectFit: 'cover' }} />
-          ) : (
-            renderAvatarSvg(avatarPreset, userInitial, 44)
-          )}
+          <Avatar
+            avatarDataUrl={avatarDataUrl}
+            avatarPreset={avatarPreset}
+            size={44}
+          />
         </div>
         <div className="profile-user-info">
           <span className="profile-user-name">{name.trim() || 'Add your name'}</span>
@@ -552,10 +553,10 @@ export default function ProfilePage() {
                         onClick={() => {
                           setAvatarPreset(null);
                         }}
-                        title="Default initial avatar"
-                        aria-label="Default initial avatar"
+                        title="Default profile avatar"
+                        aria-label="Default profile avatar"
                       >
-                        <div className="avatar-preview-default">{userInitial}</div>
+                        <Avatar avatarPreset={null} avatarDataUrl={null} size={36} />
                       </button>
                       {AVATAR_PRESETS.map((p) => (
                         <button

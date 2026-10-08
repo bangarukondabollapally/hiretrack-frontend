@@ -247,6 +247,32 @@
   background-color: rgba(176, 54, 42, 0.08);
 }
 
+.ticket-notes {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: var(--text-meta, 12px);
+  color: var(--text-secondary);
+  background-color: var(--surface-sunken);
+  padding: 4px 10px;
+  border-radius: 6px;
+  border-left: 2.5px solid var(--accent);
+  margin-top: 4px;
+}
+
+.ticket-notes-icon {
+  font-size: 11px;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
+.ticket-notes-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
 .ticket-tags {
   display: flex;
   flex-wrap: wrap;

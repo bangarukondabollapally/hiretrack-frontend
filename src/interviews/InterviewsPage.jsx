@@ -6,6 +6,7 @@ import { useApplicationsQuery, useInterviewsQuery, invalidateInterviewQueries } 
 import axiosInstance from '../api/axiosInstance';
 import QueryStateNotice from '../components/QueryStateNotice';
 import DeleteConfirmModal from '../applications/DeleteConfirmModal';
+import DatePickerPopover from '../components/DatePickerPopover';
 import { modalBackdropVariants, modalCardVariants, listItemVariants } from '../lib/motion';
 import './InterviewsPage.css';
 
@@ -396,14 +397,17 @@ export default function InterviewsPage() {
 
                 <div className="form-row">
                   <div className="form-group">
-                    <label htmlFor="modal-date">Date & Time *</label>
-                    <input
-                      id="modal-date"
-                      type="datetime-local"
+                    <label>Interview Date *</label>
+                    <DatePickerPopover
+                      value={modalFormData.interviewDate ? modalFormData.interviewDate.split('T')[0] : ''}
+                      onChange={(dateVal) => {
+                        const timePart = modalFormData.interviewDate?.includes('T')
+                          ? modalFormData.interviewDate.split('T')[1]
+                          : '10:00';
+                        setModalFormData({ ...modalFormData, interviewDate: `${dateVal}T${timePart}` });
+                      }}
+                      placeholder="Select interview date"
                       required
-                      className="form-input"
-                      value={modalFormData.interviewDate}
-                      onChange={(e) => setModalFormData({ ...modalFormData, interviewDate: e.target.value })}
                     />
                   </div>
 

@@ -51,6 +51,25 @@
   justify-content: center;
 }
 
+.app-sidebar__brand-btn {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  margin: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm, 6px);
+  color: inherit;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.app-sidebar__brand-btn:hover {
+  background-color: var(--surface-sunken);
+}
+
+.app-sidebar__close-mobile-btn,
 .app-sidebar__toggle-btn {
   background: transparent;
   border: 1px solid var(--border);
@@ -67,6 +86,7 @@
   transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
+.app-sidebar__close-mobile-btn:hover,
 .app-sidebar__toggle-btn:hover {
   background-color: var(--surface-sunken);
   color: var(--text-primary);

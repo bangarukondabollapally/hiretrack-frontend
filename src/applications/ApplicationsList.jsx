@@ -249,6 +249,13 @@ export default function ApplicationsList() {
                     </div>
                   </div>
 
+                  {app.notes && (
+                    <div className="ticket-notes">
+                      <span className="ticket-notes-icon" aria-hidden="true">📝</span>
+                      <span className="ticket-notes-text">{app.notes}</span>
+                    </div>
+                  )}
+
                   {(hasTags || app.placementOpeningId) && (
                     <div className="ticket-tags">
                       {app.placementOpeningId && (

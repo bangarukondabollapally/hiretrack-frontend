@@ -21,11 +21,12 @@ describe('avatarPresets', () => {
   });
 
   it('renders SVG element correctly for presets and fallback', () => {
-    const presetSvg = renderAvatarSvg('preset-1', 'A', 32);
+    const presetSvg = renderAvatarSvg('preset-1', 32);
     expect(presetSvg).not.toBeNull();
     expect(presetSvg.type).toBe('svg');
 
-    const fallbackSvg = renderAvatarSvg(null, 'B', 32);
-    expect(fallbackSvg).toBe('B');
+    const fallbackSvg = renderAvatarSvg(null, 32);
+    expect(fallbackSvg).not.toBeNull();
+    expect(fallbackSvg.type).toBe('svg');
   });
 });

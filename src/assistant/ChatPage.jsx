@@ -66,6 +66,58 @@ const renderPromptIcon = (type) => {
 
 const ROTATING_THINKING_WORDS = ['Thinking', 'Musing', 'Pondering', 'Mulling it over'];
 
+const getFileIconAndType = (filename = '') => {
+  const ext = (filename.split('.').pop() || '').toUpperCase();
+  let typeLabel = ext || 'FILE';
+  let icon = (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+      <polyline points="14 2 14 8 20 8"></polyline>
+    </svg>
+  );
+
+  if (ext === 'PDF') {
+    typeLabel = 'PDF';
+    icon = (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+      </svg>
+    );
+  } else if (ext === 'CSV') {
+    typeLabel = 'CSV';
+    icon = (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#166534" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+        <line x1="3" y1="9" x2="21" y2="9"></line>
+        <line x1="9" y1="21" x2="9" y2="9"></line>
+      </svg>
+    );
+  } else if (ext === 'JSON') {
+    typeLabel = 'JSON';
+    icon = (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="16 18 22 12 16 6"></polyline>
+        <polyline points="8 6 2 12 8 18"></polyline>
+      </svg>
+    );
+  } else if (ext === 'MD' || ext === 'TXT') {
+    typeLabel = ext;
+    icon = (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+      </svg>
+    );
+  }
+
+  return { icon, typeLabel };
+};
+
 const normalizeText = (text) => {
   if (!text) return '';
   return text.replace(/\u2011/g, '-').replace(/\u202F/g, ' ');
@@ -740,13 +792,18 @@ export default function ChatPage() {
                           <div className="user-bubble">
                             {(msg.attachments?.length > 0 || extractUserDisplayContent(msg.text).attachments.length > 0) && (
                               <div className="message-attachments-list">
-                                {(msg.attachments || extractUserDisplayContent(msg.text).attachments).map((att, attIdx) => (
-                                  <div key={attIdx} className="message-attachment-pill">
-                                    <span className="attachment-pill-icon">📄</span>
-                                    <span className="attachment-pill-name" title={att.name}>{att.name}</span>
-                                    {att.size && <span className="attachment-pill-size">{att.size}</span>}
-                                  </div>
-                                ))}
+                                {(msg.attachments || extractUserDisplayContent(msg.text).attachments).map((att, attIdx) => {
+                                  const { icon, typeLabel } = getFileIconAndType(att.name);
+                                  return (
+                                    <div key={attIdx} className="message-attachment-pill">
+                                      <span className="attachment-pill-icon">{icon}</span>
+                                      <div className="attachment-pill-info">
+                                        <span className="attachment-pill-name" title={att.name}>{att.name}</span>
+                                        <span className="attachment-pill-meta">{typeLabel}{att.size ? ` • ${att.size}` : ''}</span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             )}
                             {extractUserDisplayContent(msg.text).text && (
@@ -995,19 +1052,19 @@ export default function ChatPage() {
                 </button>
               </div>
             )}
-            {attachments.map((att, idx) => (
-              <div key={idx} className="attachment-chip">
-                <span className="attachment-chip-icon">
-                  {att.type === 'image' ? (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                  ) : (
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                  )}
-                </span>
-                <span className="attachment-chip-name">{att.name}</span>
-                <button type="button" className="attachment-chip-remove" onClick={() => removeAttachment(idx)} aria-label="Remove attachment">×</button>
-              </div>
-            ))}
+            {attachments.map((att, idx) => {
+              const { icon, typeLabel } = getFileIconAndType(att.name);
+              return (
+                <div key={idx} className="attachment-chip">
+                  <span className="attachment-chip-icon">{icon}</span>
+                  <div className="attachment-chip-info">
+                    <span className="attachment-chip-name" title={att.name}>{att.name}</span>
+                    <span className="attachment-chip-meta">{typeLabel}{att.size ? ` • ${att.size}` : ''}</span>
+                  </div>
+                  <button type="button" className="attachment-chip-remove" onClick={() => removeAttachment(idx)} aria-label="Remove attachment">×</button>
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -1018,8 +1075,8 @@ export default function ChatPage() {
               type="button"
               className="composer-attach-btn"
               onClick={() => setIsAttachMenuOpen(!isAttachMenuOpen)}
-              title="Attach files or application context"
-              aria-expanded={isAttachMenuOpen}
+              title="Attach file"
+              aria-label="Attach file"
             >
               +
             </button>
@@ -1057,7 +1114,7 @@ export default function ChatPage() {
                       }}
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                      Attach text file
+                      Attach file
                     </button>
                   </m.div>
                 </>

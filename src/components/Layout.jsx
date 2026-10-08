@@ -3,8 +3,7 @@ import { NavLink, Link, Outlet, useNavigate, useLocation } from 'react-router-do
 import { useAuth } from '../auth/AuthContext';
 import { useProfileQuery, prefetchUserData, prefetchRouteData } from '../api/queries';
 import { useChatHistory } from '../assistant/useChatHistory';
-import ChatHistoryList from '../assistant/ChatHistoryList';
-import { renderAvatarSvg } from '../lib/avatarPresets';
+import Avatar from './Avatar';
 import BrandLogo from './BrandLogo';
 import { AnimatePresence, m } from 'framer-motion';
 import { pageVariants, modalBackdropVariants } from '../lib/motion';
@@ -99,7 +98,6 @@ export default function Layout() {
     closeMobileMenu();
   };
 
-  const userInitial = user?.email ? user.email.charAt(0).toUpperCase() : 'U';
   const homePath = user?.role === 'ADMIN' ? '/admin/openings' : '/dashboard';
 
   return (
@@ -152,34 +150,55 @@ export default function Layout() {
       {/* Sidebar / Slide-out Drawer */}
       <aside className={`app-sidebar ${isCollapsed ? 'app-sidebar--collapsed' : ''} ${mobileMenuOpen ? 'app-sidebar--mobile-open' : ''}`}>
         <div className="app-sidebar__header">
-          <BrandLogo
-            as={Link}
-            to={homePath}
-            className="app-sidebar__brand-link"
-            title="HireTrack Dashboard"
-            showText={!isCollapsed || mobileMenuOpen}
-          />
-          <button
-            type="button"
-            className="app-sidebar__toggle-btn"
-            onClick={toggleCollapsed}
-            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {isCollapsed ? (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect width="18" height="18" x="3" y="3" rx="2" />
-                <path d="M9 3v18" />
-                <path d="m14 9 3 3-3 3" />
-              </svg>
-            ) : (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect width="18" height="18" x="3" y="3" rx="2" />
-                <path d="M9 3v18" />
-                <path d="m16 15-3-3 3-3" />
-              </svg>
-            )}
-          </button>
+          {isCollapsed && !mobileMenuOpen ? (
+            <button
+              type="button"
+              className="app-sidebar__brand-btn"
+              onClick={toggleCollapsed}
+              title="Expand sidebar"
+              aria-label="Expand sidebar"
+            >
+              <BrandLogo showText={false} size="md" />
+            </button>
+          ) : (
+            <>
+              <BrandLogo
+                as={Link}
+                to={homePath}
+                className="app-sidebar__brand-link"
+                title="HireTrack Dashboard"
+                showText={true}
+              />
+              {mobileMenuOpen ? (
+                <button
+                  type="button"
+                  className="app-sidebar__close-mobile-btn"
+                  onClick={closeMobileMenu}
+                  title="Close navigation menu"
+                  aria-label="Close navigation menu"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="app-sidebar__toggle-btn"
+                  onClick={toggleCollapsed}
+                  title="Collapse sidebar"
+                  aria-label="Collapse sidebar"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect width="18" height="18" x="3" y="3" rx="2" />
+                    <path d="M9 3v18" />
+                    <path d="m16 15-3-3 3-3" />
+                  </svg>
+                </button>
+              )}
+            </>
+          )}
         </div>
 
         <nav className="app-sidebar__nav">
@@ -388,11 +407,11 @@ export default function Layout() {
           {isCollapsed && !mobileMenuOpen ? (
             <div className="app-sidebar__footer-collapsed">
               <div className="app-sidebar__avatar-wrapper" title={user?.email}>
-                {profileData?.avatarDataUrl ? (
-                  <img src={profileData.avatarDataUrl} alt="Avatar" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
-                ) : (
-                  renderAvatarSvg(profileData?.avatarPreset, userInitial, 32)
-                )}
+                <Avatar
+                  avatarDataUrl={profileData?.avatarDataUrl}
+                  avatarPreset={profileData?.avatarPreset}
+                  size={32}
+                />
               </div>
               <button
                 type="button"
@@ -412,11 +431,11 @@ export default function Layout() {
             <div className="app-sidebar__footer-expanded">
               <div className="app-sidebar__user-row" title={user?.email}>
                 <div className="app-sidebar__avatar-wrapper">
-                  {profileData?.avatarDataUrl ? (
-                    <img src={profileData.avatarDataUrl} alt="Avatar" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
-                  ) : (
-                    renderAvatarSvg(profileData?.avatarPreset, userInitial, 32)
-                  )}
+                  <Avatar
+                    avatarDataUrl={profileData?.avatarDataUrl}
+                    avatarPreset={profileData?.avatarPreset}
+                    size={32}
+                  />
                 </div>
                 <span className="app-sidebar__user-email">{user?.email}</span>
               </div>

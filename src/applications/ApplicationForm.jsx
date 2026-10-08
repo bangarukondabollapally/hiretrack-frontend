@@ -68,11 +68,16 @@ export default function ApplicationForm() {
       if (isEdit) {
         await axiosInstance.put(`/api/applications/${id}`, formData);
         invalidateApplicationQueries(userId);
+        queryClient.invalidateQueries({ queryKey: ['applications', userId] });
         queryClient.invalidateQueries({ queryKey: ['application', userId, id] });
+        queryClient.invalidateQueries({ queryKey: ['dashboard', userId] });
+        queryClient.invalidateQueries({ queryKey: ['interviews', userId] });
         navigate('/applications');
       } else {
         await axiosInstance.post('/api/applications', formData);
         invalidateApplicationQueries(userId);
+        queryClient.invalidateQueries({ queryKey: ['applications', userId] });
+        queryClient.invalidateQueries({ queryKey: ['dashboard', userId] });
         navigate('/applications', { replace: true, state: { toastMessage: 'Application created successfully!' } });
       }
     } catch (err) {
@@ -88,6 +93,9 @@ export default function ApplicationForm() {
     try {
       await axiosInstance.delete(`/api/applications/${id}`);
       invalidateApplicationQueries(userId);
+      queryClient.invalidateQueries({ queryKey: ['applications', userId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', userId] });
+      queryClient.invalidateQueries({ queryKey: ['interviews', userId] });
       setIsDeleteModalOpen(false);
       navigate('/applications', { state: { toastMessage: 'Application deleted permanently.' } });
     } catch (err) {
@@ -118,10 +126,11 @@ export default function ApplicationForm() {
       <form onSubmit={handleSubmit} className="application-form">
         <div className="form-grid">
           <div className="form-group">
-            <label>Company Name *</label>
+            <label>Company Name {isEdit ? '(Read-only)' : '*'}</label>
             <input
               type="text"
               required
+              disabled={isEdit}
               placeholder="e.g. Google"
               value={formData.companyName}
               onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
@@ -129,10 +138,11 @@ export default function ApplicationForm() {
           </div>
 
           <div className="form-group">
-            <label>Job Role *</label>
+            <label>Job Role {isEdit ? '(Read-only)' : '*'}</label>
             <input
               type="text"
               required
+              disabled={isEdit}
               placeholder="e.g. Frontend Engineer"
               value={formData.jobRole}
               onChange={(e) => setFormData({ ...formData, jobRole: e.target.value })}
@@ -148,9 +158,10 @@ export default function ApplicationForm() {
           </div>
 
           <div className="form-group">
-            <label>Job Type</label>
+            <label>Job Type {isEdit ? '(Read-only)' : ''}</label>
             <select
               value={formData.jobType}
+              disabled={isEdit}
               onChange={(e) => setFormData({ ...formData, jobType: e.target.value })}
             >
               <option value="Full-time">Full-time</option>
@@ -161,18 +172,20 @@ export default function ApplicationForm() {
           </div>
 
           <div className="form-group">
-            <label>Applied Date</label>
+            <label>Applied Date {isEdit ? '(Read-only)' : ''}</label>
             <DatePickerPopover
               value={formData.appliedDate}
+              disabled={isEdit}
               onChange={(val) => setFormData({ ...formData, appliedDate: val })}
               placeholder="Select applied date"
             />
           </div>
 
           <div className="form-group">
-            <label>Follow-Up Date</label>
+            <label>Follow-Up Date {isEdit ? '(Read-only)' : ''}</label>
             <DatePickerPopover
               value={formData.followUpDate}
+              disabled={isEdit}
               onChange={(val) => setFormData({ ...formData, followUpDate: val })}
               placeholder="Select follow-up date"
             />
@@ -180,9 +193,10 @@ export default function ApplicationForm() {
         </div>
 
         <div className="form-group">
-          <label>Job URL</label>
+          <label>Job URL {isEdit ? '(Read-only)' : ''}</label>
           <input
             type="url"
+            disabled={isEdit}
             placeholder="https://careers.google.com/jobs/..."
             value={formData.jobUrl}
             onChange={(e) => setFormData({ ...formData, jobUrl: e.target.value })}
@@ -200,9 +214,10 @@ export default function ApplicationForm() {
         </div>
 
         <div className="form-group">
-          <label>Job Description</label>
+          <label>Job Description {isEdit ? '(Read-only)' : ''}</label>
           <textarea
             rows="5"
+            disabled={isEdit}
             placeholder="Paste full job description text here..."
             value={formData.jobDescription}
             onChange={(e) => setFormData({ ...formData, jobDescription: e.target.value })}
@@ -214,7 +229,10 @@ export default function ApplicationForm() {
             <TagSelector
               applicationId={id}
               currentTags={currentTags}
-              onTagsUpdated={refetchApp}
+              onTagsUpdated={() => {
+                refetchApp();
+                queryClient.invalidateQueries({ queryKey: ['applications', userId] });
+              }}
             />
           </div>
         )}
@@ -225,8 +243,7 @@ export default function ApplicationForm() {
               <button
                 type="button"
                 onClick={() => setIsDeleteModalOpen(true)}
-                className="btn-danger"
-                style={{ background: 'transparent', color: 'var(--danger)', border: '1px solid var(--danger)' }}
+                className="btn-danger-outline"
               >
                 Delete Application
               </button>
