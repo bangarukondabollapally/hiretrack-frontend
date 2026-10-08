@@ -4,52 +4,10 @@ import { AnimatePresence, m } from 'framer-motion';
 import { useAuth } from '../auth/AuthContext';
 import { useTrackedOpeningsQuery, trackOpeningApi, untrackOpeningApi, invalidateOpeningQueries } from '../api/queries';
 import QueryStateNotice from '../components/QueryStateNotice';
-import { getOpeningStatus, formatYearOfStudy, formatPublishedBy } from './openingStatusHelper';
-import { modalBackdropVariants, modalCardVariants, listItemVariants } from '../lib/motion';
+import { getOpeningStatus } from './openingStatusHelper';
+import { modalBackdropVariants, modalCardVariants } from '../lib/motion';
+import StudentOpeningCard, { StudentOpeningCardSkeleton, formatDisplayPackage } from './StudentOpeningCard';
 import './OpeningsPage.css';
-
-function formatDisplayPackage(pkg) {
-  if (!pkg) return '';
-  const trimmed = pkg.trim();
-  if (/^[₹$€₩¥£A$]/.test(trimmed)) return trimmed;
-  return `₹ ${trimmed}`;
-}
-
-function formatDeadlineWithCountdown(deadline) {
-  if (!deadline) return null;
-  const parts = deadline.split('T')[0].split('-');
-  let d;
-  if (parts.length === 3) {
-    d = new Date(parts[0], parts[1] - 1, parts[2]);
-  } else {
-    d = new Date(deadline);
-  }
-
-  if (isNaN(d.getTime())) return `Deadline: ${deadline}`;
-
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const formattedDate = `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const target = new Date(d);
-  target.setHours(0, 0, 0, 0);
-
-  const diffMs = target - today;
-  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffDays < 0) {
-    return { text: `Deadline: ${formattedDate} (Expired)`, isExpired: true, isClosingSoon: false };
-  } else if (diffDays === 0) {
-    return { text: `Deadline: ${formattedDate} • Due today`, isExpired: false, isClosingSoon: true };
-  } else if (diffDays === 1) {
-    return { text: `Deadline: ${formattedDate} • 1 day left`, isExpired: false, isClosingSoon: true };
-  } else if (diffDays <= 3) {
-    return { text: `Deadline: ${formattedDate} • ${diffDays} days left`, isExpired: false, isClosingSoon: true };
-  } else {
-    return { text: `Deadline: ${formattedDate} • ${diffDays} days left`, isExpired: false, isClosingSoon: false };
-  }
-}
 
 export default function TrackedOpeningsPage() {
   const { user } = useAuth();
@@ -187,11 +145,12 @@ export default function TrackedOpeningsPage() {
         </label>
       </div>
 
-      {/* Loading State */}
+      {/* Loading State Skeleton */}
       {isLoading && (
-        <div className="openings-loading">
-          <span className="spinner" />
-          <span>Loading tracked openings...</span>
+        <div className="openings-grid">
+          {Array.from({ length: 6 }).map((_, idx) => (
+            <StudentOpeningCardSkeleton key={idx} />
+          ))}
         </div>
       )}
 
@@ -215,7 +174,7 @@ export default function TrackedOpeningsPage() {
           <p>
             {searchQuery
               ? 'Try adjusting your search query.'
-              : 'Browse campus placement openings and click "Track" on any opening to save it here for quick access.'}
+              : 'Browse campus placement openings and click the bookmark icon on any opening to track it here.'}
           </p>
           {!searchQuery && (
             <div style={{ marginTop: '1.25rem' }}>
@@ -231,125 +190,17 @@ export default function TrackedOpeningsPage() {
       {!isLoading && filteredOpenings.length > 0 && (
         <div className="openings-grid">
           <AnimatePresence>
-            {filteredOpenings.map((op) => {
-              const statusInfo = getOpeningStatus(op);
-              const isClosedOrExpired = statusInfo.isClosedOrExpired;
-              const deadlineInfo = formatDeadlineWithCountdown(op.deadline);
-              const isClosingSoon = statusInfo.isClosingSoon || deadlineInfo?.isClosingSoon;
-
-              return (
-                <m.div
-                  key={op.id}
-                  layout
-                  className={`opening-card ${isClosedOrExpired ? 'opening-card--muted' : ''}`}
-                  style={{ opacity: isClosedOrExpired ? 0.7 : 1 }}
-                  variants={listItemVariants}
-                  initial={isFromCache ? false : "hidden"}
-                  animate="visible"
-                  exit="exit"
-                  whileTap={isClosedOrExpired ? {} : { scale: 0.98 }}
-                >
-                  <div className="opening-card__header">
-                    <div>
-                      <h3 className="opening-card__company">{op.companyName}</h3>
-                      <div className="opening-card__role">{op.jobRole}</div>
-                    </div>
-                    <span className={`status-badge ${isClosedOrExpired ? 'status-badge--closed' : isClosingSoon ? 'status-badge--closing-soon' : 'status-badge--open'}`}>
-                      {isClosingSoon && !isClosedOrExpired ? 'CLOSING SOON' : statusInfo.label.toUpperCase()}
-                    </span>
-                  </div>
-
-                  <div className="opening-card__meta">
-                    {op.jobType && <span className="meta-tag">{op.jobType}</span>}
-                    {op.workMode && <span className="meta-tag">{op.workMode}</span>}
-                    {op.location && (
-                      <span className="meta-tag">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '3px' }}>
-                          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/>
-                          <circle cx="12" cy="10" r="3"/>
-                        </svg>
-                        {op.location}
-                      </span>
-                    )}
-                    {op.packageDetails && (
-                      <span className="meta-tag meta-tag--package">
-                        {formatDisplayPackage(op.packageDetails)}
-                      </span>
-                    )}
-                    {op.yearOfStudy && (
-                      <span className="meta-tag">
-                        {formatYearOfStudy(op.yearOfStudy)}
-                      </span>
-                    )}
-                    {op.minCgpa != null && (
-                      <span className="meta-tag">
-                        Min CGPA: {op.minCgpa}
-                      </span>
-                    )}
-                    {op.maxBacklogs != null && (
-                      <span className="meta-tag">
-                        Max Backlogs: {op.maxBacklogs}
-                      </span>
-                    )}
-                    <span className="meta-tag meta-tag--published">
-                      {formatPublishedBy(op.publishedBy)}
-                    </span>
-                  </div>
-
-                  <p className="opening-card__eligibility">
-                    <strong>Eligibility:</strong> {op.degreeTypes || op.degree || 'All degrees'} • {op.eligibleBranches === 'ALL' ? 'All Branches' : (op.eligibleBranches || 'All Branches')}
-                    {op.minCgpa != null && ` • Min CGPA: ${op.minCgpa}`}
-                    {op.maxBacklogs != null && ` • Max Backlogs: ${op.maxBacklogs}`}
-                  </p>
-
-                  {op.deadline && (
-                    <div className={`opening-card__deadline ${deadlineInfo?.isExpired ? 'deadline--expired' : isClosingSoon ? 'deadline--closing-soon' : ''}`}>
-                      {deadlineInfo?.text || `Deadline: ${op.deadline}`}
-                    </div>
-                  )}
-
-                  <div className="opening-card__footer">
-                    <span className="published-by">{formatPublishedBy(op.publishedBy)}</span>
-                    <div className="opening-card__actions">
-                      <button
-                        type="button"
-                        className={`btn-sm ${op.isTracked ? 'btn-secondary btn-tracked' : 'btn-primary'}`}
-                        disabled={trackingLoadingId === op.id}
-                        onClick={(e) => handleToggleTrack(op, e)}
-                        title={op.isTracked ? 'Click to untrack' : 'Track opening'}
-                      >
-                        {trackingLoadingId === op.id ? (
-                          <span className="spinner spinner-sm" />
-                        ) : op.isTracked ? (
-                          '✓ Tracked'
-                        ) : (
-                          'Track'
-                        )}
-                      </button>
-
-                      <button
-                        type="button"
-                        className="btn-sm btn-secondary"
-                        onClick={() => setSelectedOpening(op)}
-                      >
-                        View details
-                      </button>
-
-                      {op.applicationLink && !isClosedOrExpired && (
-                        <a
-                          href={op.applicationLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn-sm btn-primary"
-                        >
-                          Apply now ↗
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                </m.div>
-              );
-            })}
+            {filteredOpenings.map((op) => (
+              <StudentOpeningCard
+                key={op.id}
+                op={op}
+                onViewDetails={setSelectedOpening}
+                onToggleTrack={handleToggleTrack}
+                trackingLoadingId={trackingLoadingId}
+                userRole={user?.role}
+                isFromCache={isFromCache}
+              />
+            ))}
           </AnimatePresence>
         </div>
       )}
@@ -358,12 +209,10 @@ export default function TrackedOpeningsPage() {
       <AnimatePresence>
         {selectedOpening && (() => {
           const modalStatus = getOpeningStatus(selectedOpening);
-          const modalDeadline = formatDeadlineWithCountdown(selectedOpening.deadline);
-          const modalClosingSoon = modalStatus.isClosingSoon || modalDeadline?.isClosingSoon;
 
           return (
             <m.div
-              className="modal-overlay"
+              className="modal-backdrop"
               variants={modalBackdropVariants}
               initial="hidden"
               animate="visible"
@@ -371,7 +220,7 @@ export default function TrackedOpeningsPage() {
               onClick={() => setSelectedOpening(null)}
             >
               <m.div
-                className="modal-content opening-modal"
+                className="modal-card modal-card--lg"
                 variants={modalCardVariants}
                 onClick={(e) => e.stopPropagation()}
                 role="dialog"
@@ -389,105 +238,68 @@ export default function TrackedOpeningsPage() {
                     onClick={() => setSelectedOpening(null)}
                     aria-label="Close modal"
                   >
-                    ×
+                    ✕
                   </button>
                 </div>
 
                 <div className="modal-body">
-                  <div className="modal-meta-grid">
-                    {selectedOpening.jobType && (
-                      <div className="meta-item">
-                        <span className="meta-label">Job type</span>
-                        <span className="meta-value">{selectedOpening.jobType}</span>
-                      </div>
-                    )}
-                    {selectedOpening.workMode && (
-                      <div className="meta-item">
-                        <span className="meta-label">Work mode</span>
-                        <span className="meta-value">{selectedOpening.workMode}</span>
-                      </div>
-                    )}
-                    {selectedOpening.packageDetails && (
-                      <div className="meta-item">
-                        <span className="meta-label">Package / Stipend</span>
-                        <span className="meta-value highlight">{formatDisplayPackage(selectedOpening.packageDetails)}</span>
-                      </div>
-                    )}
-                    {selectedOpening.location && (
-                      <div className="meta-item">
-                        <span className="meta-label">Location</span>
-                        <span className="meta-value">{selectedOpening.location}</span>
-                      </div>
-                    )}
-                    {selectedOpening.yearOfStudy && (
-                      <div className="meta-item">
-                        <span className="meta-label">Eligible year</span>
-                        <span className="meta-value">{selectedOpening.yearOfStudy}</span>
-                      </div>
-                    )}
-                    <div className="meta-item">
-                      <span className="meta-label">Status</span>
-                      <span className={`status-badge ${modalStatus.isClosedOrExpired ? 'status-badge--closed' : modalClosingSoon ? 'status-badge--closing-soon' : 'status-badge--open'}`}>
-                        {modalClosingSoon && !modalStatus.isClosedOrExpired ? 'CLOSING SOON' : modalStatus.label.toUpperCase()}
+                  <div className="opening-detail-meta">
+                    <div><strong>Job Type:</strong> {selectedOpening.jobType || 'N/A'}</div>
+                    <div><strong>Work Mode:</strong> {selectedOpening.workMode || 'N/A'}</div>
+                    <div><strong>Location:</strong> {selectedOpening.location || 'N/A'}</div>
+                    <div><strong>Package/Stipend:</strong> {formatDisplayPackage(selectedOpening.packageDetails) || 'N/A'}</div>
+                    <div><strong>Year of Study:</strong> {selectedOpening.yearOfStudy || 'All Years'}</div>
+                    <div><strong>Deadline:</strong> {selectedOpening.deadline || 'Rolling'}</div>
+                    <div>
+                      <strong>Status: </strong>
+                      <span className={`status-badge ${modalStatus.isClosedOrExpired ? 'status-badge--closed' : 'status-badge--open'}`}>
+                        {modalStatus.label.toUpperCase()}
                       </span>
                     </div>
                   </div>
 
-                  <div className="modal-section">
-                    <h4>Eligibility Criteria</h4>
+                  <div className="opening-detail-section">
+                    <h4>Eligibility criteria</h4>
                     <p><strong>Degrees:</strong> {selectedOpening.degreeTypes || selectedOpening.degree || 'All degrees'}</p>
                     <p><strong>Branches:</strong> {selectedOpening.eligibleBranches === 'ALL' ? 'All Branches' : (selectedOpening.eligibleBranches || 'All Branches')}</p>
-                    {selectedOpening.eligibility && <p>{selectedOpening.eligibility}</p>}
+                    {selectedOpening.minCgpa != null && parseFloat(selectedOpening.minCgpa) > 0 && (
+                      <p><strong>Min CGPA:</strong> {selectedOpening.minCgpa}</p>
+                    )}
+                    {selectedOpening.maxBacklogs != null && selectedOpening.maxBacklogs !== '' && (
+                      <p><strong>Max Backlogs:</strong> {selectedOpening.maxBacklogs}</p>
+                    )}
+                    {selectedOpening.eligibilityNote && <p><strong>Note:</strong> {selectedOpening.eligibilityNote}</p>}
                   </div>
-
-                  {modalDeadline && (
-                    <div className="modal-section">
-                      <h4>Application Deadline</h4>
-                      <p className={modalDeadline.isExpired ? 'deadline--expired' : modalDeadline.isClosingSoon ? 'deadline--urgent' : ''}>
-                        {modalDeadline.text}
-                      </p>
-                    </div>
-                  )}
 
                   {selectedOpening.description && (
-                    <div className="modal-section">
-                      <h4>Short JD</h4>
-                      <p style={{ whitespace: 'pre-line' }}>{selectedOpening.description}</p>
+                    <div className="opening-detail-section">
+                      <h4>Mini JD</h4>
+                      <div className="opening-description-text">{selectedOpening.description}</div>
                     </div>
                   )}
-
-                  <div className="modal-section">
-                    <span className="published-by">{formatPublishedBy(selectedOpening.publishedBy)}</span>
-                  </div>
                 </div>
 
                 <div className="modal-footer">
-                  <button
-                    type="button"
-                    className={`btn-sm ${selectedOpening.isTracked ? 'btn-secondary btn-tracked' : 'btn-primary'}`}
-                    disabled={trackingLoadingId === selectedOpening.id}
-                    onClick={(e) => handleToggleTrack(selectedOpening, e)}
-                  >
-                    {selectedOpening.isTracked ? '✓ Tracked' : 'Track'}
-                  </button>
-
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    onClick={() => setSelectedOpening(null)}
-                  >
-                    Close
-                  </button>
-
-                  {selectedOpening.applicationLink && !modalStatus.isClosedOrExpired && (
+                  {selectedOpening.applicationLink && (
                     <a
                       href={selectedOpening.applicationLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="btn-primary"
+                      className="btn-secondary"
                     >
-                      Apply on Company Site ↗
+                      Apply on portal ↗
                     </a>
+                  )}
+
+                  {user?.role !== 'ADMIN' && (
+                    <button
+                      type="button"
+                      className={`btn-sm ${selectedOpening.isTracked ? 'btn-secondary btn-tracked' : 'btn-primary'}`}
+                      disabled={modalStatus.isClosedOrExpired || trackingLoadingId === selectedOpening.id}
+                      onClick={(e) => handleToggleTrack(selectedOpening, e)}
+                    >
+                      {selectedOpening.isTracked ? '✓ Tracked' : 'Track'}
+                    </button>
                   )}
                 </div>
               </m.div>

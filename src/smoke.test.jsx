@@ -115,6 +115,7 @@ import AdminManageOpeningsPage from './admin/AdminManageOpeningsPage';
 import InterviewsPage from './interviews/InterviewsPage';
 import DatePickerPopover from './components/DatePickerPopover';
 import DeleteConfirmModal from './applications/DeleteConfirmModal';
+import StudentOpeningCard from './openings/StudentOpeningCard';
 
 const mockAuthValue = {
   user: { userId: 1, id: 1, email: 'student@example.com', role: 'STUDENT' },
@@ -212,4 +213,30 @@ describe('Component Smoke Tests - Missing Import Guard', () => {
       );
     }).not.toThrow();
   });
+
+  it('renders StudentOpeningCard with bookmark toggle aria attributes', () => {
+    const opening = {
+      id: 101,
+      companyName: 'Test Tech Corp',
+      jobRole: 'Frontend Developer',
+      jobType: 'Full-time',
+      workMode: 'Remote',
+      location: 'Hyderabad',
+      status: 'OPEN',
+      deadline: '2026-12-31',
+      isTracked: true,
+      minCgpa: 0,
+    };
+    const html = renderToString(
+      <StudentOpeningCard
+        op={opening}
+        onViewDetails={() => {}}
+        onToggleTrack={() => {}}
+      />
+    );
+    expect(html).toContain('aria-pressed="true"');
+    expect(html).toContain('Untrack opening');
+    expect(html).not.toContain('Min CGPA: 0');
+  });
 });
+

@@ -75,3 +75,29 @@ describe('formatPublishedBy', () => {
     expect(formatPublishedBy('Published by: Placement Cell')).toBe('Published by: Placement Cell');
   });
 });
+
+import { formatEligibilityText } from './StudentOpeningCard';
+
+describe('formatEligibilityText', () => {
+  it('hides Min CGPA when minCgpa is 0 or 0.0 or null', () => {
+    const opZero = { degreeTypes: 'B.Tech', eligibleBranches: 'CSE', minCgpa: 0, maxBacklogs: 2 };
+    expect(formatEligibilityText(opZero)).toBe('Degrees: B.Tech • Branches: CSE • Max Backlogs: 2');
+
+    const opZeroStr = { degreeTypes: 'B.Tech', eligibleBranches: 'CSE', minCgpa: '0.0', maxBacklogs: 2 };
+    expect(formatEligibilityText(opZeroStr)).toBe('Degrees: B.Tech • Branches: CSE • Max Backlogs: 2');
+
+    const opNull = { degreeTypes: 'B.Tech', eligibleBranches: 'ALL', minCgpa: null };
+    expect(formatEligibilityText(opNull)).toBe('Degrees: B.Tech • Branches: All Branches');
+  });
+
+  it('shows Min CGPA when minCgpa is greater than 0', () => {
+    const op = { degreeTypes: 'B.Tech, M.Tech', eligibleBranches: 'CSE, ECE', minCgpa: 7.5, maxBacklogs: 0, packageDetails: '12 LPA', yearOfStudy: '4th Year' };
+    const result = formatEligibilityText(op);
+    expect(result).toContain('Min CGPA: 7.5');
+    expect(result).toContain('Max Backlogs: 0');
+    expect(result).toContain('12 LPA');
+    expect(result).toContain('4th Year');
+  });
+});
+
+
