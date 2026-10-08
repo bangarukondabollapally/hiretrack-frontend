@@ -5,7 +5,6 @@ import { useAdminOpeningsQuery, invalidateOpeningQueries } from '../api/queries'
 import axiosInstance from '../api/axiosInstance';
 import { COMMON_BRANCHES, LEGACY_BRANCH_MAPPING, DEGREE_TYPES } from '../lib/constants';
 import DatePickerPopover from '../components/DatePickerPopover';
-import { useScrollLock } from '../hooks/useScrollLock';
 import './AdminOpeningsPage.css';
 
 const STUDY_YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
@@ -40,7 +39,7 @@ export default function AdminManageOpeningsPage() {
   const { data: openings = [] } = useAdminOpeningsQuery(userId);
 
   const [editingOpening, setEditingOpening] = useState(null);
-  useScrollLock(Boolean(editingOpening));
+
 
   const [formData, setFormData] = useState({
     companyName: '',

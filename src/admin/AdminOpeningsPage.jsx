@@ -7,7 +7,6 @@ import axiosInstance from '../api/axiosInstance';
 import QueryStateNotice from '../components/QueryStateNotice';
 import AdminOpeningCard from './AdminOpeningCard';
 import { modalBackdropVariants, modalCardVariants } from '../lib/motion';
-import { useScrollLock } from '../hooks/useScrollLock';
 import './AdminOpeningsPage.css';
 
 export default function AdminOpeningsPage() {
@@ -32,7 +31,7 @@ export default function AdminOpeningsPage() {
 
   // Delete modal state
   const [deletingOpening, setDeletingOpening] = useState(null);
-  useScrollLock(Boolean(deletingOpening));
+
 
   const [isDeleting, setIsDeleting] = useState(false);
 
