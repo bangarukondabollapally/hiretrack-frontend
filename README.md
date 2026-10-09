@@ -26,7 +26,7 @@ The UI is built with a custom design system and aesthetic:
 - **Tag Management**: Custom colored tags for filtering and grouping job applications.
 - **Metrics Dashboard**: Dynamic application status metrics, interview success rates, and pipeline overview.
 - **Client-Side Resume Parsing**: Drag-and-drop resume upload supporting PDF (`.pdf`), text (`.txt`), and markdown (`.md`). Text extraction is performed **entirely client-side in the browser** using `pdfjs-dist`; raw binary files are never transmitted to the backend server.
-- **AI Career Assistant**: Interactive Groq-backed career coach featuring conversation persistence in `localStorage`, per-user history clearing on logout, and targeted prompt scoping to specific job applications.
+- **AI Career Assistant**: Interactive Groq-backed career coach with SSE streaming, server-side conversation persistence, and targeted prompt scoping to specific job applications.
 
 ---
 
@@ -86,23 +86,32 @@ npm run preview
 npm run lint
 ```
 
+### Tests
+```bash
+npm test
+```
+Runs [Vitest](https://vitest.dev/) unit and smoke tests (SSR render checks for all page components, API query hook tests, auth context tests).
+
 ---
 
 ## Source Directory Structure
 
 ```
 src/
-├── api/           — Axios instance with bearer token interceptor and 401 error handler
-├── auth/          — AuthContext provider, ProtectedRoute component, Login & Register pages
-├── applications/  — Application list, search/filter bar, detail view, create/edit modals
-├── interviews/    — Interview round timeline, create/edit interview modal
-├── tags/          — Tag creation and assignment components
-├── profile/       — Profile & Master Resume editor, client-side PDF dropzone parser
-├── dashboard/     — Aggregated pipeline metrics, status breakdown cards, upcoming interviews
-├── assistant/     — AI Chat panel, prompt builder options, localStorage chat history hook
-├── lib/           — Client-side file parser (pdfjs-dist integration), status enums, constants
+├── api/           — Axios instance with bearer token interceptor, React Query hooks
+├── auth/          — AuthContext provider, ProtectedRoute, AdminRoute, Login & Register pages
+├── admin/         — Admin placement openings management (CRUD cards and form)
+├── applications/  — Application list, search/filter bar, create/edit form
+├── assistant/     — AI chat page, chat history list, streaming response renderer
+├── components/    — Shared UI (Layout, Navbar, ErrorBoundary, Avatar, BrandLogo, modals)
+├── dashboard/     — Aggregated pipeline metrics, status cards, upcoming interviews
+├── hooks/         — Custom React hooks (useScrollLock)
+├── interviews/    — Interview timeline and schedule management
+├── landing/       — Public landing page
+├── lib/           — Constants, file parser (pdfjs-dist), motion variants, avatar presets
+├── openings/      — Student openings discovery, tracked openings, opening cards and filters
+├── profile/       — Profile editor, resume dropzone, avatar picker
 ├── styles/        — Design tokens (tokens.css) containing all CSS custom properties
-├── components/    — Shared UI components (Navbar, Modal, Alert, LoadingSpinner)
 ├── App.jsx        — Main application router and shell layout
 └── main.jsx       — React 19 application entry point
 ```
