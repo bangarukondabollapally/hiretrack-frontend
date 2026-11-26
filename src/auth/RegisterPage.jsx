@@ -3,7 +3,10 @@
  *
  * POST /api/auth/register per docs/API.md:
  *   Request:  { email, password }  (password minimum 8 chars)
- *   Response 201: { id, email }
+ *   Response 201: { id, email, role }
+ *
+ * Public registration always creates a student (USER) account. Placement-cell
+ * (ADMIN) accounts are provisioned only by the backend via ADMIN_EMAIL.
  *   Error 400: invalid input (missing/malformed fields)
  *   Error 409: email already registered
  *
@@ -19,7 +22,7 @@
  */
 
 import { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import axiosInstance from '../api/axiosInstance';
 import { ROUTES } from '../lib/constants';
@@ -51,15 +54,11 @@ function validateConfirmPassword(value, password) {
 export default function RegisterPage() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [searchParams] = useSearchParams();
-
-  const initialRole = searchParams.get('role')?.toUpperCase() === 'ADMIN' ? 'ADMIN' : 'USER';
 
   const [fields, setFields] = useState({
     email: '',
     password: '',
     confirmPassword: '',
-    role: initialRole,
   });
   const [touched, setTouched] = useState({
     email: false,
@@ -100,7 +99,6 @@ export default function RegisterPage() {
       await axiosInstance.post('/api/auth/register', {
         email: fields.email,
         password: fields.password,
-        role: fields.role,
       });
 
       // Automatically log in after registration
@@ -110,6 +108,7 @@ export default function RegisterPage() {
       });
 
       login(loginRes.data);
+      // Only emails configured in the backend's ADMIN_EMAIL register as ADMIN.
       if (loginRes.data?.role === 'ADMIN') {
         navigate('/admin/openings');
       } else {
@@ -153,30 +152,6 @@ export default function RegisterPage() {
           noValidate
           aria-label="Get started form"
         >
-          {/* Account Role Buttons (No dropdowns) */}
-          <div className="field">
-            <label className="field-label">
-              Account type <span className="required" aria-hidden="true">*</span>
-            </label>
-            <div className="role-segmented-buttons">
-              <button
-                type="button"
-                className={`role-btn ${fields.role === 'USER' ? 'role-btn--active' : ''}`}
-                onClick={() => setFields(prev => ({ ...prev, role: 'USER' }))}
-                disabled={isSubmitting}
-              >
-                <span>Student</span>
-              </button>
-              <button
-                type="button"
-                className={`role-btn ${fields.role === 'ADMIN' ? 'role-btn--active' : ''}`}
-                onClick={() => setFields(prev => ({ ...prev, role: 'ADMIN' }))}
-                disabled={isSubmitting}
-              >
-                <span>Placement cell</span>
-              </button>
-            </div>
-          </div>
           {/* Email */}
           <div className="field">
             <label className="field-label" htmlFor="register-email">
