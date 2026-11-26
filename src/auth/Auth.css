@@ -98,6 +98,42 @@
   box-shadow: 0 0 0 3px var(--focus);
 }
 
+/* Password field with show/hide toggle (PasswordInput.jsx) */
+.password-field {
+  position: relative;
+}
+.password-field .field-input {
+  padding-right: 40px; /* room for the toggle */
+}
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--text-tertiary);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.password-toggle:hover:not(:disabled) {
+  color: var(--text-primary);
+}
+.password-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.password-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 /* Error state on the input itself */
 .field-input--error {
   border-color: var(--danger);

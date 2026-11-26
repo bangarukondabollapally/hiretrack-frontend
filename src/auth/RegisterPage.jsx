@@ -27,6 +27,7 @@ import { useAuth } from './AuthContext';
 import axiosInstance from '../api/axiosInstance';
 import { ROUTES } from '../lib/constants';
 import BrandLogo from '../components/BrandLogo';
+import PasswordInput from './PasswordInput';
 import './Auth.css';
 
 // ── Validation ───────────────────────────────────────────────────────────────
@@ -183,10 +184,9 @@ export default function RegisterPage() {
             <label className="field-label" htmlFor="register-password">
               Password <span className="required" aria-hidden="true">*</span>
             </label>
-            <input
+            <PasswordInput
               id="register-password"
               className={`field-input${touched.password && errors.password ? ' field-input--error' : ''}`}
-              type="password"
               name="password"
               value={fields.password}
               onChange={handleChange}
@@ -219,12 +219,11 @@ export default function RegisterPage() {
             <label className="field-label" htmlFor="register-confirm-password">
               Confirm password <span className="required" aria-hidden="true">*</span>
             </label>
-            <input
+            <PasswordInput
               id="register-confirm-password"
               className={`field-input${
                 touched.confirmPassword && errors.confirmPassword ? ' field-input--error' : ''
               }`}
-              type="password"
               name="confirmPassword"
               value={fields.confirmPassword}
               onChange={handleChange}

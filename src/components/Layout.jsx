@@ -86,19 +86,15 @@ export default function Layout() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // switchConversation / newConversation already navigate to /assistant/:id or /assistant.
+  // A second navigate('/assistant') here overrode that, so a chat only opened on the second click.
   const handleSelectConversation = (id) => {
     chatHistory.switchConversation(id);
-    if (location.pathname !== '/assistant') {
-      navigate('/assistant');
-    }
     closeMobileMenu();
   };
 
   const handleNewChat = () => {
     chatHistory.newConversation();
-    if (location.pathname !== '/assistant') {
-      navigate('/assistant');
-    }
     closeMobileMenu();
   };
 

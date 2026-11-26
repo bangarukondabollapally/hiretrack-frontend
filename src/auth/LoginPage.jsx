@@ -25,6 +25,7 @@ import { useAuth } from './AuthContext';
 import axiosInstance from '../api/axiosInstance';
 import { ROUTES } from '../lib/constants';
 import BrandLogo from '../components/BrandLogo';
+import PasswordInput from './PasswordInput';
 import './Auth.css';
 
 // ── Validation ───────────────────────────────────────────────────────────────
@@ -184,10 +185,9 @@ export default function LoginPage() {
             <label className="field-label" htmlFor="login-password">
               Password <span className="required" aria-hidden="true">*</span>
             </label>
-            <input
+            <PasswordInput
               id="login-password"
               className={`field-input${touched.password && errors.password ? ' field-input--error' : ''}`}
-              type="password"
               name="password"
               value={fields.password}
               onChange={handleChange}
