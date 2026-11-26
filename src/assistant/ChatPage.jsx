@@ -369,6 +369,7 @@ export default function ChatPage() {
       setReasoningTimeSeconds(Math.floor((Date.now() - startTime) / 1000));
     }, 1000);
 
+    let streamOpened = false;
     try {
       const payload = {
         message: fullPayloadMessage,
@@ -389,8 +390,20 @@ export default function ChatPage() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error ${response.status}`);
+        // The server answered (validation, ownership, rate limit, ...): show its message
+        // instead of retrying, which would re-send the question.
+        let message = "Couldn't reach AI assistant. Please try again.";
+        try {
+          const body = await response.json();
+          if (body?.message) message = body.message;
+        } catch {
+          // non-JSON error body
+        }
+        const httpError = new Error(message);
+        httpError.isHttpError = true;
+        throw httpError;
       }
+      streamOpened = true;
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
@@ -457,6 +470,11 @@ export default function ChatPage() {
     } catch (err) {
       if (err.name === 'AbortError') {
         updateMessageText(assistantMsgId, prev => prev + ' [Stopped]');
+      } else if (err.isHttpError) {
+        updateMessageText(assistantMsgId, err.message);
+      } else if (streamOpened) {
+        // The question was already saved and answered in part; retrying would duplicate it.
+        updateMessageText(assistantMsgId, prev => `${prev || ''}\n\n[Connection lost. Please try again.]`);
       } else {
         try {
           const fallbackRes = await axiosInstance.post('/api/assistant/chat', {
