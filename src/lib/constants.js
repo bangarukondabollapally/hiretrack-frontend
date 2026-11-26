@@ -109,6 +109,12 @@ export const LEGACY_BRANCH_MAPPING = {
 };
 
 /**
+ * A student's current year of study (profile). Must match the backend list
+ * (backend/src/lib/academics.ts STUDY_YEARS).
+ */
+export const STUDENT_YEARS_OF_STUDY = ['1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year', 'Graduated'];
+
+/**
  * Standard degree types for placement openings.
  */
 export const DEGREE_TYPES = [

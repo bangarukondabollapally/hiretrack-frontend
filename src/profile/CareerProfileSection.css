@@ -1,0 +1,43 @@
+#section-career-profile { margin-top: var(--space-7); }
+
+.career-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-4);
+}
+.career-field { display: flex; flex-direction: column; gap: 4px; }
+
+.career-projects { display: flex; flex-direction: column; gap: var(--space-3); }
+.career-project {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.career-project__head { display: flex; gap: var(--space-2); align-items: center; }
+.career-project__head .form-input { flex: 1; }
+.career-empty { margin: 0; font-size: var(--text-meta); color: var(--text-tertiary); }
+.career-add { align-self: flex-start; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* Two columns on phones: the fields are short (a select or a number). */
+@media (max-width: 768px) {
+  .career-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+}
+@media (max-width: 360px) {
+  .career-grid { grid-template-columns: 1fr; }
+}

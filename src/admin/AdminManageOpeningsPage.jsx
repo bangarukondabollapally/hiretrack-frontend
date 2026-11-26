@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthContext';
 import { useAdminOpeningsQuery, invalidateOpeningQueries } from '../api/queries';
 import axiosInstance from '../api/axiosInstance';
 import { COMMON_BRANCHES, LEGACY_BRANCH_MAPPING, DEGREE_TYPES } from '../lib/constants';
+import SkillTagInput from '../components/SkillTagInput';
 import DatePickerPopover from '../components/DatePickerPopover';
 import './AdminOpeningsPage.css';
 
@@ -67,6 +68,10 @@ export default function AdminManageOpeningsPage() {
   const [currency, setCurrency] = useState('₹');
   const [packageAmount, setPackageAmount] = useState('');
 
+  // Structured skills used by the student career assistant for readiness checks
+  const [requiredSkills, setRequiredSkills] = useState([]);
+  const [preferredSkills, setPreferredSkills] = useState([]);
+
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -97,6 +102,8 @@ export default function AdminManageOpeningsPage() {
 
     setCurrency(foundCurr);
     setPackageAmount(rawPkg);
+    setRequiredSkills(opening.requiredSkills || []);
+    setPreferredSkills(opening.preferredSkills || []);
 
     const degRaw = opening.degreeTypes || opening.degree || '';
     const degrees = degRaw
@@ -285,6 +292,8 @@ export default function AdminManageOpeningsPage() {
       minCgpa: minCgpaVal,
       maxBacklogs: maxBacklogsVal,
       yearOfStudy: yearFormatted,
+      requiredSkills,
+      preferredSkills,
     };
 
     try {
@@ -671,6 +680,33 @@ export default function AdminManageOpeningsPage() {
               placeholder="Concise job description: role, key responsibilities, required skills, technical requirements..."
             />
             {formErrors.description && <span className="field-error">{formErrors.description}</span>}
+          </div>
+
+          {/* Structured skills (optional) — used for student readiness checks */}
+          <div className="field">
+            <label className="field-label" htmlFor="opening-required-skills">Required skills</label>
+            <SkillTagInput
+              id="opening-required-skills"
+              value={requiredSkills}
+              onChange={setRequiredSkills}
+              maxItems={30}
+              placeholder="e.g. React, SQL — press Enter after each"
+              ariaLabel="Add a required skill"
+            />
+          </div>
+          <div className="field">
+            <label className="field-label" htmlFor="opening-preferred-skills">Preferred skills</label>
+            <SkillTagInput
+              id="opening-preferred-skills"
+              value={preferredSkills}
+              onChange={setPreferredSkills}
+              maxItems={30}
+              placeholder="Nice-to-have skills (optional)"
+              ariaLabel="Add a preferred skill"
+            />
+            <span className="field-hint" style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)' }}>
+              Students’ career assistant compares their profile with these. Required skills decide readiness; preferred skills only inform advice.
+            </span>
           </div>
 
           {/* Form Actions */}

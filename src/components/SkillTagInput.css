@@ -1,0 +1,53 @@
+.skill-input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 5px 8px;
+  /* Same fill as .form-input / .field-input so it reads as a regular field */
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: text;
+  transition: border-color var(--transition-fast);
+}
+.skill-input:focus-within { border-color: var(--border-strong); box-shadow: 0 0 0 3px var(--accent-dim); }
+.skill-input--disabled { opacity: 0.6; }
+
+.skill-input__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px 2px 8px;
+  font-size: var(--text-meta);
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+}
+.skill-input__remove {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1;
+  color: var(--text-tertiary);
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.skill-input__remove:hover:not(:disabled) { color: var(--danger); background: var(--surface-mid); }
+.skill-input__remove:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.skill-input__field {
+  flex: 1;
+  min-width: 140px;
+  padding: 3px 2px;
+  font: inherit;
+  font-size: var(--text-body);
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  outline: none;
+}

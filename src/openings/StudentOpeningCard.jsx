@@ -1,6 +1,7 @@
 import { m } from 'framer-motion';
 import { listItemVariants } from '../lib/motion';
 import { getOpeningStatus } from './openingStatusHelper';
+import { OpeningSkillsLine } from './OpeningSkills';
 
 export function formatDisplayPackage(pkg) {
   if (!pkg) return '';
@@ -213,6 +214,8 @@ export default function StudentOpeningCard({
               <span className="eligibility-val">{cgpaBacklogsText}</span>
             </div>
           )}
+          {/* Structured skills set by the placement cell (hidden when none) */}
+          <OpeningSkillsLine opening={op} />
         </div>
       </div>
 
