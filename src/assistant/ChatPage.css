@@ -197,6 +197,20 @@
   max-width: 680px;
 }
 
+/* Gentle profile-completion hint under the suggestion chips (never blocks the assistant) */
+.empty-profile-hint {
+  margin: 20px 0 0;
+  max-width: 560px;
+  text-align: center;
+  font-size: var(--text-meta);
+  color: var(--text-tertiary);
+}
+.empty-profile-hint a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .chip-btn {
   display: inline-flex;
   align-items: center;

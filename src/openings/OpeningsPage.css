@@ -416,6 +416,45 @@
   white-space: pre-wrap;
 }
 
+/* Structured skills (details modal; the card line reuses .eligibility-row) */
+.opening-skill-group {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 8px;
+  align-items: baseline;
+  margin-bottom: 0.4rem;
+}
+.opening-skill-group__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary, #4D4A43);
+}
+.opening-skill-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.opening-skill-chip {
+  padding: 2px 8px;
+  font-size: 0.78rem;
+  color: var(--text-primary, #1A1917);
+  background: var(--surface-sunken, #F1EFE9);
+  border: 1px solid var(--border, #DDD8CE);
+  border-radius: 999px;
+}
+.opening-detail-section .opening-skill-hint {
+  margin-top: 0.25rem;
+  font-size: 0.78rem;
+  color: var(--text-tertiary, #6E6A61);
+}
+
+@media (max-width: 480px) {
+  .opening-skill-group { grid-template-columns: 1fr; gap: 4px; }
+}
+
 .modal-footer {
   padding: 1rem 1.25rem;
   border-top: 1px solid var(--border, #DDD8CE);

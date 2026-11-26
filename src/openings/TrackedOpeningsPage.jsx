@@ -11,6 +11,7 @@ import StudentOpeningCard, {
   formatDeadlineDate,
   getStatusPillInfo,
 } from './StudentOpeningCard';
+import OpeningSkillsSection from './OpeningSkills';
 import { modalBackdropVariants, modalCardVariants } from '../lib/motion';
 import { useScrollLock } from '../hooks/useScrollLock';
 import './OpeningsPage.css';
@@ -262,7 +263,8 @@ export default function TrackedOpeningsPage() {
                     <div><strong>Location:</strong> {selectedOpening.location || 'N/A'}</div>
                     <div><strong>Package/Stipend:</strong> {formatDisplayPackage(selectedOpening.packageDetails) || 'N/A'}</div>
                     <div><strong>Year of Study:</strong> {selectedOpening.yearOfStudy || 'All Years'}</div>
-                    <div><strong>Deadline:</strong> {formatDeadlineDate(selectedOpening.deadline)}</div>
+                    {/* formatDeadlineDate already prefixes "Deadline:"; strip it so the label is not shown twice */}
+                    <div><strong>Deadline:</strong> {formatDeadlineDate(selectedOpening.deadline).replace(/^Deadline:\s*/, '')}</div>
                     <div>
                       <strong>Status: </strong>
                       <span className={pillInfo.className}>
@@ -283,6 +285,8 @@ export default function TrackedOpeningsPage() {
                     )}
                     {selectedOpening.eligibilityNote && <p><strong>Note:</strong> {selectedOpening.eligibilityNote}</p>}
                   </div>
+
+                  <OpeningSkillsSection opening={selectedOpening} />
 
                   {selectedOpening.description && (
                     <div className="opening-detail-section">

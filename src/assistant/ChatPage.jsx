@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
-import { useOutletContext, Navigate } from 'react-router-dom';
+import { useOutletContext, Navigate, Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import axiosInstance from '../api/axiosInstance';
 import { useAuth } from '../auth/AuthContext';
-import { useApplicationsQuery } from '../api/queries';
+import { useApplicationsQuery, useProfileQuery } from '../api/queries';
 import { useChatHistory } from './useChatHistory';
 import ChatHistoryList from './ChatHistoryList';
+import GuidancePanel from './guidance/GuidancePanel';
+import { buildActionRequest, formatMissing } from './guidance/guidanceLabels';
 import { AnimatePresence, m } from 'framer-motion';
 import { popoverVariants, staggerContainerVariants, listItemVariants, toastVariants } from '../lib/motion';
 import { repairMarkdownTables, TABLE_BR_MARKER } from '../lib/repairMarkdownTables';
@@ -15,12 +17,14 @@ import './ChatPage.css';
 const INITIAL_GREETING = "What can I help you with today?";
 
 const SUGGESTED_PROMPTS = [
-  { type: 'code', category: 'Code', label: 'Tailor resume for this role', prompt: 'Tailor my resume for this role' },
-  { type: 'prep', category: 'Prep', label: 'Summarize prep notes', prompt: 'Summarize my interview preparation notes' },
-  { type: 'status', category: 'Status', label: 'Applications in Interview stage', prompt: 'Show applications in Interview stage' },
-  { type: 'strategy', category: 'Strategy', label: 'What applications need follow-up?', prompt: 'What applications need follow-up?' },
-  { type: 'draft', category: 'Draft', label: 'Research before interview', prompt: 'What should I research before my interview?' },
+  { type: 'status', category: 'Discover', label: 'Which openings suit my profile?', prompt: 'Which openings suit my profile?' },
+  { type: 'strategy', category: 'Readiness', label: 'Am I ready for my tracked openings?', prompt: 'Am I ready to apply for the openings I am tracking?' },
+  { type: 'code', category: 'Upskill', label: 'What should I learn next?', prompt: 'What skills should I learn to be ready for the openings that suit me?' },
+  { type: 'prep', category: 'Compare', label: 'Compare my tracked openings', prompt: 'Compare the openings I am tracking and tell me which to prioritise.' },
+  { type: 'draft', category: 'Prep', label: 'Prepare for my next interview', prompt: 'How should I prepare for my next interview?' },
 ];
+
+const MAX_COMPARE = 3;
 
 const renderPromptIcon = (type) => {
   switch (type) {
@@ -185,7 +189,32 @@ export default function ChatPage() {
     appendMessage,
     updateMessageText,
     updateReasoningText,
+    updateMessageGuidance,
+    removeMessage,
   } = history;
+
+  // Profile completeness hint for the empty state (assistant works without it)
+  const { data: profileData } = useProfileQuery(userId);
+  const profileMissing = profileData
+    ? [
+        !(profileData.skills || []).length && 'skills',
+        !profileData.degreeType && 'degree',
+        !profileData.yearOfStudy && 'year of study',
+        profileData.cgpa == null && 'CGPA',
+      ].filter(Boolean)
+    : [];
+
+  // Openings selected on cards for comparison (max 3)
+  const [compareSelection, setCompareSelection] = useState([]);
+  const toggleCompare = useCallback((opening) => {
+    setCompareSelection((prev) =>
+      prev.some((o) => o.id === opening.id)
+        ? prev.filter((o) => o.id !== opening.id)
+        : prev.length >= MAX_COMPARE
+          ? prev
+          : [...prev, { id: opening.id, companyName: opening.companyName, jobRole: opening.jobRole }]
+    );
+  }, []);
 
   // Window width tracking for responsive behavior
   const [windowWidth, setWindowWidth] = useState(() => typeof window !== 'undefined' ? window.innerWidth : 1200);
@@ -317,11 +346,12 @@ export default function ChatPage() {
   };
 
   // SSE Stream Handler
-  const handleSendMessage = useCallback(async (overrideText) => {
-    const promptText = (overrideText || inputText).trim();
+  // options: { intent, openingIds } from card actions; { regenerate: true } re-answers the last question.
+  const handleSendMessage = useCallback(async (overrideText, options = {}) => {
+    const promptText = (typeof overrideText === 'string' ? overrideText : inputText).trim();
     if ((!promptText && attachments.length === 0) || isGenerating) return;
 
-    const currentAttachments = [...attachments];
+    const currentAttachments = options.regenerate ? [] : [...attachments];
     let fullPayloadMessage = promptText;
 
     if (currentAttachments.length > 0) {
@@ -345,13 +375,15 @@ export default function ChatPage() {
       newConversation();
     }
 
-    const userMsg = {
-      id: `msg_${Date.now()}`,
-      sender: 'user',
-      text: promptText,
-      attachments: currentAttachments.map(a => ({ name: a.name, size: a.size, content: a.content })),
-    };
-    appendMessage(userMsg);
+    const userMsgId = `msg_${Date.now()}`;
+    if (!options.regenerate) {
+      appendMessage({
+        id: userMsgId,
+        sender: 'user',
+        text: promptText,
+        attachments: currentAttachments.map(a => ({ name: a.name, size: a.size, content: a.content })),
+      });
+    }
 
     setIsGenerating(true);
     setStreamPhase('retrieving');
@@ -370,12 +402,15 @@ export default function ChatPage() {
     }, 1000);
 
     let streamOpened = false;
+    const payload = {
+      message: fullPayloadMessage,
+      applicationId: selectedAppId ? Number(selectedAppId) : null,
+      conversationId: activeId ? Number(activeId) : null,
+      ...(options.intent ? { intent: options.intent } : {}),
+      ...(options.openingIds?.length ? { openingIds: options.openingIds } : {}),
+      ...(options.regenerate ? { regenerate: true } : {}),
+    };
     try {
-      const payload = {
-        message: fullPayloadMessage,
-        applicationId: selectedAppId ? Number(selectedAppId) : null,
-        conversationId: activeId ? Number(activeId) : null,
-      };
 
       const rawBaseUrl = import.meta.env.VITE_API_BASE_URL || '';
       const API_BASE_URL = rawBaseUrl.replace(/\/+$/, '');
@@ -452,13 +487,21 @@ export default function ChatPage() {
             updateMessageText(assistantMsgId, prev => (prev || '') + (data.text || ''));
           } else if (eventType === 'reasoning') {
             updateReasoningText(assistantMsgId, data.text || '');
+          } else if (eventType === 'context' || eventType === 'guidance') {
+            // Verified HireTrack data arrives first (cards render while the answer streams);
+            // the final payload adds the validated AI references and learning plan.
+            updateMessageGuidance(assistantMsgId, data);
           } else if (eventType === 'done') {
             if (data.conversationId) {
               history.setActiveId?.(data.conversationId);
               window.history.replaceState(null, '', `/assistant/${data.conversationId}`);
             }
           } else if (eventType === 'error') {
-            updateMessageText(assistantMsgId, `\n\n[Error: ${data.message || 'Stream connection failed'}]`);
+            updateMessageText(assistantMsgId, prev => `${prev || ''}\n\n[Error: ${data.message || 'Stream connection failed'}]`);
+            if (data.conversationId == null && !options.regenerate) {
+              // The server discarded this unanswered question; keep the UI consistent with it.
+              removeMessage(userMsgId);
+            }
           }
         } catch (e) {
           console.warn('Unparseable SSE JSON chunk:', rawData, e);
@@ -477,12 +520,9 @@ export default function ChatPage() {
         updateMessageText(assistantMsgId, prev => `${prev || ''}\n\n[Connection lost. Please try again.]`);
       } else {
         try {
-          const fallbackRes = await axiosInstance.post('/api/assistant/chat', {
-            message: fullPayloadMessage,
-            applicationId: selectedAppId ? Number(selectedAppId) : null,
-            conversationId: activeId ? Number(activeId) : null,
-          });
+          const fallbackRes = await axiosInstance.post('/api/assistant/chat', payload);
           updateMessageText(assistantMsgId, fallbackRes.data.reply);
+          if (fallbackRes.data.guidance) updateMessageGuidance(assistantMsgId, fallbackRes.data.guidance);
           if (fallbackRes.data.conversationId) {
             history.setActiveId?.(fallbackRes.data.conversationId);
             window.history.replaceState(null, '', `/assistant/${fallbackRes.data.conversationId}`);
@@ -501,7 +541,15 @@ export default function ChatPage() {
         history.refetchConversations?.();
       }
     }
-  }, [inputText, attachments, isGenerating, activeId, selectedAppId, token, appendMessage, newConversation, updateMessageText, updateReasoningText]);
+  }, [inputText, attachments, isGenerating, activeId, selectedAppId, token, appendMessage, newConversation, updateMessageText, updateReasoningText, updateMessageGuidance, removeMessage]);
+
+  // Contextual actions from opening cards and the compare bar
+  const handleGuidanceAction = useCallback((action, openings) => {
+    const request = buildActionRequest(action, openings);
+    if (!request) return;
+    if (action === 'compare') setCompareSelection([]);
+    handleSendMessage(request.text, { intent: request.intent, openingIds: request.openingIds });
+  }, [handleSendMessage]);
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -615,10 +663,14 @@ export default function ChatPage() {
   };
 
   const handleRegenerate = (msgIndex) => {
-    if (msgIndex <= 0) return;
+    if (msgIndex <= 0 || isGenerating) return;
     const prevUserMsg = messages[msgIndex - 1];
+    const assistantMsg = messages[msgIndex];
     if (prevUserMsg && prevUserMsg.sender === 'user') {
-      handleSendMessage(prevUserMsg.text);
+      // Only the latest answer can be regenerated in place; older ones are asked again as a new turn.
+      const isLatest = msgIndex === messages.length - 1;
+      if (isLatest && assistantMsg) removeMessage(assistantMsg.id);
+      handleSendMessage(prevUserMsg.text, isLatest ? { regenerate: true } : {});
     }
   };
 
@@ -788,6 +840,13 @@ export default function ChatPage() {
                   </m.button>
                 ))}
               </m.div>
+
+              {profileMissing.length > 0 && (
+                <p className="empty-profile-hint">
+                  Add your {formatMissing(profileMissing)} in{' '}
+                  <Link to="/settings?tab=job-search">Settings → Job search</Link> for sharper matching. The assistant works without them.
+                </p>
+              )}
             </div>
           ) : (
             /* DOCKED STATE: Transcript column + Docked Composer at bottom */
@@ -973,6 +1032,20 @@ export default function ChatPage() {
                             </Suspense>
                           </div>
 
+                          {/* Verified career guidance: cards, readiness, comparison, learning plan */}
+                          {msg.guidance && (
+                            <GuidancePanel
+                              guidance={msg.guidance}
+                              onAction={handleGuidanceAction}
+                              onAsk={(q) => handleSendMessage(q)}
+                              compareSelection={compareSelection}
+                              onToggleCompare={toggleCompare}
+                              disabled={isGenerating}
+                              isLatest={idx === messages.length - 1 && !isGenerating}
+                              isStreaming={isGenerating && idx === messages.length - 1}
+                            />
+                          )}
+
                           {/* Minimal Icon Action Row (Copy & Regenerate - Always visible on touch) */}
                           {msg.text && (
                             <div className="assistant-action-row">
@@ -1036,6 +1109,27 @@ export default function ChatPage() {
 
               {/* Docked composer near bottom */}
               <div className="composer-container composer-container--docked">
+                {compareSelection.length > 0 && (
+                  <div className="gd-compare-bar" role="region" aria-label="Openings selected for comparison">
+                    <span className="gd-compare-bar__names">
+                      Compare: {compareSelection.map((o) => o.companyName).join(', ')}
+                      {compareSelection.length < 2 && ' (select one more)'}
+                    </span>
+                    <span className="gd-compare-bar__actions">
+                      <button type="button" className="gd-btn gd-btn--ghost" onClick={() => setCompareSelection([])}>
+                        Clear
+                      </button>
+                      <button
+                        type="button"
+                        className="gd-btn gd-btn--primary"
+                        disabled={compareSelection.length < 2 || isGenerating}
+                        onClick={() => handleGuidanceAction('compare', compareSelection)}
+                      >
+                        Compare {compareSelection.length}
+                      </button>
+                    </span>
+                  </div>
+                )}
                 {renderComposer()}
               </div>
             </div>
@@ -1211,7 +1305,7 @@ export default function ChatPage() {
           <textarea
             ref={textareaRef}
             className="composer-input"
-            placeholder="Ask about your applications, interviews or resume..."
+            placeholder="Ask about openings or skills…"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={handleKeyDown}

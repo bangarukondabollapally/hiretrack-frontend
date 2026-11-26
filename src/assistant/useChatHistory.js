@@ -97,6 +97,7 @@ export function useChatHistory(userId, initialGreeting) {
     sender: m.role ? m.role.toLowerCase() : 'user',
     text: m.content || '',
     createdAt: m.createdAt,
+    guidance: m.guidance || null,
   }));
 
   const messages = localStreamMessages !== null ? localStreamMessages : serverMessages;
@@ -142,6 +143,19 @@ export function useChatHistory(userId, initialGreeting) {
         return { ...m, text: newText };
       });
     });
+  }, []);
+
+  /** Attaches structured career guidance (from `context`/`guidance` SSE events) to a message. */
+  const updateMessageGuidance = useCallback((msgId, guidance) => {
+    setLocalStreamMessages((prev) => {
+      if (!prev) return prev;
+      return prev.map((m) => (m.id === msgId ? { ...m, guidance } : m));
+    });
+  }, []);
+
+  /** Removes a message from the local buffer (e.g. a question the server discarded after a failure). */
+  const removeMessage = useCallback((msgId) => {
+    setLocalStreamMessages((prev) => (prev ? prev.filter((m) => m.id !== msgId) : prev));
   }, []);
 
   const updateReasoningText = useCallback((msgId, reasoningChunk) => {
@@ -195,6 +209,8 @@ export function useChatHistory(userId, initialGreeting) {
     appendMessage,
     updateMessageText,
     updateReasoningText,
+    updateMessageGuidance,
+    removeMessage,
     deleteConversation,
     renameConversation,
     togglePinConversation,

@@ -8,6 +8,7 @@ import { extractTextFromFile } from '../lib/fileParser';
 import QueryStateNotice from '../components/QueryStateNotice';
 import { AVATAR_PRESETS, renderAvatarSvg } from '../lib/avatarPresets';
 import Avatar from '../components/Avatar';
+import CareerProfileSection from './CareerProfileSection';
 import './ProfilePage.css';
 
 const TABS_STUDENT = [
@@ -915,6 +916,11 @@ export default function ProfilePage() {
                 </div>
               </form>
             </section>
+          )}
+
+          {/* STUDENT TAB 2 (continued): skills, education & projects for the career assistant */}
+          {!isAdmin && activeTab === 'job-search' && (
+            <CareerProfileSection profileData={profileData} userId={userId} />
           )}
         </div>
       </div>
