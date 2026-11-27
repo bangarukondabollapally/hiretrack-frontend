@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
-import { useApplicationQuery, invalidateApplicationQueries, queryClient } from '../api/queries';
+import {
+  useApplicationQuery,
+  useApplicationsQuery,
+  useOpeningsQuery,
+  invalidateApplicationQueries,
+  queryClient,
+} from '../api/queries';
+import OpeningPicker, { fieldsFromOpening } from './OpeningPicker';
 import axiosInstance from '../api/axiosInstance';
 import StatusControl from './StatusControl';
 import TagSelector from './TagSelector';
@@ -23,18 +30,51 @@ export default function ApplicationForm() {
 
   const prefillOpening = location.state?.opening;
 
-  const [formData, setFormData] = useState({
-    companyName: prefillOpening?.companyName || '',
-    jobRole: prefillOpening?.jobRole || '',
+  const EMPTY_FORM = {
+    companyName: '',
+    jobRole: '',
     status: 'APPLIED',
-    jobType: prefillOpening?.jobType || 'Full-time',
-    jobUrl: prefillOpening?.applicationLink || '',
-    notes: prefillOpening?.id ? `Tracked from Placement Opening #${prefillOpening.id}` : '',
+    jobType: 'Full-time',
+    jobUrl: '',
+    notes: '',
     appliedDate: new Date().toISOString().split('T')[0],
     followUpDate: '',
-    jobDescription: prefillOpening?.description || '',
-    placementOpeningId: prefillOpening?.id || null
-  });
+    jobDescription: '',
+    placementOpeningId: null,
+  };
+
+  const [formData, setFormData] = useState(() =>
+    prefillOpening?.id ? { ...EMPTY_FORM, ...fieldsFromOpening(prefillOpening) } : EMPTY_FORM
+  );
+
+  // New applications: pick an existing HireTrack opening (default) or enter an external one manually.
+  const [source, setSource] = useState('opening');
+  const [selectedOpening, setSelectedOpening] = useState(prefillOpening?.id ? prefillOpening : null);
+  const isLinked = !isEdit && Boolean(formData.placementOpeningId);
+
+  const { data: openings, isLoading: openingsLoading, isError: openingsError } = useOpeningsQuery(userId, false, { enabled: !isEdit });
+  const { data: myApplications } = useApplicationsQuery(userId, { enabled: !isEdit });
+  const appliedByOpening = new Map(
+    (myApplications || []).filter((a) => a.placementOpeningId).map((a) => [a.placementOpeningId, a.id])
+  );
+
+  const selectOpening = (opening) => {
+    setSelectedOpening(opening);
+    setFormData((f) => ({ ...f, ...fieldsFromOpening(opening) }));
+    setError('');
+  };
+
+  // Unlinking clears the auto-filled opening details but keeps status, dates and notes.
+  const clearOpening = () => {
+    setSelectedOpening(null);
+    setFormData((f) => ({ ...f, companyName: '', jobRole: '', jobType: 'Full-time', jobUrl: '', jobDescription: '', placementOpeningId: null }));
+  };
+
+  const chooseSource = (next) => {
+    if (next === source) return;
+    if (selectedOpening || formData.placementOpeningId) clearOpening();
+    setSource(next);
+  };
 
   const [currentTags, setCurrentTags] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -124,13 +164,52 @@ export default function ApplicationForm() {
       {error && <div className="form-error-alert">{error}</div>}
 
       <form onSubmit={handleSubmit} className="application-form">
+        {!isEdit && (
+          <>
+            <div className="application-source" role="group" aria-label="Application source">
+              <button
+                type="button"
+                className="application-source__option"
+                aria-pressed={source === 'opening'}
+                onClick={() => chooseSource('opening')}
+              >
+                HireTrack opening
+              </button>
+              <button
+                type="button"
+                className="application-source__option"
+                aria-pressed={source === 'manual'}
+                onClick={() => chooseSource('manual')}
+              >
+                External application
+              </button>
+            </div>
+            <p className="application-source__hint">
+              {source === 'opening'
+                ? 'Pick an opening from your placement cell — company, role and details are filled in and the application stays linked to it.'
+                : 'For jobs not listed in HireTrack. Enter the details yourself.'}
+            </p>
+            {source === 'opening' && (
+              <OpeningPicker
+                openings={openings}
+                isLoading={openingsLoading && !openings}
+                isError={openingsError && !openings}
+                appliedByOpening={appliedByOpening}
+                selected={selectedOpening}
+                onSelect={selectOpening}
+                onClear={clearOpening}
+              />
+            )}
+          </>
+        )}
+
         <div className="form-grid">
           <div className="form-group">
             <label>Company Name {isEdit ? '(Read-only)' : '*'}</label>
             <input
               type="text"
               required
-              disabled={isEdit}
+              disabled={isEdit || isLinked}
               placeholder="e.g. Google"
               value={formData.companyName}
               onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
@@ -142,7 +221,7 @@ export default function ApplicationForm() {
             <input
               type="text"
               required
-              disabled={isEdit}
+              disabled={isEdit || isLinked}
               placeholder="e.g. Frontend Engineer"
               value={formData.jobRole}
               onChange={(e) => setFormData({ ...formData, jobRole: e.target.value })}
@@ -253,7 +332,7 @@ export default function ApplicationForm() {
             <button type="button" onClick={() => navigate('/applications')} className="btn-secondary">
               Cancel
             </button>
-            <button type="submit" disabled={isSaving} className="btn-primary">
+            <button type="submit" disabled={isSaving || (!isEdit && source === 'opening' && !isLinked)} className="btn-primary">
               {isSaving ? 'Saving...' : isEdit ? 'Update Application' : 'Create Application'}
             </button>
           </div>
